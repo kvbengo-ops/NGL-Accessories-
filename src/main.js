@@ -44,7 +44,7 @@ if (isFinePointer) {
   document.addEventListener('mouseenter', () => document.body.classList.remove('cursor-hidden'));
 
   // Grow cursor on interactive elements
-  const hoverTargets = 'a, button, .collection-card, .testimonial-card, .pillar, input';
+  const hoverTargets = 'a, button, .flip-card, .testimonial-card, .pillar, input';
   document.querySelectorAll(hoverTargets).forEach((el) => {
     el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
     el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
@@ -309,20 +309,52 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 });
 
 /* ──────────────────────────────────────────────────────────
-   12. COLLECTION CARD — cursor hover effect
+   12. FLIP CARD — click reveal + hover tilt effect
 ────────────────────────────────────────────────────────── */
+// Toggle flip on click
+document.querySelectorAll('.flip-card-inner').forEach((inner) => {
+  inner.addEventListener('click', (e) => {
+    // If click was on a link or button, let it bubble naturally
+    if (e.target.closest('.flip-close') || e.target.closest('.flip-back-cta')) {
+      return;
+    }
+    inner.classList.toggle('is-flipped');
+  });
+
+  // Close buttons inside back cards
+  inner.querySelector('.flip-close')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    inner.classList.remove('is-flipped');
+  });
+
+  // CTA links
+  inner.querySelector('.flip-back-cta')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+});
+
+// Subtle 3D tilt on hover (only when not flipped)
 if (isFinePointer) {
-  document.querySelectorAll('.collection-card').forEach((card) => {
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
+  document.querySelectorAll('.flip-card-inner').forEach((inner) => {
+    inner.addEventListener('mousemove', (e) => {
+      if (inner.classList.contains('is-flipped')) {
+        inner.style.transform = 'rotateY(180deg)';
+        return;
+      }
+      const rect = inner.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width  - 0.5;
       const y = (e.clientY - rect.top)  / rect.height - 0.5;
-      card.style.transform = `perspective(800px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg)`;
+      inner.style.transform = `perspective(1000px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg)`;
     });
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = '';
-      card.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-      setTimeout(() => { card.style.transition = ''; }, 600);
+
+    inner.addEventListener('mouseleave', () => {
+      inner.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+      if (inner.classList.contains('is-flipped')) {
+        inner.style.transform = 'rotateY(180deg)';
+      } else {
+        inner.style.transform = 'rotateY(0deg)';
+      }
+      setTimeout(() => { inner.style.transition = ''; }, 600);
     });
   });
 }
