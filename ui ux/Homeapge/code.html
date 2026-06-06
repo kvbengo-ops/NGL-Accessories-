@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AURA Accessories - Affordable Luxury</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Quicksand:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "error-container": "#ffdad6",
+                "tertiary-fixed": "#c0edd0",
+                "on-error": "#ffffff",
+                "inverse-surface": "#2b2f48",
+                "surface-container-low": "#f4f2ff",
+                "on-tertiary-fixed-variant": "#264f39",
+                "inverse-primary": "#f0bd8b",
+                "surface-container-lowest": "#ffffff",
+                "surface": "#fbf8ff",
+                "secondary-fixed-dim": "#e3bccb",
+                "on-surface": "#161a32",
+                "primary-fixed": "#ffdcbd",
+                "on-tertiary-container": "#1f4833",
+                "primary-fixed-dim": "#f0bd8b",
+                "on-secondary": "#ffffff",
+                "secondary-container": "#fdd5e4",
+                "surface-container": "#ececff",
+                "primary": "#7d562d",
+                "tertiary": "#3e6750",
+                "inverse-on-surface": "#f0efff",
+                "background": "#fbf8ff",
+                "surface-container-high": "#e5e6ff",
+                "tertiary-container": "#8bb69b",
+                "on-primary-container": "#5b3912",
+                "surface-tint": "#7d562d",
+                "on-secondary-container": "#795a67",
+                "surface-dim": "#d5d8f9",
+                "surface-variant": "#dee0ff",
+                "secondary-fixed": "#ffd8e7",
+                "on-primary": "#ffffff",
+                "secondary": "#745662",
+                "on-tertiary-fixed": "#002112",
+                "on-secondary-fixed-variant": "#5b3f4b",
+                "on-surface-variant": "#50453b",
+                "surface-container-highest": "#dee0ff",
+                "tertiary-fixed-dim": "#a4d1b4",
+                "on-error-container": "#93000a",
+                "outline": "#82756a",
+                "primary-container": "#d4a373",
+                "error": "#ba1a1a",
+                "surface-bright": "#fbf8ff",
+                "on-primary-fixed-variant": "#623f18",
+                "on-background": "#161a32",
+                "outline-variant": "#d4c4b7",
+                "on-tertiary": "#ffffff",
+                "on-secondary-fixed": "#2b141f",
+                "on-primary-fixed": "#2c1600"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "container-margin": "24px",
+                "section-gap": "64px",
+                "gutter": "16px",
+                "base": "8px"
+        },
+        "fontFamily": {
+                "headline-xl": ["Playfair Display"],
+                "body-md": ["Quicksand"],
+                "label-sm": ["Quicksand"],
+                "headline-xl-mobile": ["Playfair Display"],
+                "body-lg": ["Quicksand"],
+                "headline-md": ["Playfair Display"],
+                "headline-lg": ["Playfair Display"],
+                "label-md": ["Quicksand"]
+        },
+        "fontSize": {
+                "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                "headline-xl-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "500"}],
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+        }
+      },
+    },
+  }
+</script>
+<style>
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined', sans-serif;
+        font-size: 24px;
+        line-height: 1;
+        display: inline-block;
+        white-space: nowrap;
+        -webkit-font-smoothing: antialiased;
+    }
+    @keyframes pulse-sparkle {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+      50% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+    }
+    .animate-sparkle {
+      animation: pulse-sparkle 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1), transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+      .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .delay-100 { transition-delay: 100ms; }
+      .delay-200 { transition-delay: 200ms; }
+      .delay-300 { transition-delay: 300ms; }
+      .bg-parallax { transition: transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); }
+      .category-panel:hover .bg-parallax { transform: scale(1.06); }
+      .hover-lift { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+      .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    }
+    .mouse-sparkle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e9c349 0%, rgba(233, 195, 73, 0) 70%);
+      opacity: 0.8;
+      animation: sparkle-fade 0.8s forwards;
+    }
+    @keyframes sparkle-fade {
+      0% { transform: scale(0.2); opacity: 0.6; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased selection:bg-secondary-fixed-dim selection:text-primary">
+<header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-primary/10 transition-all duration-500">
+<div class="flex justify-between items-center h-20 px-container-margin md:px-section-gap max-w-7xl mx-auto">
+<div class="h-12 w-auto flex items-center"><img alt="NGL Logo" class="h-full w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLsK1mQ71BPeNq2qhttEOGCAn76FF_qx6fXPej6YjnHqByRzdhhkpXBaPQPDxt1BRHF8XKQP9pLOdClNroPjGqBcbuGrRq_C1xMLHaoU2PKRRE370XTKqCTuHcJwD8k9mcMv60-OWt2-11YFTKEnVMrRN3MyQNW9FrrVolgdaoqQDngpVzUs5nvDQXqSg7YpdVRzwO4kVPgC60cLtfPPv2CvL7FBYcAeDVOiQkfo5NfE3sePzYQllpTHGQ"/></div>
+<nav class="hidden md:flex gap-container-margin items-center">
+<a class="font-label-md text-label-md text-on-surface-variant font-medium hover:text-secondary transition-colors" href="#">Natural</a>
+<a class="font-label-md text-label-md text-on-surface-variant font-medium hover:text-secondary transition-colors" href="#">Grace</a>
+<a class="font-label-md text-label-md text-on-surface-variant font-medium hover:text-secondary transition-colors" href="#">Lush</a>
+</nav>
+<div class="flex items-center gap-base text-primary">
+<button aria-label="search" class="p-1 hover:text-secondary transition-colors"><span class="material-symbols-outlined">search</span></button>
+<button aria-label="shopping_bag" class="p-1 hover:text-secondary transition-colors"><span class="material-symbols-outlined">shopping_bag</span></button>
+<button aria-label="favorite" class="p-1 hover:text-secondary transition-colors"><span class="material-symbols-outlined">favorite</span></button>
+</div>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative w-full h-[85vh] min-h-[600px] flex items-center justify-center bg-surface-container overflow-hidden">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLslc3TxdVem_wtdUlqGQ5h-asV0fUJImcb83hvxZ8fqSTq5BqLDn9uqOcI3JXBsG14v3duqb5LCyc-ZDe8XIKkyP3RYaZHc5uPSxLsutCoR4AHAya2FcPJy8jLfex53Gzgc12lTt_bdk4R-FZlk_v492QmHg3DrX3tHfGoeE2hNnwXIzjZI8S_gCzbEkQ-QaABwfSgaJ3XrrO7R2XbEuCQ_zCc2mPz-laOeAVCe5f5_YheIL_Rj6lCIqiw'); opacity: 0.6;"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-surface/20 to-surface/60"></div>
+<div class="relative z-10 text-center px-container-margin max-w-[800px] mx-auto reveal active">
+<div class="absolute -top-12 -left-8 animate-sparkle text-secondary-fixed-dim opacity-60">
+<span class="material-symbols-outlined" style="font-size: 48px;">sparkles</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary mb-6 drop-shadow-sm">
+                Uncompromising Luxury.<br/>Unbelievable Prices.
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-[600px] mx-auto">
+                Experience premium, conscious craftsmanship. Elevate your everyday with pieces designed to last a lifetime, without the traditional retail markup.
+            </p>
+<a class="inline-flex items-center justify-center bg-primary text-on-primary font-label-md text-label-md py-4 px-10 rounded-full hover:bg-primary/90 hover-lift shadow-lg" href="#collections">
+                Explore Collections
+            </a>
+</div>
+</section>
+<!-- Section 1: The NGL Standard -->
+<section class="py-section-gap px-container-margin md:px-section-gap max-w-7xl mx-auto">
+<div class="text-center mb-16 reveal active">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-2 relative inline-block">
+                The NGL Standard
+                <span class="material-symbols-outlined absolute -top-4 -right-8 text-secondary-fixed-dim animate-sparkle" style="font-size: 20px;">flare</span>
+</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Consciously crafted to endure your lifestyle.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="flex flex-col items-center text-center p-8 bg-white border border-outline/5 rounded-2xl shadow-sm hover-lift reveal delay-100 active">
+<div class="w-16 h-16 rounded-full bg-secondary-fixed-dim/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">Waterproof</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed">Wear it in the shower, pool, or ocean. Our pieces never fade or lose their shine.</p>
+</div>
+<div class="flex flex-col items-center text-center p-8 bg-white border border-outline/5 rounded-2xl shadow-sm hover-lift reveal delay-200 active">
+<div class="w-16 h-16 rounded-full bg-secondary-fixed-dim/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shining</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">Non-Tarnish</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed">Advanced plating techniques ensure your jewelry remains brilliant day after day.</p>
+</div>
+<div class="flex flex-col items-center text-center p-8 bg-white border border-outline/5 rounded-2xl shadow-sm hover-lift reveal delay-300 active">
+<div class="w-16 h-16 rounded-full bg-secondary-fixed-dim/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">spa</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-3">Hypoallergenic</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed">Free from nickel and harsh metals. Kind to even the most sensitive skin.</p>
+</div>
+</div>
+</section>
+<!-- Section 2: Curated Essences -->
+<section class="w-full" id="collections">
+<div class="text-center py-16 reveal active">
+<h2 class="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary">Curated Essences</h2>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 min-h-[600px]">
+<!-- Natural -->
+<div class="category-panel relative group overflow-hidden h-[600px] flex flex-col justify-end p-12 reveal active">
+<div class="bg-parallax absolute inset-0 w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida/AP1WRLtnsHbHcrd0P-BY1ZskIPb0KdD3lTrG5tSpJjJEpqEG_qngKTsBYbLoZzyUGrjxHSXY-bAKudwvG3uLHq2ATXsfeD6IfQVvjyqdafRiA7osHxQqaMdy5saAdazuOrppwF3iD6lBChNCY_Y1TPGKKmyXmsr6yGB5m0kBmSeCkyCMh_VCS19UbqXTLDg4jx09Hp3YR1P3MsudNYa5VOccvMJmvoGcY2Y8jIKsEX6QpWDyR-ad5q-wqMI4mpI");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-4">
+<span class="inline-block px-3 py-1 mb-4 bg-white/20 backdrop-blur-md rounded font-label-sm text-white tracking-widest uppercase">The Collection</span>
+<h3 class="font-headline-xl text-white mb-4">Natural</h3>
+<p class="font-body-md text-white/90 mb-8 max-w-xs">Organic forms and light sage accents for the minimalist soul.</p>
+<button class="bg-white text-primary font-label-md py-3 px-8 rounded-full hover:bg-surface-container hover-lift">Shop Natural</button>
+</div>
+</div>
+<!-- Grace -->
+<div class="category-panel relative group overflow-hidden h-[600px] flex flex-col justify-end p-12 reveal delay-100 active">
+<div class="bg-parallax absolute inset-0 w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida/AP1WRLvIeHEhPhZDnO7xiXXZ-pWyKX3SK9AERYObfp7eOf8wOV_w5__SRqjeIg3QJYSBH37DooI-6hv1HxH3L_AOBMketcrtWw2Z1wYQoriRBKbBvR4vFPA-LJpv-PZ3q4u3n1dvJI8P_YKPmjpg6oqxG0qpvcezZqGSDSajZ5oPyUQFIU8pt_UDsJ90xGKO6F1Cs9lmm9hHjzAAV99lqY1Zo2-alVkg8xOGZgNsgVMUqzHq7S-SzhvrZAdacfU");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-4">
+<span class="inline-block px-3 py-1 mb-4 bg-white/20 backdrop-blur-md rounded font-label-sm text-white tracking-widest uppercase">The Collection</span>
+<h3 class="font-headline-xl text-white mb-4">Grace</h3>
+<p class="font-body-md text-white/90 mb-8 max-w-xs">Dramatic silhouettes in rich gold tones for a bold presence.</p>
+<button class="bg-white text-primary font-label-md py-3 px-8 rounded-full hover:bg-surface-container hover-lift">Shop Grace</button>
+</div>
+</div>
+<!-- Lush -->
+<div class="category-panel relative group overflow-hidden h-[600px] flex flex-col justify-end p-12 reveal delay-200 active">
+<div class="bg-parallax absolute inset-0 w-full h-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida/AP1WRLtsbvkrNLB38lALXuzBPoBk4oUQNFBibx-qWQ_yJxPHg-eHuB6xUNOa298gvV69RzqRjdQ4rHshArd_7ExZZLHR27JTOiNrggfIq2xjoeK87AMZ6LA8bJjEUSNPTQY6QIG_xnTHctse90jl4HbfWvHeWN22SIyNKdJdbKPMB7vixhM4cMQ0T7xzK2GdU-BULzG1iaVHjWNyJGPH7f9ZrqF9Z7ByC5vFzdccpc5quyAvEco5ahYIOlvGfSc");'></div>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+<div class="relative z-10 transition-transform duration-500 group-hover:-translate-y-4">
+<span class="inline-block px-3 py-1 mb-4 bg-white/20 backdrop-blur-md rounded font-label-sm text-white tracking-widest uppercase">The Collection</span>
+<h3 class="font-headline-xl text-white mb-4">Lush</h3>
+<p class="font-body-md text-white/90 mb-8 max-w-xs">Vibrant hues and resort-ready designs for an endless summer.</p>
+<button class="bg-white text-primary font-label-md py-3 px-8 rounded-full hover:bg-surface-container hover-lift">Shop Lush</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Why NGL? (Refined True Cost) -->
+<section class="py-section-gap px-container-margin md:px-section-gap max-w-7xl mx-auto">
+<div class="bg-primary-fixed/30 rounded-3xl p-12 md:p-20 relative overflow-hidden flex flex-col md:flex-row items-center gap-16 reveal active">
+<div class="md:w-1/2 relative z-10">
+<h2 class="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary mb-6">Transparent Luxury</h2>
+<h3 class="font-headline-md text-headline-md text-secondary mb-4">Simple. Beautiful. Accessible.</h3>
+<p class="font-body-lg text-on-surface-variant mb-6 leading-relaxed">
+                    We believe picking out jewelry shouldn't be a difficult or expensive process. 
+                </p>
+<p class="font-body-md text-on-surface-variant mb-8 leading-relaxed">
+                    Our goal is to make styling effortless by offering curated, premium pieces that fit your life perfectly, all without the luxury price tag.
+                </p>
+<div class="flex items-center gap-2 text-primary font-label-md border-t border-primary/10 pt-6">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span> 
+                    Fair Pricing Guarantee
+                </div>
+</div>
+<div class="md:w-1/2 w-full grid grid-cols-1 gap-4 relative z-10">
+<div class="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-white flex items-center gap-6 hover-lift">
+<div class="w-14 h-14 rounded-full bg-secondary-fixed-dim/20 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">style</span>
+</div>
+<div>
+<h4 class="font-headline-md text-lg text-primary uppercase tracking-widest">Curated Lifestyle</h4>
+<p class="font-body-md text-sm text-outline">Natural, Grace, Lush</p>
+</div>
+</div>
+<div class="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-white flex items-center gap-6 hover-lift">
+<div class="w-14 h-14 rounded-full bg-secondary-fixed-dim/20 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">verified</span>
+</div>
+<div>
+<h4 class="font-headline-md text-lg text-primary uppercase tracking-widest">Enduring Quality</h4>
+<p class="font-body-md text-sm text-outline">Waterproof &amp; Non-Tarnish</p>
+</div>
+</div>
+<div class="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-white flex items-center gap-6 hover-lift">
+<div class="w-14 h-14 rounded-full bg-secondary-fixed-dim/20 flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div>
+<h4 class="font-headline-md text-lg text-primary uppercase tracking-widest">Accessible</h4>
+<p class="font-body-md text-sm text-outline">Honest, Direct Pricing</p>
+</div>
+</div>
+</div>
+<!-- Decorative Glow -->
+<div class="absolute -right-20 -bottom-20 w-96 h-96 bg-secondary-container/20 blur-3xl rounded-full"></div>
+</div>
+</section>
+</main>
+<footer class="bg-surface border-t border-primary/5 w-full py-16">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 px-container-margin md:px-section-gap max-w-7xl mx-auto">
+<div class="flex flex-col gap-4">
+<div class="h-10 w-auto flex items-center mb-2"><img alt="NGL Logo" class="h-full w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLsK1mQ71BPeNq2qhttEOGCAn76FF_qx6fXPej6YjnHqByRzdhhkpXBaPQPDxt1BRHF8XKQP9pLOdClNroPjGqBcbuGrRq_C1xMLHaoU2PKRRE370XTKqCTuHcJwD8k9mcMv60-OWt2-11YFTKEnVMrRN3MyQNW9FrrVolgdaoqQDngpVzUs5nvDQXqSg7YpdVRzwO4kVPgC60cLtfPPv2CvL7FBYcAeDVOiQkfo5NfE3sePzYQllpTHGQ"/></div>
+<p class="font-body-md text-on-surface-variant">© 2024 NGL Jewelry.<br/>Consciously Crafted.</p>
+<div class="flex items-center gap-2 font-label-sm text-secondary-fixed-dim mt-4">
+                Sparkle on <span class="material-symbols-outlined text-sm text-error" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-primary font-bold mb-2">Our Standards</span>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Waterproof</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Non-Tarnish</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Fair Pricing</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-primary font-bold mb-2">Support</span>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Contact</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Shipping</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Returns</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-label-md text-primary font-bold mb-2">Stay Connected</span>
+<p class="text-on-surface-variant text-sm">Join for exclusive drops and early access.</p>
+<div class="flex border-b border-outline/30 focus-within:border-primary transition-colors py-2">
+<input class="bg-transparent border-none focus:ring-0 p-0 w-full text-sm" placeholder="Email Address" type="email"/>
+<button class="text-primary hover:text-secondary">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</footer>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const observerOptions = { threshold: 0.1 };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  let lastSparkleTime = 0;
+  document.addEventListener('mousemove', (e) => {
+    const now = Date.now();
+    if (now - lastSparkleTime < 100) return;
+    if (Math.random() > 0.4) return;
+    lastSparkleTime = now;
+
+    const sparkle = document.createElement('div');
+    sparkle.className = 'mouse-sparkle';
+    sparkle.style.left = (e.clientX + (Math.random()-0.5)*20) + 'px';
+    sparkle.style.top = (e.clientY + (Math.random()-0.5)*20) + 'px';
+    const size = 4 + Math.random() * 6;
+    sparkle.style.width = size + 'px';
+    sparkle.style.height = size + 'px';
+    document.body.appendChild(sparkle);
+    setTimeout(() => sparkle.remove(), 800);
+  });
+});
+</script>
+</body></html>
