@@ -15,11 +15,36 @@
 </head>
 <body>
 
-  <!-- ░░ CUSTOM CURSOR ░░ -->
-  <div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
-  <div id="cursor-ring" class="cursor-ring" aria-hidden="true"></div>
+
+  <!-- ░░ PRODUCT FULL-VIEW MODAL ░░ -->
+  <div id="product-modal-backdrop" class="product-modal-backdrop" role="dialog" aria-modal="true" aria-label="Product details" aria-hidden="true">
+    <div class="product-modal" id="product-modal">
+      <button class="modal-close" id="modal-close" aria-label="Close product view">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="modal-image-panel" id="modal-image-panel">
+        <img id="modal-img" src="" alt="" />
+        <div class="modal-image-gradient"></div>
+      </div>
+      <div class="modal-info-panel">
+        <span class="modal-category-badge" id="modal-badge"></span>
+        <h2 class="modal-product-name" id="modal-name"></h2>
+        <p class="modal-price" id="modal-price"></p>
+        <div class="modal-divider"></div>
+        <p class="modal-desc" id="modal-desc"></p>
+        <div class="modal-tags" id="modal-tags"></div>
+        <div class="modal-actions">
+          <button class="modal-btn-cart" id="modal-btn-cart">
+            <span class="material-symbols-outlined">add_shopping_cart</span>
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ░░ ANNOUNCEMENT BANNER ░░ -->
+
   <div id="banner" class="banner">
     <div class="banner-marquee">
       <span>✦ Free shipping on orders over ₱1,500 &nbsp; · &nbsp; Non-Tarnish &nbsp; · &nbsp; Hypoallergenic &nbsp; · &nbsp; Waterproof &nbsp; · &nbsp; Premium Packaging ✦</span>
@@ -40,7 +65,7 @@
           <span></span><span></span><span></span>
         </button>
         <ul class="nav-links">
-          <li><a href="#" class="nav-link active">Shop All</a></li>
+          <li><a href="shop.html" class="nav-link">Shop All</a></li>
           <li><a href="#collections" class="nav-link">Collections</a></li>
           <li><a href="#story" class="nav-link">About</a></li>
         </ul>
@@ -62,7 +87,7 @@
 
     <!-- Mobile drawer -->
     <div class="nav-drawer" id="nav-drawer" aria-hidden="true">
-      <a href="#" class="drawer-link active">Shop All</a>
+      <a href="shop.html" class="drawer-link">Shop All</a>
       <a href="#collections" class="drawer-link">Collections</a>
       <a href="#story" class="drawer-link">About</a>
       <a href="#newsletter" class="drawer-link">Join Inner Circle</a>
@@ -72,7 +97,7 @@
   <!-- ░░ HERO ░░ -->
   <section id="hero" class="hero">
     <div class="hero-bg">
-      <img src="/images/hero_jewelry.png" alt="Delicate gold bracelets on wrist" class="hero-img" id="hero-img" />
+      <img src="/images/hero_jewelry.png" alt="Delicate gold bracelets on wrist" class="hero-img" id="hero-img" width="1920" height="1080" fetchpriority="high" />
       <div class="hero-overlay"></div>
       <div class="hero-grain" aria-hidden="true"></div>
     </div>
@@ -107,7 +132,7 @@
       <!-- CTAs -->
       <div class="hero-cta line-wrap" style="--d:680ms">
         <div class="line-inner">
-          <a href="#" class="btn btn--ghost mag-btn" id="hero-shop-all">Shop All</a>
+          <a href="shop.html" class="btn btn--ghost mag-btn" id="hero-shop-all">Shop All</a>
           <a href="#collections" class="btn btn--solid mag-btn" id="hero-explore">Find Your Collection</a>
         </div>
       </div>
@@ -202,7 +227,7 @@
     <div class="story-inner">
       <div class="story-image-wrap reveal-left-el" style="--d:0ms">
         <div class="story-image-frame">
-          <img src="/images/hero_jewelry.png" alt="NGL Accessories — accessible luxury jewelry" class="story-image" id="story-img" />
+          <img src="/images/hero_jewelry.png" alt="NGL Accessories — accessible luxury jewelry" class="story-image" id="story-img" width="600" height="800" loading="lazy" />
         </div>
         <div class="story-accent-border"></div>
         <div class="story-accent-label">Est. 2024</div>
@@ -267,7 +292,7 @@
           <div class="flip-face flip-front">
             <div class="collection-num">01</div>
             <div class="collection-image-wrap">
-              <img src="/images/natural_collection.png" alt="Natural Collection" class="collection-image" />
+              <img src="/images/natural_collection.png" alt="Natural Collection" class="collection-image" width="800" height="1200" loading="lazy" />
             </div>
             <div class="collection-overlay"></div>
             <div class="collection-info">
@@ -314,7 +339,7 @@
           <div class="flip-face flip-front">
             <div class="collection-num collection-num--gold">02</div>
             <div class="collection-image-wrap">
-              <img src="/images/grace_collection.png" alt="Grace Collection" class="collection-image" />
+              <img src="/images/grace_collection.png" alt="Grace Collection" class="collection-image" width="800" height="1200" loading="lazy" />
             </div>
             <div class="collection-overlay collection-overlay--dark"></div>
             <div class="collection-info">
@@ -361,7 +386,7 @@
           <div class="flip-face flip-front">
             <div class="collection-num collection-num--coral">03</div>
             <div class="collection-image-wrap">
-              <img src="/images/lush_collection.png" alt="Lush Collection" class="collection-image" />
+              <img src="/images/lush_collection.png" alt="Lush Collection" class="collection-image" width="800" height="1200" loading="lazy" />
             </div>
             <div class="collection-overlay collection-overlay--lush"></div>
             <div class="collection-info">

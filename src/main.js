@@ -5,51 +5,7 @@
    ============================================================ */
 import './style.css';
 
-/* ──────────────────────────────────────────────────────────
-   1. LERP CUSTOM CURSOR
-────────────────────────────────────────────────────────── */
-const cursorDot  = document.getElementById('cursor-dot');
-const cursorRing = document.getElementById('cursor-ring');
-
-let mouseX = window.innerWidth  / 2;
-let mouseY = window.innerHeight / 2;
-let dotX = mouseX, dotY = mouseY;
-let ringX = mouseX, ringY = mouseY;
-let rafId;
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
-
-const lerp = (a, b, t) => a + (b - a) * t;
-
-function animateCursor() {
-  dotX  = lerp(dotX,  mouseX, 0.85);
-  dotY  = lerp(dotY,  mouseY, 0.85);
-  ringX = lerp(ringX, mouseX, 0.1);
-  ringY = lerp(ringY, mouseY, 0.1);
-
-  cursorDot.style.transform  = `translate3d(${dotX - 3.5}px, ${dotY - 3.5}px, 0)`;
-  cursorRing.style.transform = `translate3d(${ringX - 18}px, ${ringY - 18}px, 0)`;
-
-  rafId = requestAnimationFrame(animateCursor);
-}
-
-if (isFinePointer) {
-  animateCursor();
-
-  document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-  });
-
-  document.addEventListener('mouseleave', () => document.body.classList.add('cursor-hidden'));
-  document.addEventListener('mouseenter', () => document.body.classList.remove('cursor-hidden'));
-
-  // Grow cursor on interactive elements
-  const hoverTargets = 'a, button, .flip-card, .testimonial-card, .pillar, input';
-  document.querySelectorAll(hoverTargets).forEach((el) => {
-    el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-    el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-  });
-}
 
 /* ──────────────────────────────────────────────────────────
    2. NAVBAR — scroll state + mobile drawer
@@ -233,10 +189,18 @@ newsletterForm?.addEventListener('submit', (e) => {
   e.preventDefault();
   const email = newsletterEmail.value.trim();
 
+  // Clear any previous error
+  document.getElementById('nl-error-msg')?.remove();
+
   if (!isValidEmail(email)) {
     shake(newsletterEmail);
     return;
   }
+
+  // Loading state
+  const submitBtn = newsletterForm.querySelector('[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.style.opacity = '0.65';
 
   // Animate form out, success in
   newsletterForm.style.transition = 'opacity 0.4s, transform 0.4s';
@@ -279,6 +243,22 @@ function shake(el) {
   ];
   el.animate(kf, { duration: 480, easing: 'ease-in-out' });
   el.focus();
+
+  let errorEl = document.getElementById('nl-error-msg');
+  if (!errorEl) {
+    errorEl = document.createElement('p');
+    errorEl.id = 'nl-error-msg';
+    errorEl.setAttribute('role', 'alert');
+    errorEl.style.cssText = [
+      'font-family:var(--font-sans)',
+      'font-size:11px',
+      'color:var(--coral)',
+      'letter-spacing:0.05em',
+      'margin-top:-4px',
+    ].join(';');
+    el.closest('.nl-input-row').insertAdjacentElement('afterend', errorEl);
+  }
+  errorEl.textContent = 'Please enter a valid email address.';
 }
 
 /* Inject success animation keyframe */
@@ -309,25 +289,45 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
 });
 
 /* ──────────────────────────────────────────────────────────
-   12. FLIP CARD — click reveal + hover tilt effect
+   12. FLIP CARD — click reveal + keyboard + ARIA + hover tilt
 ────────────────────────────────────────────────────────── */
-// Toggle flip on click
+const collectionNames = { 'flip-natural': 'Natural', 'flip-grace': 'Grace', 'flip-lush': 'Lush' };
+
 document.querySelectorAll('.flip-card-inner').forEach((inner) => {
+  const name = collectionNames[inner.id] || 'Collection';
+  inner.setAttribute('tabindex', '0');
+  inner.setAttribute('role', 'button');
+  inner.setAttribute('aria-pressed', 'false');
+  inner.setAttribute('aria-label', `${name} Collection — press to reveal details`);
+
+  function setFlipped(flipped) {
+    inner.classList.toggle('is-flipped', flipped);
+    inner.setAttribute('aria-pressed', String(flipped));
+    inner.setAttribute('aria-label',
+      flipped
+        ? `${name} Collection — press to close`
+        : `${name} Collection — press to reveal details`
+    );
+  }
+
   inner.addEventListener('click', (e) => {
-    // If click was on a link or button, let it bubble naturally
-    if (e.target.closest('.flip-close') || e.target.closest('.flip-back-cta')) {
-      return;
-    }
-    inner.classList.toggle('is-flipped');
+    if (e.target.closest('.flip-close') || e.target.closest('.flip-back-cta')) return;
+    setFlipped(!inner.classList.contains('is-flipped'));
   });
 
-  // Close buttons inside back cards
+  inner.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setFlipped(!inner.classList.contains('is-flipped'));
+    }
+    if (e.key === 'Escape') setFlipped(false);
+  });
+
   inner.querySelector('.flip-close')?.addEventListener('click', (e) => {
     e.stopPropagation();
-    inner.classList.remove('is-flipped');
+    setFlipped(false);
   });
 
-  // CTA links
   inner.querySelector('.flip-back-cta')?.addEventListener('click', (e) => {
     e.stopPropagation();
   });
@@ -358,3 +358,4 @@ if (isFinePointer) {
     });
   });
 }
+

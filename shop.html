@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse &amp; Shop — NGL Accessories</title>
+  <meta name="description" content="Browse NGL Accessories' full collection of non-tarnish, hypoallergenic, and waterproof jewelry — earrings, rings, bracelets, and necklaces." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+
+  <!-- ░░ PRODUCT FULL-VIEW MODAL ░░ -->
+  <div id="product-modal-backdrop" class="product-modal-backdrop" role="dialog" aria-modal="true" aria-label="Product details" aria-hidden="true">
+    <div class="product-modal" id="product-modal">
+      <button class="modal-close" id="modal-close" aria-label="Close product view">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="modal-image-panel" id="modal-image-panel">
+        <img id="modal-img" src="" alt="" />
+        <div class="modal-image-gradient"></div>
+      </div>
+      <div class="modal-info-panel">
+        <span class="modal-category-badge" id="modal-badge"></span>
+        <h2 class="modal-product-name" id="modal-name"></h2>
+        <p class="modal-price" id="modal-price"></p>
+        <div class="modal-divider"></div>
+        <p class="modal-desc" id="modal-desc"></p>
+        <div class="modal-tags" id="modal-tags"></div>
+        <div class="modal-actions">
+          <button class="modal-btn-cart" id="modal-btn-cart">
+            <span class="material-symbols-outlined">add_shopping_cart</span>
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░ ANNOUNCEMENT BANNER ░░ -->
+
+  <div id="banner" class="banner">
+    <div class="banner-marquee">
+      <span>✦ Free shipping on orders over ₱1,500 &nbsp; · &nbsp; Non-Tarnish &nbsp; · &nbsp; Hypoallergenic &nbsp; · &nbsp; Waterproof &nbsp; · &nbsp; Premium Packaging ✦</span>
+      <span aria-hidden="true">✦ Free shipping on orders over ₱1,500 &nbsp; · &nbsp; Non-Tarnish &nbsp; · &nbsp; Hypoallergenic &nbsp; · &nbsp; Waterproof &nbsp; · &nbsp; Premium Packaging ✦</span>
+    </div>
+    <button id="banner-close" class="banner-close" aria-label="Close banner">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- ░░ NAVIGATION ░░ -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-inner">
+
+      <!-- Left: Desktop links -->
+      <div class="nav-left">
+        <button id="nav-toggle" class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links">
+          <li><a href="shop.html" class="nav-link active">Shop All</a></li>
+          <li><a href="index.html#collections" class="nav-link">Collections</a></li>
+          <li><a href="index.html#story" class="nav-link">About</a></li>
+        </ul>
+      </div>
+
+      <!-- Center: Logo -->
+      <a href="index.html" class="nav-logo">NGL Accessories</a>
+
+      <!-- Right: Icons -->
+      <div class="nav-right">
+        <button class="nav-icon-btn" aria-label="Search"><span class="material-symbols-outlined">search</span></button>
+        <button class="nav-icon-btn nav-icon--desktop" aria-label="Account"><span class="material-symbols-outlined">person</span></button>
+        <button class="nav-icon-btn cart-btn" aria-label="Cart">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          <span class="cart-count" aria-label="0 items">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="nav-drawer" id="nav-drawer" aria-hidden="true">
+      <a href="shop.html" class="drawer-link active">Shop All</a>
+      <a href="index.html#collections" class="drawer-link">Collections</a>
+      <a href="index.html#story" class="drawer-link">About</a>
+      <a href="index.html#newsletter" class="drawer-link">Join Inner Circle</a>
+    </div>
+  </nav>
+
+  <!-- ░░ SHOP ░░ -->
+  <section id="shop" class="shop">
+    <div class="shop-inner">
+
+      <!-- Header -->
+      <div class="shop-header">
+        <span class="label-caps gold reveal-up-el" style="--d:0ms">Browse &amp; Shop</span>
+        <h2 class="shop-title reveal-up-el" style="--d:100ms">Find Your Perfect Piece</h2>
+        <p class="shop-subtitle reveal-up-el" style="--d:200ms">
+          Swipe right to add to cart — or flip to Browse All for the full collection.
+        </p>
+        <div class="view-toggle reveal-up-el" style="--d:300ms" role="group" aria-label="Product view mode">
+          <button class="view-btn active" id="btn-swipe-view" aria-pressed="true">
+            <span class="material-symbols-outlined">swipe</span>
+            Discover
+          </button>
+          <button class="view-btn" id="btn-grid-view" aria-pressed="false">
+            <span class="material-symbols-outlined">grid_view</span>
+            Browse All
+          </button>
+        </div>
+      </div>
+
+      <!-- ── SWIPE VIEW ── -->
+      <div class="swipe-view" id="swipe-view">
+        <div class="swipe-hint" aria-hidden="true">
+          <div class="hint-chip hint-chip--skip">
+            <span class="material-symbols-outlined">close</span> Skip
+          </div>
+          <div class="hint-chip hint-chip--like">
+            Add to Cart <span class="material-symbols-outlined">favorite</span>
+          </div>
+        </div>
+
+        <div class="card-stack" id="card-stack" role="region" aria-label="Swipeable product cards"></div>
+
+        <div class="swipe-actions" id="swipe-actions">
+          <button class="swipe-btn swipe-btn--skip" id="btn-action-skip" aria-label="Skip this product">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          <span class="swipe-counter" id="swipe-counter" aria-live="polite">1 / 9</span>
+          <button class="swipe-btn swipe-btn--like" id="btn-action-like" aria-label="Add product to cart">
+            <span class="material-symbols-outlined">favorite</span>
+          </button>
+        </div>
+
+        <!-- Fullscreen button -->
+        <button class="swipe-fullscreen-btn" id="btn-fullscreen" aria-label="Enter fullscreen swipe mode">
+          <span class="material-symbols-outlined">fullscreen</span>
+          Full Screen
+        </button>
+
+
+        <div class="swipe-empty hidden" id="swipe-empty">
+          <span class="material-symbols-outlined">diamond</span>
+          <h3>You've seen them all!</h3>
+          <p>Check your cart or start over to browse again.</p>
+          <button class="btn btn--solid" id="btn-reset-swipe">Start Over</button>
+        </div>
+      </div>
+
+      <!-- ── GRID VIEW ── -->
+      <div class="grid-view hidden" id="grid-view">
+        <div class="products-grid" id="products-grid"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ░░ FOOTER ░░ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-logo">NGL Accessories</p>
+        <p class="footer-tagline">Luxury Within Reach — premium earrings, rings, bracelets, and necklaces for every occasion.</p>
+        <div class="footer-socials">
+          <a href="#" class="social-link" aria-label="Instagram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="#" class="social-link" aria-label="TikTok">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+          </a>
+          <a href="#" class="social-link" aria-label="Facebook">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <nav class="footer-nav" aria-label="Collections">
+        <h5 class="footer-nav-heading">Collections</h5>
+        <a href="index.html#collections" class="footer-nav-link">Natural — Everyday</a>
+        <a href="index.html#collections" class="footer-nav-link">Grace — Formal</a>
+        <a href="index.html#collections" class="footer-nav-link">Lush — Resort</a>
+        <a href="#" class="footer-nav-link">New Arrivals</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Customer Care">
+        <h5 class="footer-nav-heading">Customer Care</h5>
+        <a href="#" class="footer-nav-link">Shipping &amp; Returns</a>
+        <a href="#" class="footer-nav-link">Contact Us</a>
+        <a href="#" class="footer-nav-link">Store Locator</a>
+        <a href="#" class="footer-nav-link">FAQ</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Legal">
+        <h5 class="footer-nav-heading">Legal</h5>
+        <a href="#" class="footer-nav-link">Privacy Policy</a>
+        <a href="#" class="footer-nav-link">Terms of Service</a>
+        <a href="#" class="footer-nav-link">Cookie Policy</a>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2025 NGL Accessories. All rights reserved. &nbsp;✦&nbsp; Luxury Within Reach.</p>
+      <p>Made with love in the Philippines 🇵🇭</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/shop.js"></script>
+</body>
+</html>
