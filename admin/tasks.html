@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tasks — NGL Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="admin-page">
+  <div id="sidebar-container"></div>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div>
+        <h1 class="admin-page-title">Tasks</h1>
+        <p class="admin-page-subtitle">Manage workflow and assignments</p>
+      </div>
+      <button class="admin-header-btn" id="btn-create-task">
+        <span class="material-symbols-outlined">add</span>
+        New Task
+      </button>
+    </header>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="tasks-search" class="admin-search" placeholder="Search tasks…" />
+      </div>
+      <select id="tasks-filter-status" class="admin-select">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+      </select>
+      <select id="tasks-filter-assignee" class="admin-select">
+        <option value="">All Assignees</option>
+        <!-- Populated by JS -->
+      </select>
+    </div>
+
+    <!-- Table -->
+    <section class="admin-card">
+      <div class="table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Assigned To</th>
+              <th>Due Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-body">
+            <tr><td colspan="6" class="table-loading">Loading tasks…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Create/Edit Task Modal -->
+  <div class="admin-modal-backdrop" id="task-modal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="task-modal-title">New Task</h2>
+        <button class="modal-close-btn" id="close-task-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="task-form" class="modal-form">
+        <input type="hidden" id="task-id" />
+        <div class="form-field">
+          <label class="form-label" for="task-title">Title *</label>
+          <input type="text" id="task-title" class="form-input" required />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="task-desc">Description</label>
+          <textarea id="task-desc" class="form-input form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="task-status">Status</label>
+            <select id="task-status" class="admin-select">
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="task-priority">Priority</label>
+            <select id="task-priority" class="admin-select">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="task-assignee">Assign To</label>
+            <select id="task-assignee" class="admin-select">
+              <option value="">Unassigned</option>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="task-due">Due Date</label>
+            <input type="date" id="task-due" class="form-input" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-admin-ghost" id="btn-cancel-task">Cancel</button>
+          <button type="submit" class="btn-admin-primary" id="btn-save-task">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/src/tasks.js"></script>
+</body>
+</html>

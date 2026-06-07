@@ -1,4 +1,5 @@
 import './style.css';
+import { getProducts } from './supabase.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -82,118 +83,67 @@ if (isFinePointer) {
   });
 }
 
+/* ── FORMAT PRICE ── */
+function formatPrice(n) {
+  return `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+}
+
 /* ── PRODUCTS ── */
-const PRODUCTS = [
-  {
-    id: 'natural-1',
-    name: 'Dainty Chain Bracelet',
-    category: 'natural',
-    categoryLabel: 'Natural',
-    price: '₱380',
-    desc: 'Delicate sterling-silver chain with a hand-polished finish. Light and stackable — perfect for everyday wear.',
-    tags: ['#minimalist', '#stackable', '#sterling'],
-    emoji: 'link',
-    image: '/images/natural_chain_bracelet.png',
-  },
-  {
-    id: 'natural-2',
-    name: 'Pearl Stud Earrings',
-    category: 'natural',
-    categoryLabel: 'Natural',
-    price: '₱290',
-    desc: 'Freshwater pearls set in brushed silver. Timeless studs that complement any outfit effortlessly.',
-    tags: ['#freshwater', '#classic', '#everyday'],
-    emoji: 'circle',
-    image: '/images/natural_pearl_studs.png',
-  },
-  {
-    id: 'natural-3',
-    name: 'Slim Band Ring',
-    category: 'natural',
-    categoryLabel: 'Natural',
-    price: '₱250',
-    desc: 'Smooth slim band crafted from recycled silver. Minimalist design that stacks beautifully.',
-    tags: ['#ring', '#minimalist', '#recycled'],
-    emoji: 'radio_button_unchecked',
-    image: '/images/natural_slim_ring.png',
-  },
-  {
-    id: 'grace-1',
-    name: 'Crystal Drop Earrings',
-    category: 'grace',
-    categoryLabel: 'Grace',
-    price: '₱650',
-    desc: 'Hand-set Swarovski-grade crystals cascade gracefully from 18K gold-plated hooks. Pure refined elegance.',
-    tags: ['#crystal', '#goldplated', '#luxury'],
-    emoji: 'diamond',
-    image: '/images/grace_crystal_earrings.png',
-  },
-  {
-    id: 'grace-2',
-    name: 'Statement Choker',
-    category: 'grace',
-    categoryLabel: 'Grace',
-    price: '₱780',
-    desc: 'Layered gold-tone chain choker with a vintage clasp. Makes a bold statement at any occasion.',
-    tags: ['#choker', '#statement', '#vintage'],
-    emoji: 'blur_circular',
-    image: '/images/grace_statement_choker.png',
-  },
-  {
-    id: 'grace-3',
-    name: 'Layered Bracelet Set',
-    category: 'grace',
-    categoryLabel: 'Grace',
-    price: '₱590',
-    desc: 'Curated set of three gold-plated bracelets — chain, beaded, and twisted rope — designed to layer together.',
-    tags: ['#set', '#layered', '#goldplated'],
-    emoji: 'layers',
-    image: '/images/grace_layered_bracelet_set.png',
-  },
-  {
-    id: 'lush-1',
-    name: 'Shell Drop Earrings',
-    category: 'lush',
-    categoryLabel: 'Lush',
-    price: '₱420',
-    desc: 'Natural white shells with coral-tinted trim, wire-wrapped on brass hooks. Effortless tropical charm.',
-    tags: ['#shell', '#boho', '#tropical'],
-    emoji: 'sunny',
-    image: '/images/lush_shell_earrings.png',
-  },
-  {
-    id: 'lush-2',
-    name: 'Turquoise Beaded Bracelet',
-    category: 'lush',
-    categoryLabel: 'Lush',
-    price: '₱360',
-    desc: 'Genuine turquoise beads hand-knotted on stretch elastic. Bold colour that catches the light.',
-    tags: ['#turquoise', '#beaded', '#bold'],
-    emoji: 'blur_on',
-    image: '/images/lush_turquoise_bracelet.png',
-  },
-  {
-    id: 'lush-3',
-    name: 'Floral Charm Anklet',
-    category: 'lush',
-    categoryLabel: 'Lush',
-    price: '₱310',
-    desc: 'Dainty brass chain with hand-painted enamel flower charms. Playful, colourful, and adjustable.',
-    tags: ['#anklet', '#floral', '#enamel'],
-    emoji: 'local_florist',
-    image: '/images/lush_floral_anklet.png',
-  },
-];
+const emojiMap = {
+  'Earrings': 'circle',
+  'Rings': 'radio_button_unchecked',
+  'Bracelets': 'link',
+  'Necklaces': 'blur_circular',
+  'Anklets': 'local_florist'
+};
+
+let PRODUCTS = [];
 
 /* ── CART ── */
-let cartCount = 0;
+let cart = [];
 
-function addToCart(product) {
-  cartCount++;
+function loadCart() {
+  try {
+    cart = JSON.parse(localStorage.getItem('ngl_cart') || '[]');
+  } catch {
+    cart = [];
+  }
+  updateCartCount();
+}
+
+function saveCart() {
+  localStorage.setItem('ngl_cart', JSON.stringify(cart));
+  updateCartCount();
+}
+
+function updateCartCount() {
+  const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
   const el = document.querySelector('.cart-count');
   if (el) {
-    el.textContent = cartCount;
-    el.setAttribute('aria-label', `${cartCount} item${cartCount !== 1 ? 's' : ''}`);
+    el.textContent = totalQty;
+    el.setAttribute('aria-label', `${totalQty} item${totalQty !== 1 ? 's' : ''}`);
+  }
+}
+
+function addToCart(product) {
+  const existing = cart.find(item => item.id === product.id);
+  if (existing) {
+    existing.quantity = Math.min(existing.quantity + 1, 99);
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      collection: product.categoryLabel,
+      price: product.price, // Number
+      image_url: product.image,
+      quantity: 1
+    });
+  }
+  saveCart();
+
+  // Animate cart badge
+  const el = document.querySelector('.cart-count');
+  if (el) {
     el.animate(
       [{ transform: 'scale(1)' }, { transform: 'scale(1.45)' }, { transform: 'scale(1)' }],
       { duration: 280, easing: 'cubic-bezier(0.34,1.56,0.64,1)' }
@@ -242,7 +192,7 @@ function openModal(product) {
   modalBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:10px">${product.emoji}</span>${product.categoryLabel}`;
   modalName.textContent  = product.name;
   modalPrice.className   = `modal-price modal-price--${product.category}`;
-  modalPrice.textContent = product.price;
+  modalPrice.textContent = formatPrice(product.price);
   modalDesc.textContent  = product.desc;
   modalTags.innerHTML    = product.tags.map(t => `<span class="modal-tag">${t}</span>`).join('');
   modalCartBtn.innerHTML = `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`;
@@ -286,7 +236,7 @@ function buildSwipeCard(product) {
   card.className = `swipe-card swipe-card--${product.category}`;
   card.dataset.id = product.id;
   card.setAttribute('role', 'article');
-  card.setAttribute('aria-label', `${product.name} — ${product.price}`);
+  card.setAttribute('aria-label', `${product.name} — ${formatPrice(product.price)}`);
 
   card.innerHTML = `
     <div class="card-overlay card-overlay--like" aria-hidden="true">
@@ -309,7 +259,7 @@ function buildSwipeCard(product) {
       <p class="card-desc">${product.desc}</p>
       <div class="card-tags">${product.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
       <div class="card-price-row">
-        <span class="card-price">${product.price}</span>
+        <span class="card-price">${formatPrice(product.price)}</span>
         <button class="card-view-btn" data-id="${product.id}" aria-label="View full details">
           <span class="material-symbols-outlined">open_in_full</span> View
         </button>
@@ -502,21 +452,29 @@ class SwipeStack {
 }
 
 /* ── GRID RENDERER ── */
+let activeFilter = 'all';
+
 function buildProductCard(product) {
   const card = document.createElement('div');
-  card.className = 'product-card';
+  card.className = `product-card product-card--${product.category}`;
+  card.dataset.id = product.id;
   card.innerHTML = `
     <div class="product-card-image">
-      <img src="${product.image}" alt="${product.name}" loading="lazy" />
+      <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <div class="product-card-overlay" aria-hidden="true">
+        <button class="overlay-quick-add" aria-label="Add ${product.name} to cart">
+          <span class="material-symbols-outlined">add_shopping_cart</span>
+          Add to Cart
+        </button>
+      </div>
     </div>
     <div class="product-card-body">
       <span class="product-card-badge badge--${product.category}">${product.categoryLabel}</span>
       <h3 class="product-card-name">${product.name}</h3>
-      <p class="product-card-desc">${product.desc}</p>
       <div class="product-card-footer">
-        <span class="product-card-price">${product.price}</span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="card-view-btn grid-view-btn" aria-label="View full details">
+        <span class="product-card-price">${formatPrice(product.price)}</span>
+        <div class="product-card-actions">
+          <button class="card-view-btn grid-view-btn" aria-label="View ${product.name} details">
             <span class="material-symbols-outlined">open_in_full</span>
           </button>
           <button class="btn-add-cart" aria-label="Add ${product.name} to cart">
@@ -527,23 +485,58 @@ function buildProductCard(product) {
       </div>
     </div>
   `;
-  card.querySelector('.btn-add-cart').addEventListener('click', function () {
+
+  function handleAdd(btn, isOverlay) {
     addToCart(product);
-    this.classList.add('added');
-    this.innerHTML = `<span class="material-symbols-outlined">check</span> Added`;
+    btn.classList.add('added');
+    btn.innerHTML = isOverlay
+      ? `<span class="material-symbols-outlined">check</span> Added!`
+      : `<span class="material-symbols-outlined">check</span> Added`;
     setTimeout(() => {
-      this.classList.remove('added');
-      this.innerHTML = `<span class="material-symbols-outlined">add_shopping_cart</span> Add`;
+      btn.classList.remove('added');
+      btn.innerHTML = isOverlay
+        ? `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`
+        : `<span class="material-symbols-outlined">add_shopping_cart</span> Add`;
     }, 2000);
+  }
+
+  card.querySelector('.overlay-quick-add')?.addEventListener('click', function () {
+    handleAdd(this, true);
   });
-  card.querySelector('.grid-view-btn').addEventListener('click', () => openModal(product));
+  card.querySelector('.btn-add-cart')?.addEventListener('click', function () {
+    handleAdd(this, false);
+  });
+  card.querySelector('.grid-view-btn')?.addEventListener('click', () => openModal(product));
   return card;
 }
 
 function renderGrid() {
   const grid = document.getElementById('products-grid');
-  if (!grid || grid.children.length) return;
-  PRODUCTS.forEach(p => grid.appendChild(buildProductCard(p)));
+  if (!grid) return;
+  const filtered = activeFilter === 'all'
+    ? PRODUCTS
+    : PRODUCTS.filter(p => p.category === activeFilter);
+  grid.innerHTML = '';
+  filtered.forEach((p, i) => {
+    const card = buildProductCard(p);
+    card.style.setProperty('--stagger-i', String(Math.min(i, 8)));
+    grid.appendChild(card);
+  });
+}
+
+/* ── SKELETON LOADER ── */
+function showSkeleton() {
+  const stack = document.getElementById('card-stack');
+  if (!stack) return;
+  stack.innerHTML = `
+    <div class="swipe-skeleton" aria-hidden="true">
+      <div class="skeleton-slab"></div>
+      <div class="skeleton-body-area">
+        <div class="skeleton-bar skeleton-bar--badge"></div>
+        <div class="skeleton-bar skeleton-bar--name"></div>
+        <div class="skeleton-bar skeleton-bar--price"></div>
+      </div>
+    </div>`;
 }
 
 /* ── SHOP INIT ── */
@@ -557,6 +550,7 @@ let swipeStack = null;
 
 function initSwipeStack() {
   if (!swipeStack && cardStackEl) {
+    cardStackEl.innerHTML = '';
     swipeStack = new SwipeStack(cardStackEl, PRODUCTS);
   }
 }
@@ -588,7 +582,93 @@ document.getElementById('btn-action-skip')?.addEventListener('click', () => swip
 document.getElementById('btn-action-like')?.addEventListener('click', () => swipeStack?.like());
 document.getElementById('btn-reset-swipe')?.addEventListener('click', () => swipeStack?.reset());
 
-showSwipeView();
+document.querySelectorAll('.filter-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    
+    // Change body theme based on filter
+    document.body.classList.remove('theme-natural', 'theme-grace', 'theme-lush');
+    if (activeFilter !== 'all') {
+      document.body.classList.add(`theme-${activeFilter}`);
+    }
+    
+    // Update description
+    const descMap = {
+      'all': `
+        <span class="desc-subtitle"><span style="opacity:0.5">✦</span> The Full Collection <span style="opacity:0.5">✦</span></span>
+        <span class="desc-body">Browse our complete range of premium, waterproof jewelry.</span>
+      `,
+      'natural': `
+        <span class="desc-subtitle"><span style="opacity:0.5">✽</span> Everyday Essentials <span style="opacity:0.5">✽</span></span>
+        <span class="desc-body">Minimalist and versatile pieces that effortlessly complement casual outfits.</span>
+      `,
+      'grace': `
+        <span class="desc-subtitle"><span style="opacity:0.5; font-size:14px">⟡</span> Formal & Glamorous <span style="opacity:0.5; font-size:14px">⟡</span></span>
+        <span class="desc-body">Bold, refined statement pieces created for special occasions.</span>
+      `,
+      'lush': `
+        <span class="desc-subtitle"><span style="opacity:0.5; font-size:14px">☼</span> Resort & Vacation <span style="opacity:0.5; font-size:14px">☼</span></span>
+        <span class="desc-body">Refreshing, vibrant pieces inspired by tropical destinations.</span>
+      `
+    };
+    const descEl = document.getElementById('collection-desc');
+    if (descEl) {
+      descEl.style.opacity = '0';
+      descEl.style.transform = 'translateY(10px)';
+      setTimeout(() => {
+        descEl.innerHTML = descMap[activeFilter] || descMap['all'];
+        descEl.style.opacity = '1';
+        descEl.style.transform = 'translateY(0)';
+      }, 200); // Wait for fade out
+    }
+    
+    renderGrid();
+  });
+});
+
+// Cart button click listener
+document.querySelector('.cart-btn')?.addEventListener('click', () => {
+  window.location.href = '/checkout.html';
+});
+
+// Dynamic Loader Function
+async function initShop() {
+  loadCart();
+  showSkeleton();
+  try {
+    const rawProducts = await getProducts();
+    PRODUCTS = rawProducts.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.collection.toLowerCase(),
+      categoryLabel: p.collection,
+      price: Number(p.price),
+      desc: p.description || '',
+      tags: p.tags || [],
+      emoji: emojiMap[p.category] || 'diamond',
+      image: p.image_url || ''
+    }));
+
+    const params = new URLSearchParams(window.location.search);
+    const collectionParam = params.get('collection');
+
+    if (collectionParam) {
+      showGridView();
+      const pill = document.querySelector(`.filter-pill[data-filter="${collectionParam}"]`);
+      if (pill) pill.click();
+    } else {
+      showSwipeView();
+    }
+  } catch (err) {
+    console.error('Failed to load products:', err);
+    // Show empty state or message
+    showSwipeView();
+  }
+}
+
+initShop();
 
 /* ── FULLSCREEN SWIPE MODE ── */
 (function () {

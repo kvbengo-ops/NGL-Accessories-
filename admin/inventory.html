@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory — NGL Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="admin-page">
+  <div id="sidebar-container"></div>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div>
+        <h1 class="admin-page-title">Inventory</h1>
+        <p class="admin-page-subtitle">Manage products and stock levels</p>
+      </div>
+      <button class="admin-header-btn" id="btn-add-product">
+        <span class="material-symbols-outlined">add</span>
+        Add Product
+      </button>
+    </header>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="inv-search" class="admin-search" placeholder="Search products…" />
+      </div>
+      <select id="inv-filter-collection" class="admin-select">
+        <option value="">All Collections</option>
+        <option value="Natural">Natural</option>
+        <option value="Grace">Grace</option>
+        <option value="Lush">Lush</option>
+      </select>
+      <select id="inv-filter-category" class="admin-select">
+        <option value="">All Categories</option>
+        <option value="Earrings">Earrings</option>
+        <option value="Rings">Rings</option>
+        <option value="Bracelets">Bracelets</option>
+        <option value="Necklaces">Necklaces</option>
+        <option value="Anklets">Anklets</option>
+      </select>
+      <select id="inv-filter-stock" class="admin-select">
+        <option value="">All Stock</option>
+        <option value="low">Low Stock</option>
+        <option value="out">Out of Stock</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <section class="admin-card">
+      <div class="table-wrap">
+        <table class="admin-table" id="inventory-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Collection</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-body">
+            <tr><td colspan="7" class="table-loading">Loading inventory…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="admin-modal-backdrop" id="product-modal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="product-modal-title">Add Product</h2>
+        <button class="modal-close-btn" id="close-product-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form class="modal-form" id="product-form" novalidate>
+        <input type="hidden" id="product-id" />
+        <div class="form-field" style="margin-bottom: 16px;">
+          <label class="form-label" for="p-name">Product Name *</label>
+          <input type="text" id="p-name" class="form-input" required />
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="p-cost">Cost (₱)</label>
+            <input type="number" id="p-cost" class="form-input" min="0" step="0.01" value="0" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="p-price">Selling Price (₱) *</label>
+            <input type="number" id="p-price" class="form-input" min="0" step="0.01" required />
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="p-collection">Collection *</label>
+            <select id="p-collection" class="form-input" required>
+              <option value="">Select…</option>
+              <option>Natural</option>
+              <option>Grace</option>
+              <option>Lush</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="p-category">Category *</label>
+            <select id="p-category" class="form-input" required>
+              <option value="">Select…</option>
+              <option>Earrings</option>
+              <option>Rings</option>
+              <option>Bracelets</option>
+              <option>Necklaces</option>
+              <option>Anklets</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="p-stock">Initial Stock *</label>
+            <input type="number" id="p-stock" class="form-input" min="0" value="0" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="p-threshold">Low Stock Alert At</label>
+            <input type="number" id="p-threshold" class="form-input" min="1" value="5" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="p-image-file">Product Image</label>
+          <div class="img-upload-zone" id="img-upload-zone">
+            <input type="file" id="p-image-file" accept="image/*" class="img-upload-input"
+              aria-label="Upload product image" />
+            <img id="img-upload-preview" class="img-upload-preview" alt="Product preview" />
+            <div class="img-upload-placeholder" id="img-upload-placeholder">
+              <span class="material-symbols-outlined">photo_camera</span>
+              <p id="img-upload-cta">Click to upload or drag &amp; drop</p>
+              <small class="img-upload-hint">PNG, JPG, WebP — max 5 MB</small>
+            </div>
+            <div class="img-upload-overlay" id="img-upload-overlay">
+              <span class="material-symbols-outlined img-upload-spinner-icon">progress_activity</span>
+              <span class="img-upload-overlay-text">Uploading…</span>
+            </div>
+            <button type="button" class="img-upload-clear" id="img-upload-clear"
+              aria-label="Remove image" title="Remove image">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <input type="hidden" id="p-image-existing" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="p-desc">Description</label>
+          <textarea id="p-desc" class="form-input form-textarea" rows="3"></textarea>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="p-tags">Tags (comma separated)</label>
+          <input type="text" id="p-tags" class="form-input" placeholder="#minimalist, #everyday" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-admin-ghost" id="cancel-product-modal">Cancel</button>
+          <button type="submit" class="btn-admin-primary" id="save-product-btn">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/src/inventory.js"></script>
+</body>
+</html>

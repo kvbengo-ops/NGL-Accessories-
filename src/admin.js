@@ -1,0 +1,158 @@
+/* ============================================================
+   NGL Accessories — Admin Shared Utilities
+   Auth guard · Sidebar · Toasts · Helpers
+   ============================================================ */
+import { supabase, getCurrentAdmin } from './supabase.js';
+
+/* ── Auth Guard ──────────────────────────────────────────── */
+export async function requireAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = '/admin/login.html';
+    throw new Error('Not authenticated');
+  }
+  const admin = await getCurrentAdmin();
+  if (!admin || !admin.is_active) {
+    await supabase.auth.signOut();
+    window.location.href = '/admin/login.html';
+    throw new Error('Not an active admin');
+  }
+  // Update last login
+  await supabase.from('admins').update({ last_login: new Date().toISOString() }).eq('id', admin.id);
+  return admin;
+}
+
+export async function requireSuperadmin() {
+  const admin = await requireAuth();
+  if (admin.role !== 'superadmin') {
+    showToast('Access denied — superadmin only', 'error');
+    setTimeout(() => window.location.href = '/admin/dashboard.html', 1500);
+    throw new Error('Not a superadmin');
+  }
+  return admin;
+}
+
+export async function logout() {
+  await supabase.auth.signOut();
+  window.location.href = '/admin/login.html';
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+export function renderSidebar(activePage, admin) {
+  const nav = [
+    { section: 'Overview' },
+    { href: '/admin/dashboard.html', icon: 'dashboard',       label: 'Dashboard' },
+    { href: '/admin/tasks.html',     icon: 'task_alt',        label: 'Tasks'     },
+    { section: 'Operations' },
+    { href: '/admin/inventory.html', icon: 'inventory_2',     label: 'Inventory' },
+    { href: '/admin/orders.html',    icon: 'receipt_long',    label: 'Orders'    },
+    { href: '/admin/pos.html',       icon: 'point_of_sale',   label: 'POS'       },
+    { href: '/admin/expenses.html',  icon: 'receipt',         label: 'Expenses'  },
+    { section: 'Settings', superadminOnly: true },
+    { href: '/admin/admins.html',    icon: 'manage_accounts', label: 'Admins', superadminOnly: true },
+  ];
+
+  const isSuperadmin = admin?.role === 'superadmin';
+  const navHtml = nav
+    .filter(n => !n.superadminOnly || isSuperadmin)
+    .map(n => n.section
+      ? `<span class="sidebar-nav-section">${n.section}</span>`
+      : `<a href="${n.href}" class="sidebar-link ${activePage === n.label ? 'active' : ''}">
+           <span class="material-symbols-outlined">${n.icon}</span>
+           <span>${n.label}</span>
+         </a>`)
+    .join('');
+
+  const html = `
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-mark">
+          <span class="material-symbols-outlined">diamond</span>
+        </div>
+        <div class="sidebar-brand-text">
+          <span class="sidebar-logo">NGL</span>
+          <span class="sidebar-subbrand">Admin Portal</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">${navHtml}</nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">${admin?.name ? admin.name[0].toUpperCase() : 'A'}</div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name">${admin?.name || 'Admin'}</span>
+            <span class="sidebar-user-role">${admin?.role || 'admin'}</span>
+          </div>
+        </div>
+        <button class="sidebar-logout" id="sidebar-logout">
+          <span class="material-symbols-outlined">logout</span>
+          Sign out
+        </button>
+      </div>
+    </aside>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+  `;
+
+  const container = document.getElementById('sidebar-container');
+  if (container) {
+    container.innerHTML = html;
+    document.getElementById('sidebar-logout')?.addEventListener('click', logout);
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+      document.getElementById('admin-sidebar')?.classList.toggle('open');
+    });
+  }
+}
+
+/* ── Toast Notifications ─────────────────────────────────── */
+let toastTimer = null;
+export function showToast(msg, type = 'success') {
+  let toast = document.getElementById('admin-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    toast.className = 'admin-toast';
+    document.body.appendChild(toast);
+  }
+  const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' };
+  toast.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'check_circle'}</span>${msg}`;
+  toast.className = `admin-toast admin-toast--${type} visible`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 3500);
+}
+
+/* ── Format helpers ──────────────────────────────────────── */
+export function formatPrice(n) {
+  return `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+}
+
+export function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-PH', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+export function statusBadge(status) {
+  const map = {
+    pending:    'badge--warning',
+    processing: 'badge--info',
+    shipped:    'badge--purple',
+    delivered:  'badge--success',
+    completed:  'badge--success',
+    cancelled:  'badge--error',
+    voided:     'badge--error',
+  };
+  return `<span class="status-badge ${map[status] || ''}">${status}</span>`;
+}
+
+/* ── Modal helpers ───────────────────────────────────────── */
+export function openModal(id) {
+  document.getElementById(id)?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+export function closeModal(id) {
+  document.getElementById(id)?.classList.remove('open');
+  document.body.style.overflow = '';
+}

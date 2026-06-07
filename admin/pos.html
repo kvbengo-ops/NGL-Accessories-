@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>POS Terminal — NGL Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="admin-page admin-page--pos">
+  <div id="sidebar-container"></div>
+
+  <main class="pos-layout">
+
+    <!-- LEFT: Product Grid -->
+    <div class="pos-products">
+      <div class="pos-products-header">
+        <div class="search-wrap">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input type="text" id="pos-search" class="admin-search" placeholder="Search products…" />
+        </div>
+        <div class="pos-filter-tabs" id="pos-filter-tabs">
+          <button class="pos-tab active" data-collection="">All</button>
+          <button class="pos-tab" data-collection="Natural">Natural</button>
+          <button class="pos-tab" data-collection="Grace">Grace</button>
+          <button class="pos-tab" data-collection="Lush">Lush</button>
+        </div>
+      </div>
+      <div class="pos-product-grid" id="pos-product-grid">
+        <div class="table-loading">Loading products…</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Cart / Transaction -->
+    <div class="pos-cart">
+      <div class="pos-cart-header">
+        <h2 class="pos-cart-title">
+          <span class="material-symbols-outlined">shopping_cart</span>
+          Transaction
+        </h2>
+        <button class="pos-clear-btn" id="pos-clear-cart" title="Clear cart">
+          <span class="material-symbols-outlined">delete_sweep</span>
+        </button>
+      </div>
+
+      <div class="pos-cart-items" id="pos-cart-items">
+        <div class="pos-cart-empty" id="pos-cart-empty">
+          <span class="material-symbols-outlined">shopping_cart</span>
+          <p>No items added yet</p>
+          <p class="pos-empty-hint">Click products on the left to add them</p>
+        </div>
+      </div>
+
+      <div class="pos-cart-footer">
+        <div class="pos-discount-row">
+          <label class="pos-discount-label" for="pos-discount">Discount (₱)</label>
+          <input type="number" id="pos-discount" class="pos-discount-input" min="0" value="0" />
+        </div>
+        <div class="pos-totals">
+          <div class="pos-total-row">
+            <span>Subtotal</span>
+            <span id="pos-subtotal">₱0.00</span>
+          </div>
+          <div class="pos-total-row pos-total-row--discount" id="pos-discount-row" style="display:none">
+            <span>Discount</span>
+            <span id="pos-discount-display">-₱0.00</span>
+          </div>
+          <div class="pos-total-row pos-total-row--grand">
+            <span>Total</span>
+            <span id="pos-total">₱0.00</span>
+          </div>
+        </div>
+
+        <!-- Payment method -->
+        <div class="pos-payment-tabs">
+          <button class="pos-pay-tab active" data-method="cash">
+            <span class="material-symbols-outlined">payments</span>Cash
+          </button>
+          <button class="pos-pay-tab" data-method="gcash">
+            <span class="material-symbols-outlined">phone_iphone</span>GCash
+          </button>
+          <button class="pos-pay-tab" data-method="card">
+            <span class="material-symbols-outlined">credit_card</span>Card
+          </button>
+        </div>
+
+        <button class="pos-charge-btn" id="pos-charge-btn" disabled>
+          <span class="material-symbols-outlined">point_of_sale</span>
+          Charge
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Payment Modal -->
+  <div class="admin-modal-backdrop" id="payment-modal">
+    <div class="admin-modal admin-modal--payment">
+      <div class="modal-header">
+        <h2 class="modal-title">Process Payment</h2>
+        <button class="modal-close-btn" id="close-payment-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="payment-modal-body">
+        <div class="payment-total-display">
+          <span class="payment-total-label">Total Due</span>
+          <span class="payment-total-value" id="payment-total-value">₱0.00</span>
+        </div>
+
+        <!-- Cash tendered (shown for cash) -->
+        <div id="cash-section">
+          <div class="form-field">
+            <label class="form-label" for="cash-tendered">Cash Tendered (₱)</label>
+            <input type="number" id="cash-tendered" class="form-input form-input--xl" min="0" placeholder="0.00" />
+          </div>
+          <div class="change-display" id="change-display" style="display:none">
+            <span class="change-label">Change</span>
+            <span class="change-value" id="change-value">₱0.00</span>
+          </div>
+        </div>
+
+        <!-- GCash / Card ref -->
+        <div id="ref-section" style="display:none">
+          <div class="form-field">
+            <label class="form-label" for="payment-ref">Reference Number (optional)</label>
+            <input type="text" id="payment-ref" class="form-input" placeholder="GCash / Card ref #" />
+          </div>
+        </div>
+
+        <div class="payment-modal-actions">
+          <button class="btn-admin-ghost" id="cancel-payment">Cancel</button>
+          <button class="btn-admin-primary btn-admin-primary--large" id="confirm-payment" disabled>
+            <span class="material-symbols-outlined">check_circle</span>
+            Confirm Sale
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div class="admin-modal-backdrop" id="receipt-modal">
+    <div class="admin-modal admin-modal--receipt">
+      <div class="modal-header">
+        <h2 class="modal-title">Receipt</h2>
+        <button class="modal-close-btn" id="close-receipt-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="receipt-body" id="receipt-body"></div>
+      <div class="receipt-actions">
+        <button class="btn-admin-ghost" id="print-receipt">
+          <span class="material-symbols-outlined">print</span>
+          Print
+        </button>
+        <button class="btn-admin-primary" id="new-transaction">
+          <span class="material-symbols-outlined">add</span>
+          New Sale
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/pos.js"></script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+/* ============================================================
+   NGL Admin — Orders Management
+   ============================================================ */
+import { supabase, getOrders, updateOrderStatus } from '../src/supabase.js';
+import { requireAuth, renderSidebar, showToast, formatPrice, formatDate, statusBadge, openModal, closeModal } from '../src/admin.js';
+
+let allOrders = [];
+
+const ONLINE_STATUSES = ['pending','processing','shipped','delivered','cancelled'];
+const POS_STATUSES    = ['completed','voided'];
+
+(async () => {
+  const admin = await requireAuth();
+  renderSidebar('Orders', admin);
+  await loadOrders();
+  setupFilters();
+  setupModal();
+  setupExport();
+
+  // Real-time new orders
+  supabase.channel('orders-watch')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, async () => {
+      showToast('New order received!', 'info');
+      await loadOrders();
+    })
+    .subscribe();
+})();
+
+async function loadOrders() {
+  const tbody = document.getElementById('orders-body');
+  tbody.innerHTML = '<tr><td colspan="8" class="table-loading">Loading…</td></tr>';
+  allOrders = await getOrders();
+  renderTable(allOrders);
+}
+
+function renderTable(orders) {
+  const tbody = document.getElementById('orders-body');
+  if (orders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No orders found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map(o => `
+    <tr data-id="${o.id}">
+      <td class="order-num">${o.order_number}</td>
+      <td>${o.customer_name || '—'}</td>
+      <td>${(o.order_items || []).length} item(s)</td>
+      <td><span class="type-badge type-badge--${o.type}">${o.type}</span></td>
+      <td>${formatPrice(o.total)}</td>
+      <td>
+        <select class="status-select" data-order-id="${o.id}" data-type="${o.type}">
+          ${(o.type === 'online' ? ONLINE_STATUSES : POS_STATUSES).map(s =>
+            `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
+      </td>
+      <td class="date-cell">${formatDate(o.created_at)}</td>
+      <td>
+        <button class="action-btn" data-view-id="${o.id}" title="View details">
+          <span class="material-symbols-outlined">open_in_new</span>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Status change
+  document.querySelectorAll('.status-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.orderId;
+      await updateOrderStatus(id, sel.value);
+      showToast('Order status updated');
+    });
+  });
+
+  // View detail
+  document.querySelectorAll('[data-view-id]').forEach(btn => {
+    btn.addEventListener('click', () => showOrderDetail(btn.dataset.viewId));
+  });
+}
+
+/* ── Filters ─────────────────────────────────────────────── */
+function setupFilters() {
+  const search      = document.getElementById('orders-search');
+  const filterType  = document.getElementById('orders-filter-type');
+  const filterStat  = document.getElementById('orders-filter-status');
+
+  function apply() {
+    const q    = search.value.toLowerCase();
+    const type = filterType.value;
+    const stat = filterStat.value;
+    const filtered = allOrders.filter(o => {
+      const matchQ = !q || o.order_number.toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q);
+      const matchT = !type || o.type === type;
+      const matchS = !stat || o.status === stat;
+      return matchQ && matchT && matchS;
+    });
+    renderTable(filtered);
+  }
+  [search, filterType, filterStat].forEach(el => el?.addEventListener('input', apply));
+}
+
+/* ── Order Detail Modal ──────────────────────────────────── */
+function setupModal() {
+  document.getElementById('close-order-modal')?.addEventListener('click', () => closeModal('order-detail-modal'));
+}
+
+function showOrderDetail(id) {
+  const o = allOrders.find(x => x.id === id);
+  if (!o) return;
+
+  const items = (o.order_items || []).map(item => `
+    <div class="order-detail-item">
+      <span class="odi-name">${item.product_name}</span>
+      <span class="odi-qty">×${item.quantity}</span>
+      <span class="odi-price">${formatPrice(item.subtotal)}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('order-detail-number').textContent = o.order_number;
+  document.getElementById('order-detail-content').innerHTML = `
+    <div class="order-detail-grid">
+      <div class="order-detail-section">
+        <h3 class="order-detail-heading">Customer</h3>
+        <p>${o.customer_name || '—'}</p>
+        <p>${o.customer_email || '—'}</p>
+        <p>${o.customer_phone || '—'}</p>
+        ${o.delivery_address ? `<p class="addr">${o.delivery_address}</p>` : ''}
+        ${o.order_notes ? `<p class="notes">Notes: ${o.order_notes}</p>` : ''}
+      </div>
+      <div class="order-detail-section">
+        <h3 class="order-detail-heading">Payment</h3>
+        <p>${o.payment_method || '—'}</p>
+        <p>Type: <span class="type-badge type-badge--${o.type}">${o.type}</span></p>
+        <p>Status: ${statusBadge(o.status)}</p>
+        <p>Date: ${formatDate(o.created_at)}</p>
+      </div>
+    </div>
+    <div class="order-detail-section">
+      <h3 class="order-detail-heading">Items</h3>
+      <div class="order-detail-items">${items || '<p>No items</p>'}</div>
+      <div class="order-detail-totals">
+        <div class="total-row"><span>Subtotal</span><span>${formatPrice(o.subtotal)}</span></div>
+        ${o.discount > 0 ? `<div class="total-row total-row--discount"><span>Discount</span><span>-${formatPrice(o.discount)}</span></div>` : ''}
+        <div class="total-row total-row--grand"><span>Total</span><span>${formatPrice(o.total)}</span></div>
+      </div>
+    </div>
+  `;
+
+  openModal('order-detail-modal');
+}
+
+/* ── CSV Export ──────────────────────────────────────────── */
+function setupExport() {
+  document.getElementById('btn-export-csv')?.addEventListener('click', () => {
+    const headers = ['Order #','Type','Status','Customer','Email','Phone','Total','Payment','Date'];
+    const rows = allOrders.map(o => [
+      o.order_number, o.type, o.status,
+      o.customer_name || '',
+      o.customer_email || '',
+      o.customer_phone || '',
+      o.total,
+      o.payment_method || '',
+      new Date(o.created_at).toLocaleString('en-PH'),
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `ngl-orders-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exported!');
+  });
+}

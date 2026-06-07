@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — NGL Accessories</title>
+  <meta name="description" content="Secure checkout for NGL Accessories — premium hypoallergenic jewelry." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="checkout-page">
+
+  <!-- Nav -->
+  <nav class="checkout-nav">
+    <a href="/index.html" class="checkout-nav-logo">NGL Accessories</a>
+    <div class="checkout-secure">
+      <span class="material-symbols-outlined">lock</span>
+      Secure Checkout
+    </div>
+  </nav>
+
+  <div class="checkout-layout">
+    <!-- Left: Form steps -->
+    <div class="checkout-main">
+      <!-- Step indicator -->
+      <div class="checkout-steps">
+        <div class="checkout-step active" id="step-indicator-1">
+          <span class="step-num">1</span>
+          <span class="step-label">Review Cart</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="checkout-step" id="step-indicator-2">
+          <span class="step-num">2</span>
+          <span class="step-label">Your Details</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="checkout-step" id="step-indicator-3">
+          <span class="step-num">3</span>
+          <span class="step-label">Payment</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Cart Review -->
+      <div class="checkout-step-panel active" id="checkout-step-1">
+        <h2 class="checkout-panel-title">Review Your Cart</h2>
+        <div id="cart-review-items">
+          <div class="table-loading">Loading cart…</div>
+        </div>
+        <div class="checkout-shipping-note" id="checkout-shipping-note"></div>
+        <div class="checkout-step-actions">
+          <a href="/shop.html" class="btn-checkout-ghost">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Continue Shopping
+          </a>
+          <button class="btn-checkout-primary" id="go-step-2" disabled>
+            Next: Your Details
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Customer Details -->
+      <div class="checkout-step-panel" id="checkout-step-2">
+        <h2 class="checkout-panel-title">Your Details</h2>
+        <form class="checkout-form" id="details-form" novalidate>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="form-label" for="c-name">Full Name *</label>
+              <input type="text" id="c-name" class="form-input" required placeholder="Maria Santos" />
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="c-phone">Phone Number *</label>
+              <input type="tel" id="c-phone" class="form-input" required placeholder="09XX XXX XXXX" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="c-email">Email Address *</label>
+            <input type="email" id="c-email" class="form-input" required placeholder="maria@example.com" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="c-address">Delivery Address *</label>
+            <textarea id="c-address" class="form-input form-textarea" rows="3" required
+              placeholder="Street, Barangay, City, Province, ZIP"></textarea>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="c-notes">Order Notes (optional)</label>
+            <textarea id="c-notes" class="form-input form-textarea" rows="2"
+              placeholder="Special instructions for your order…"></textarea>
+          </div>
+          <div class="checkout-step-actions">
+            <button type="button" class="btn-checkout-ghost" id="back-step-1">
+              <span class="material-symbols-outlined">arrow_back</span> Back
+            </button>
+            <button type="submit" class="btn-checkout-primary">
+              Next: Payment
+              <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 3: Payment -->
+      <div class="checkout-step-panel" id="checkout-step-3">
+        <h2 class="checkout-panel-title">Payment Method</h2>
+
+        <div class="payment-options" id="payment-options">
+          <!-- GCash -->
+          <label class="payment-option" for="pay-gcash">
+            <input type="radio" id="pay-gcash" name="payment" value="gcash" class="payment-radio" checked />
+            <div class="payment-option-inner">
+              <span class="material-symbols-outlined payment-option-icon">phone_iphone</span>
+              <div>
+                <span class="payment-option-name">GCash</span>
+                <span class="payment-option-desc">Pay via GCash e-wallet</span>
+              </div>
+              <span class="payment-check material-symbols-outlined">check_circle</span>
+            </div>
+          </label>
+          <!-- GCash details -->
+          <div class="payment-detail-panel" id="gcash-detail">
+            <div class="gcash-info">
+              <div class="gcash-number">
+                <span class="material-symbols-outlined">phone_iphone</span>
+                <span>GCash Number: <strong>09XX-XXX-XXXX</strong></span>
+              </div>
+              <p class="gcash-name">Account Name: <strong>NGL Accessories</strong></p>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="gcash-ref">GCash Reference Number *</label>
+              <input type="text" id="gcash-ref" class="form-input" placeholder="e.g. 123456789012" />
+            </div>
+          </div>
+
+          <!-- Bank Transfer -->
+          <label class="payment-option" for="pay-bank">
+            <input type="radio" id="pay-bank" name="payment" value="bank_transfer" class="payment-radio" />
+            <div class="payment-option-inner">
+              <span class="material-symbols-outlined payment-option-icon">account_balance</span>
+              <div>
+                <span class="payment-option-name">Bank Transfer</span>
+                <span class="payment-option-desc">BDO, BPI, or UnionBank</span>
+              </div>
+              <span class="payment-check material-symbols-outlined">check_circle</span>
+            </div>
+          </label>
+          <div class="payment-detail-panel hidden" id="bank-detail">
+            <div class="bank-info">
+              <p><strong>BDO:</strong> Account # 0012-3456-7890 · NGL Accessories</p>
+              <p><strong>BPI:</strong> Account # 1234-5678-90 · NGL Accessories</p>
+            </div>
+            <div class="form-field">
+              <label class="form-label" for="bank-ref">Bank Reference Number *</label>
+              <input type="text" id="bank-ref" class="form-input" placeholder="Transaction reference #" />
+            </div>
+          </div>
+
+          <!-- COD -->
+          <label class="payment-option" for="pay-cod">
+            <input type="radio" id="pay-cod" name="payment" value="cod" class="payment-radio" />
+            <div class="payment-option-inner">
+              <span class="material-symbols-outlined payment-option-icon">local_shipping</span>
+              <div>
+                <span class="payment-option-name">Cash on Delivery</span>
+                <span class="payment-option-desc">Pay when your order arrives</span>
+              </div>
+              <span class="payment-check material-symbols-outlined">check_circle</span>
+            </div>
+          </label>
+          <div class="payment-detail-panel hidden" id="cod-detail">
+            <p class="cod-note">
+              <span class="material-symbols-outlined">info</span>
+              Please have the exact amount ready. COD available within Metro Manila and nearby areas.
+            </p>
+          </div>
+        </div>
+
+        <div class="checkout-step-actions">
+          <button type="button" class="btn-checkout-ghost" id="back-step-2">
+            <span class="material-symbols-outlined">arrow_back</span> Back
+          </button>
+          <button class="btn-checkout-primary" id="place-order-btn">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            Place Order
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Order Summary -->
+    <div class="checkout-sidebar">
+      <div class="checkout-summary-card">
+        <h3 class="checkout-summary-title">Order Summary</h3>
+        <div id="checkout-summary-items"></div>
+        <div class="checkout-summary-totals">
+          <div class="checkout-total-row">
+            <span>Subtotal</span>
+            <span id="summary-subtotal">₱0.00</span>
+          </div>
+          <div class="checkout-total-row">
+            <span>Shipping</span>
+            <span id="summary-shipping">—</span>
+          </div>
+          <div class="checkout-total-row checkout-total-row--grand">
+            <span>Total</span>
+            <span id="summary-total">₱0.00</span>
+          </div>
+        </div>
+        <div class="checkout-trust">
+          <div class="checkout-trust-item">
+            <span class="material-symbols-outlined">verified_user</span>
+            <span>Secure checkout</span>
+          </div>
+          <div class="checkout-trust-item">
+            <span class="material-symbols-outlined">local_shipping</span>
+            <span>Free shipping over ₱1,500</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/checkout.js"></script>
+</body>
+</html>
