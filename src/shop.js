@@ -503,6 +503,9 @@ function buildProductCard(product) {
           <button class="card-view-btn grid-view-btn" aria-label="View ${product.name} details">
             <span class="material-symbols-outlined">open_in_full</span>
           </button>
+          <button class="card-view-btn grid-like-btn" aria-label="Like ${product.name}" style="transition: color 0.3s">
+            <span class="material-symbols-outlined">favorite</span>
+          </button>
           <button class="btn-add-cart" aria-label="Add ${product.name} to cart">
             <span class="material-symbols-outlined">add_shopping_cart</span>
             Add
@@ -538,6 +541,18 @@ function buildProductCard(product) {
   card.querySelector('.grid-view-btn')?.addEventListener('click', function (e) {
     e.stopPropagation();
     openModal(product);
+  });
+  card.querySelector('.grid-like-btn')?.addEventListener('click', function (e) {
+    e.stopPropagation();
+    trackEngagement(product.id, 'like');
+    this.style.color = 'var(--coral)';
+    this.querySelector('span').style.fontVariationSettings = '"FILL" 1, "wght" 400';
+    const heart = card.querySelector('.like-heart-burst');
+    if (heart) {
+      heart.classList.remove('animate');
+      void heart.offsetWidth; // trigger reflow
+      heart.classList.add('animate');
+    }
   });
 
   // Double tap to like
