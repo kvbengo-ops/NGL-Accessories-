@@ -439,3 +439,27 @@ DROP TRIGGER IF EXISTS expenses_updated_at ON expenses;
 CREATE TRIGGER expenses_updated_at
   BEFORE UPDATE ON expenses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- 9. PRODUCT ENGAGEMENT (Views & Likes)
+-- ============================================================
+
+-- Safely add engagement columns if the table already existed
+DO $$ BEGIN
+  ALTER TABLE products ADD COLUMN likes_count integer DEFAULT 0;
+EXCEPTION WHEN duplicate_column THEN null;
+END $$;
+
+-- A secure remote procedure call to increment likes 
+-- without exposing direct write access to anonymous users.
+CREATE OR REPLACE FUNCTION increment_engagement(product_id uuid, type text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF type = 'like' THEN
+    UPDATE products SET likes_count = COALESCE(likes_count, 0) + 1 WHERE id = product_id;
+  END IF;
+END;
+$$;

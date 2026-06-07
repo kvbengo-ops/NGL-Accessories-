@@ -19,6 +19,18 @@ export async function getProducts() {
   return data;
 }
 
+export async function trackEngagement(productId, type) {
+  try {
+    const { error } = await supabase.rpc('increment_engagement', {
+      product_id: productId,
+      type: type
+    });
+    if (error) console.error('Engagement tracking failed:', error);
+  } catch (err) {
+    console.error('Engagement tracking error:', err);
+  }
+}
+
 export async function getAllProducts() {
   const { data, error } = await supabase
     .from('products')

@@ -1,5 +1,5 @@
 import './style.css';
-import { getProducts } from './supabase.js';
+import { getProducts, trackEngagement } from './supabase.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -224,6 +224,7 @@ document.addEventListener('keydown', (e) => {
 modalCartBtn?.addEventListener('click', () => {
   if (!modalProduct) return;
   addToCart(modalProduct);
+  trackEngagement(modalProduct.id, 'like');
   modalCartBtn.innerHTML = `<span class="material-symbols-outlined">check</span> Added!`;
   modalCartBtn.classList.add('added');
   modalCartBtn.disabled = true;
@@ -305,7 +306,8 @@ class SwipeStack {
 
   _fillStack() {
     while (this.cards.length < 3 && this.index < this.products.length) {
-      const card = buildSwipeCard(this.products[this.index++]);
+      const product = this.products[this.index++];
+      const card = buildSwipeCard(product);
       this._attachDrag(card);
       this.stack.appendChild(card);
       this.cards.push(card);
@@ -408,12 +410,16 @@ class SwipeStack {
     card.style.transform  = `translateX(${offX}) rotate(${direction === 'right' ? 24 : -24}deg)`;
     card.style.opacity    = '0';
 
-    if (direction === 'right' && product) addToCart(product);
+    if (direction === 'right' && product) {
+      addToCart(product);
+      trackEngagement(product.id, 'like');
+    }
 
     setTimeout(() => {
       card.remove();
       this.cards.shift();
       this._fillStack();
+
       this._updateCounter();
       this._checkEmpty();
     }, 420);
@@ -488,6 +494,7 @@ function buildProductCard(product) {
 
   function handleAdd(btn, isOverlay) {
     addToCart(product);
+    trackEngagement(product.id, 'like');
     btn.classList.add('added');
     btn.innerHTML = isOverlay
       ? `<span class="material-symbols-outlined">check</span> Added!`

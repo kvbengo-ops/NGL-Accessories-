@@ -59,6 +59,7 @@ function renderTable(products) {
             </button>
           </div>
         </td>
+        <td><span style="font-weight: 500; color: var(--coral);"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">favorite</span>${p.likes_count || 0}</span></td>
         <td>${stockBadge(inv.stock, inv.low_stock_threshold)}</td>
         <td>
           <div class="action-btns">

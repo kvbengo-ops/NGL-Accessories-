@@ -165,6 +165,29 @@ import { requireAuth, renderSidebar, formatPrice, formatDate, statusBadge } from
       </div>
     `).join('');
   }
+
+  // ── Trending Products ───────────────────────────────────────
+  const trendingEl = document.getElementById('trending-products');
+  if (trendingEl) {
+    const trending = products
+      .filter(p => (p.likes_count > 0))
+      .sort((a, b) => {
+        return (b.likes_count || 0) - (a.likes_count || 0);
+      })
+      .slice(0, 5);
+
+    if (trending.length === 0) {
+      trendingEl.innerHTML = '<p class="table-empty">No engagement data yet</p>';
+    } else {
+      trendingEl.innerHTML = trending.map((p, i) => `
+        <div class="top-product-row">
+          <span class="top-rank" style="color:var(--gold-300)">${i + 1}</span>
+          <span class="top-name">${p.name}</span>
+          <span class="top-rev" style="color:var(--coral)"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">favorite</span> ${p.likes_count || 0}</span>
+        </div>
+      `).join('');
+    }
+  }
 })();
 
 /* ── Canvas Bar Chart ────────────────────────────────────── */
