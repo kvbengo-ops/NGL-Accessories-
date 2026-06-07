@@ -16,6 +16,18 @@ let currentUser = null;
   await loadAdmins();
   await refreshTasks();
 
+  // Check for deep link
+  const params = new URLSearchParams(window.location.search);
+  const taskId = params.get('id');
+  if (taskId) {
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) {
+      openTaskModal(task);
+    }
+    // Clean up URL without refreshing
+    window.history.replaceState({}, '', '/admin/tasks.html');
+  }
+
   // Filter bindings
   document.getElementById('tasks-search').addEventListener('input', renderTasks);
   document.getElementById('tasks-filter-status').addEventListener('change', renderTasks);

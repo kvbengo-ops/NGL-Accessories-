@@ -19,6 +19,8 @@ export default defineConfig({
         'admin-orders': resolve(__dirname, 'admin/orders.html'),
         'admin-pos': resolve(__dirname, 'admin/pos.html'),
         'admin-admins': resolve(__dirname, 'admin/admins.html'),
+        'admin-tasks': resolve(__dirname, 'admin/tasks.html'),
+        'admin-expenses': resolve(__dirname, 'admin/expenses.html'),
       },
     },
   },
