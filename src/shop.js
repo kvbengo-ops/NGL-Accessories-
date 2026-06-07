@@ -250,7 +250,10 @@ function buildSwipeCard(product) {
         <span class="material-symbols-outlined">close</span> Skip
       </div>
     </div>
-    ${product.image ? `<div class="card-image"><img src="${product.image}" alt="${product.name}" loading="lazy" /></div>` : ''}
+    ${product.image ? `<div class="card-image" style="position:relative;">
+      <img src="${product.image}" alt="${product.name}" loading="lazy" />
+      <span class="material-symbols-outlined like-heart-burst">favorite</span>
+    </div>` : ''}
     <div class="card-body">
       <span class="card-category-badge">
         <span class="material-symbols-outlined">${product.emoji}</span>
@@ -272,6 +275,22 @@ function buildSwipeCard(product) {
   card.querySelector('.card-view-btn')?.addEventListener('click', (e) => {
     e.stopPropagation();
     openModal(product);
+  });
+
+  // Double tap to like
+  let lastTap = 0;
+  card.querySelector('.card-image')?.addEventListener('click', function(e) {
+    const now = new Date().getTime();
+    const timesince = now - lastTap;
+    if (timesince < 400 && timesince > 0) {
+      // Double tap!
+      trackEngagement(product.id, 'like');
+      const heart = this.querySelector('.like-heart-burst');
+      heart.classList.remove('animate');
+      void heart.offsetWidth; // trigger reflow
+      heart.classList.add('animate');
+    }
+    lastTap = new Date().getTime();
   });
 
   return card;
@@ -465,8 +484,9 @@ function buildProductCard(product) {
   card.className = `product-card product-card--${product.category}`;
   card.dataset.id = product.id;
   card.innerHTML = `
-    <div class="product-card-image">
+    <div class="product-card-image" style="position:relative;">
       <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-overlay" aria-hidden="true">
         <button class="overlay-quick-add" aria-label="Add ${product.name} to cart">
           <span class="material-symbols-outlined">add_shopping_cart</span>
@@ -507,13 +527,35 @@ function buildProductCard(product) {
     }, 2000);
   }
 
-  card.querySelector('.overlay-quick-add')?.addEventListener('click', function () {
+  card.querySelector('.overlay-quick-add')?.addEventListener('click', function (e) {
+    e.stopPropagation();
     handleAdd(this, true);
   });
-  card.querySelector('.btn-add-cart')?.addEventListener('click', function () {
+  card.querySelector('.btn-add-cart')?.addEventListener('click', function (e) {
+    e.stopPropagation();
     handleAdd(this, false);
   });
-  card.querySelector('.grid-view-btn')?.addEventListener('click', () => openModal(product));
+  card.querySelector('.grid-view-btn')?.addEventListener('click', function (e) {
+    e.stopPropagation();
+    openModal(product);
+  });
+
+  // Double tap to like
+  let lastTap = 0;
+  card.querySelector('.product-card-image')?.addEventListener('click', function(e) {
+    const now = new Date().getTime();
+    const timesince = now - lastTap;
+    if (timesince < 400 && timesince > 0) {
+      // Double tap!
+      trackEngagement(product.id, 'like');
+      const heart = this.querySelector('.like-heart-burst');
+      heart.classList.remove('animate');
+      void heart.offsetWidth; // trigger reflow
+      heart.classList.add('animate');
+    }
+    lastTap = new Date().getTime();
+  });
+
   return card;
 }
 
