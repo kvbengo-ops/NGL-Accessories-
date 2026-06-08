@@ -299,12 +299,14 @@ async function completeSale() {
     const discount = getDiscount();
     const total    = getTotal();
     const orderNum = generateOrderNumber();
+    const refInput = document.getElementById('payment-ref');
+    const paymentMethod = payMethod === 'cash' ? 'cash' : (refInput?.value ? `${payMethod} (${refInput.value})` : payMethod);
 
     const order = await createOrder({
       order_number:   orderNum,
       type:           'pos',
       status:         'completed',
-      payment_method: payMethod,
+      payment_method: paymentMethod,
       subtotal,
       discount,
       total,

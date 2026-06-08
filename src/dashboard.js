@@ -5,7 +5,7 @@ import {
   supabase, getOrders, getSalesSummary, 
   getAllProducts, getTasks, getExpenses
 } from '../src/supabase.js';
-import { requireAuth, renderSidebar, formatPrice, formatDate, statusBadge } from '../src/admin.js';
+import { requireAuth, renderSidebar, formatPrice, formatDate, statusBadge, escapeHtml } from '../src/admin.js';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
@@ -184,7 +184,7 @@ function startTour() {
     tbody.innerHTML = recent.map(o => `
       <tr>
         <td class="order-num">${o.order_number}</td>
-        <td>${o.customer_name || '—'}</td>
+        <td>${escapeHtml(o.customer_name) || '—'}</td>
         <td><span class="type-badge type-badge--${o.type}">${o.type}</span></td>
         <td>${formatPrice(o.total)}</td>
         <td>${statusBadge(o.status)}</td>

@@ -126,9 +126,17 @@ function updateCartCount() {
 }
 
 function addToCart(product) {
+  if (product.stock <= 0) {
+    showToast(`Sorry, ${product.name} is out of stock.`);
+    return false;
+  }
   const existing = cart.find(item => item.id === product.id);
   if (existing) {
-    existing.quantity = Math.min(existing.quantity + 1, 99);
+    if (existing.quantity >= product.stock) {
+      showToast(`Cannot add more. Only ${product.stock} in stock.`);
+      return false;
+    }
+    existing.quantity = Math.min(existing.quantity + 1, product.stock, 99);
   } else {
     cart.push({
       id: product.id,
@@ -136,6 +144,7 @@ function addToCart(product) {
       collection: product.categoryLabel,
       price: product.price, // Number
       image_url: product.image,
+      stock: product.stock,
       quantity: 1
     });
   }
@@ -150,6 +159,7 @@ function addToCart(product) {
     );
   }
   showToast(`${product.name} added to cart`);
+  return true;
 }
 
 /* ── TOAST ── */
@@ -195,8 +205,13 @@ function openModal(product) {
   modalPrice.textContent = formatPrice(product.price);
   modalDesc.textContent  = product.desc;
   modalTags.innerHTML    = product.tags.map(t => `<span class="modal-tag">${t}</span>`).join('');
-  modalCartBtn.innerHTML = `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`;
-  modalCartBtn.disabled  = false;
+  if (product.stock <= 0) {
+    modalCartBtn.innerHTML = `<span class="material-symbols-outlined">block</span> Out of Stock`;
+    modalCartBtn.disabled  = true;
+  } else {
+    modalCartBtn.innerHTML = `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`;
+    modalCartBtn.disabled  = false;
+  }
   modalCartBtn.classList.remove('added');
 
   modalBackdrop.removeAttribute('aria-hidden');
@@ -223,7 +238,8 @@ document.addEventListener('keydown', (e) => {
 // Add to cart from modal
 modalCartBtn?.addEventListener('click', () => {
   if (!modalProduct) return;
-  addToCart(modalProduct);
+  const success = addToCart(modalProduct);
+  if (!success) return;
   trackEngagement(modalProduct.id, 'like');
   modalCartBtn.innerHTML = `<span class="material-symbols-outlined">check</span> Added!`;
   modalCartBtn.classList.add('added');
@@ -474,6 +490,15 @@ class SwipeStack {
     this._fillStack();
     this._updateCounter();
   }
+
+  destroy() {
+    this.cards.forEach(c => c.remove());
+    this.cards = [];
+    document.removeEventListener('mousemove', this._onMouseMove);
+    document.removeEventListener('mouseup',   this._onMouseUp);
+    document.removeEventListener('touchmove', this._onTouchMove);
+    document.removeEventListener('touchend',  this._onTouchEnd);
+  }
 }
 
 /* ── GRID RENDERER ── */
@@ -488,9 +513,9 @@ function buildProductCard(product) {
       <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-overlay" aria-hidden="true">
-        <button class="overlay-quick-add" aria-label="Add ${product.name} to cart">
-          <span class="material-symbols-outlined">add_shopping_cart</span>
-          Add to Cart
+        <button class="overlay-quick-add" aria-label="Add ${product.name} to cart" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+          <span class="material-symbols-outlined">${product.stock <= 0 ? 'block' : 'add_shopping_cart'}</span>
+          ${product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
         </button>
       </div>
     </div>
@@ -506,9 +531,9 @@ function buildProductCard(product) {
           <button class="card-view-btn grid-like-btn" aria-label="Like ${product.name}" style="transition: color 0.3s">
             <span class="material-symbols-outlined">favorite</span>
           </button>
-          <button class="btn-add-cart" aria-label="Add ${product.name} to cart">
-            <span class="material-symbols-outlined">add_shopping_cart</span>
-            Add
+          <button class="btn-add-cart" aria-label="Add ${product.name} to cart" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+            <span class="material-symbols-outlined">${product.stock <= 0 ? 'block' : 'add_shopping_cart'}</span>
+            ${product.stock <= 0 ? 'Out of Stock' : 'Add'}
           </button>
         </div>
       </div>
@@ -516,7 +541,8 @@ function buildProductCard(product) {
   `;
 
   function handleAdd(btn, isOverlay) {
-    addToCart(product);
+    const success = addToCart(product);
+    if (!success) return;
     trackEngagement(product.id, 'like');
     btn.classList.add('added');
     btn.innerHTML = isOverlay
@@ -712,7 +738,8 @@ async function initShop() {
       desc: p.description || '',
       tags: p.tags || [],
       emoji: emojiMap[p.category] || 'diamond',
-      image: p.image_url || ''
+      image: p.image_url || '',
+      stock: p.inventory?.stock || 0
     }));
 
     const params = new URLSearchParams(window.location.search);

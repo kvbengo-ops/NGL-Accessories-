@@ -17,10 +17,7 @@ function formatPrice(n) {
   }
 
   const { data: order, error } = await supabase
-    .from('orders')
-    .select('*, order_items(*)')
-    .eq('id', id)
-    .single();
+    .rpc('get_order_public', { p_order_id: id });
 
   if (error || !order) {
     document.getElementById('confirm-order-number').textContent = 'Could not load order';
@@ -48,7 +45,7 @@ function formatPrice(n) {
       </div>
     </div>
     <div class="confirm-items">
-      ${(order.order_items || []).map(item => `
+      ${(order.items || []).map(item => `
         <div class="confirm-item-row">
           <span>${item.product_name} ×${item.quantity}</span>
           <span>${formatPrice(item.subtotal)}</span>

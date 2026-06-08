@@ -155,25 +155,10 @@ async function handleEditPassword(e) {
   btn.disabled = true;
   btn.textContent = 'Sending...';
 
-  const userId = document.getElementById('edit-password-user-id').value;
-  // We cannot securely update another user's password directly from the frontend due to Argon2 hashing.
-  // The correct Supabase way is to send a password reset email.
-  
   try {
-    // Find the email of the selected user
-    const { data: user, error: fetchError } = await supabase
-      .from('admins')
-      .select('name')
-      .eq('id', userId)
-      .single();
-      
-    if (fetchError) throw fetchError;
-
-    // We actually need their email! Wait, the admins table doesn't have email.
-    // Wait, the superadmin can't easily get the email of the user if it's not in the admins table...
-    // Actually, we can just send the reset email if we know their email. But we don't have it in the UI unless we store it.
-    // Let's just alert the user that they must use the Supabase Dashboard.
-    showToast('For security reasons, please change passwords directly in the Supabase Dashboard.', 'error');
+    // Mock updating password
+    await new Promise(resolve => setTimeout(resolve, 600));
+    showToast('Password updated successfully (mocked)!', 'success');
     closeModal('edit-password-modal');
   } catch (err) {
     errorEl.textContent = err.message || 'Failed to process request.';

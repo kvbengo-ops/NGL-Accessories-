@@ -500,3 +500,77 @@ DROP TRIGGER IF EXISTS orders_restore_stock ON public.orders;
 CREATE TRIGGER orders_restore_stock
   AFTER UPDATE OF status ON public.orders
   FOR EACH ROW EXECUTE FUNCTION public.restore_stock_on_cancel();
+
+-- ============================================================
+-- 13. NEWSLETTER SUBSCRIBERS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text UNIQUE NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "newsletter_anon_insert" ON newsletter_subscribers;
+CREATE POLICY "newsletter_anon_insert" ON newsletter_subscribers FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "newsletter_admin_all" ON newsletter_subscribers;
+CREATE POLICY "newsletter_admin_all" ON newsletter_subscribers FOR ALL USING (auth.role() = 'authenticated');
+
+-- ============================================================
+-- 14. PUBLIC ORDER LOOKUP (For Order Confirm Page)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.get_order_public(p_order_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_order record;
+  v_items jsonb;
+BEGIN
+  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT jsonb_agg(jsonb_build_object(
+    'product_id', product_id,
+    'product_name', product_name,
+    'price', price,
+    'quantity', quantity,
+    'subtotal', subtotal
+  )) INTO v_items
+  FROM public.order_items
+  WHERE order_id = p_order_id;
+
+  RETURN jsonb_build_object(
+    'id', v_order.id,
+    'order_number', v_order.order_number,
+    'status', v_order.status,
+    'subtotal', v_order.subtotal,
+    'total', v_order.total,
+    'customer_name', v_order.customer_name,
+    'customer_email', v_order.customer_email,
+    'delivery_address', v_order.delivery_address,
+    'payment_method', v_order.payment_method,
+    'created_at', v_order.created_at,
+    'items', v_items
+  );
+END;
+$$;
+
+-- ============================================================
+-- 15. AUTO-CANCEL STALE PENDING ORDERS
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.auto_cancel_stale_orders()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  -- Cancel pending online orders older than 2 hours. POS orders might be different.
+  UPDATE public.orders
+  SET status = 'cancelled', updated_at = now()
+  WHERE status = 'pending' AND type = 'online' AND created_at < now() - interval '2 hours';
+  -- Note: The orders_restore_stock trigger will automatically return inventory.
+END;
+$$;

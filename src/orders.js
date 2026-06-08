@@ -2,7 +2,7 @@
    NGL Admin — Orders Management
    ============================================================ */
 import { supabase, getOrders, updateOrderStatus } from '../src/supabase.js';
-import { requireAuth, renderSidebar, showToast, formatPrice, formatDate, statusBadge, openModal, closeModal } from '../src/admin.js';
+import { requireAuth, renderSidebar, showToast, formatPrice, formatDate, statusBadge, openModal, closeModal, escapeHtml } from '../src/admin.js';
 
 let allOrders = [];
 
@@ -42,7 +42,7 @@ function renderTable(orders) {
   tbody.innerHTML = orders.map(o => `
     <tr data-id="${o.id}">
       <td class="order-num">${o.order_number}</td>
-      <td>${o.customer_name || '—'}</td>
+      <td>${escapeHtml(o.customer_name) || '—'}</td>
       <td>${(o.order_items || []).length} item(s)</td>
       <td><span class="type-badge type-badge--${o.type}">${o.type}</span></td>
       <td>${formatPrice(o.total)}</td>
@@ -66,6 +66,10 @@ function renderTable(orders) {
   document.querySelectorAll('.status-select').forEach(sel => {
     sel.addEventListener('change', async () => {
       const id = sel.dataset.orderId;
+      if (!confirm('Are you sure you want to change the status of this order?')) {
+        await loadOrders(); // Reset select state
+        return;
+      }
       await updateOrderStatus(id, sel.value);
       showToast('Order status updated');
     });
@@ -120,11 +124,11 @@ function showOrderDetail(id) {
     <div class="order-detail-grid">
       <div class="order-detail-section">
         <h3 class="order-detail-heading">Customer</h3>
-        <p>${o.customer_name || '—'}</p>
-        <p>${o.customer_email || '—'}</p>
-        <p>${o.customer_phone || '—'}</p>
-        ${o.delivery_address ? `<p class="addr">${o.delivery_address}</p>` : ''}
-        ${o.order_notes ? `<p class="notes">Notes: ${o.order_notes}</p>` : ''}
+        <p>${escapeHtml(o.customer_name) || '—'}</p>
+        <p>${escapeHtml(o.customer_email) || '—'}</p>
+        <p>${escapeHtml(o.customer_phone) || '—'}</p>
+        ${o.delivery_address ? `<p class="addr">${escapeHtml(o.delivery_address)}</p>` : ''}
+        ${o.order_notes ? `<p class="notes">Notes: ${escapeHtml(o.order_notes)}</p>` : ''}
       </div>
       <div class="order-detail-section">
         <h3 class="order-detail-heading">Payment</h3>

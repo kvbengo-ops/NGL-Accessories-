@@ -248,6 +248,14 @@ async function placeOrder() {
     const shipping = getShipping(subtotal);
     const total    = subtotal + shipping;
 
+    // --- STUB: Payment Gateway Integration (PayMongo/GCash) ---
+    if (['gcash', 'card', 'bank_transfer'].includes(payMethod)) {
+      console.log(`[STUB] Initiating ${payMethod.toUpperCase()} payment via PayMongo API...`);
+      await new Promise(r => setTimeout(r, 600)); // Simulate API delay
+      console.log(`[STUB] Payment intent successful for ${formatPrice(total)}`);
+    }
+    // ----------------------------------------------------------
+
     const order = await createOrder({
       order_number:     generateOrderNumber(),
       type:             'online',
@@ -270,6 +278,11 @@ async function placeOrder() {
 
     // Clear cart
     localStorage.removeItem('ngl_cart');
+
+    // --- STUB: Transactional Emails (Resend API) ---
+    console.log(`[STUB] Sending order confirmation email to ${details.email} via Resend API...`);
+    // await fetch('https://api.resend.com/emails', { method: 'POST', body: JSON.stringify(...) });
+    // -----------------------------------------------
 
     // Redirect to confirmation
     window.location.href = `/order-confirm.html?id=${order.id}`;

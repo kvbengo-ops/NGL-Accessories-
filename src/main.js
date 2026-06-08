@@ -4,6 +4,7 @@
    Parallax · Marquee · Counter animation · All interactions
    ============================================================ */
 import './style.css';
+import { supabase } from './supabase.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -185,7 +186,7 @@ document.querySelectorAll('.stat-num[data-target]').forEach((el) => {
 const newsletterForm  = document.getElementById('newsletter-form');
 const newsletterEmail = document.getElementById('newsletter-email');
 
-newsletterForm?.addEventListener('submit', (e) => {
+newsletterForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = newsletterEmail.value.trim();
 
@@ -201,6 +202,12 @@ newsletterForm?.addEventListener('submit', (e) => {
   const submitBtn = newsletterForm.querySelector('[type="submit"]');
   submitBtn.disabled = true;
   submitBtn.style.opacity = '0.65';
+
+  try {
+    await supabase.from('newsletter_subscribers').insert([{ email }]);
+  } catch (err) {
+    console.error('Newsletter error:', err);
+  }
 
   // Animate form out, success in
   newsletterForm.style.transition = 'opacity 0.4s, transform 0.4s';
@@ -358,4 +365,25 @@ if (isFinePointer) {
     });
   });
 }
+/* ──────────────────────────────────────────────────────────
+   13. CART STATE (HOMEPAGE)
+────────────────────────────────────────────────────────── */
+let cart = [];
+function loadCart() {
+  try {
+    cart = JSON.parse(localStorage.getItem('ngl_cart') || '[]');
+  } catch {
+    cart = [];
+  }
+  const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const el = document.querySelector('.cart-count');
+  if (el) {
+    el.textContent = totalQty;
+    el.setAttribute('aria-label', `${totalQty} item${totalQty !== 1 ? 's' : ''}`);
+  }
+}
+loadCart();
 
+document.querySelector('.cart-btn')?.addEventListener('click', () => {
+  window.location.href = '/checkout.html';
+});
