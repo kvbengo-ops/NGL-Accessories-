@@ -21,6 +21,7 @@ export default defineConfig({
         'admin-admins': resolve(__dirname, 'admin/admins.html'),
         'admin-tasks': resolve(__dirname, 'admin/tasks.html'),
         'admin-expenses': resolve(__dirname, 'admin/expenses.html'),
+        'admin-todo': resolve(__dirname, 'admin/todo.html'),
       },
     },
   },
