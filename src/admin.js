@@ -43,6 +43,7 @@ export function renderSidebar(activePage, admin) {
     { section: 'Overview' },
     { href: '/admin/dashboard.html', icon: 'dashboard',       label: 'Dashboard' },
     { href: '/admin/tasks.html',     icon: 'task_alt',        label: 'Tasks'     },
+    { href: '/admin/todo.html',      icon: 'checklist',       label: 'My To-Do'  },
     { section: 'Operations' },
     { href: '/admin/inventory.html', icon: 'inventory_2',     label: 'Inventory' },
     { href: '/admin/orders.html',    icon: 'receipt_long',    label: 'Orders'    },

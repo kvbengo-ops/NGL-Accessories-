@@ -70,13 +70,28 @@ form?.addEventListener('submit', async (e) => {
   }
 
   // Check admin record exists and is active
-  const { data: adminRecord } = await supabase
+  const { data: adminRecord, error: adminError } = await supabase
     .from('admins')
     .select('is_active, role')
     .eq('id', data.user.id)
-    .single();
+    .maybeSingle();
 
-  if (!adminRecord || !adminRecord.is_active) {
+  if (adminError) {
+    await supabase.auth.signOut();
+    setLoading(false);
+    showError('Error reading admin profile. Please contact support.');
+    console.error('Admin profile lookup failed:', adminError);
+    return;
+  }
+
+  if (!adminRecord) {
+    await supabase.auth.signOut();
+    setLoading(false);
+    showError('No admin profile linked to this login. Contact a superadmin.');
+    return;
+  }
+
+  if (!adminRecord.is_active) {
     await supabase.auth.signOut();
     setLoading(false);
     showError('Your admin account is inactive. Contact a superadmin.');

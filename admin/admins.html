@@ -86,6 +86,31 @@
     </div>
   </div>
 
+  <!-- Edit Password Modal -->
+  <div class="admin-modal-backdrop" id="edit-password-modal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Password</h2>
+        <button class="modal-close-btn" id="close-edit-password-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="edit-password-form" class="modal-form">
+        <input type="hidden" id="edit-password-user-id" />
+        <div class="form-field">
+          <label class="form-label" for="new-admin-password">New Password *</label>
+          <input type="password" id="new-admin-password" class="form-input" required minlength="8" />
+          <small style="color:rgba(245,241,235,0.4);font-size:12px;margin-top:4px;display:block;">Must be at least 8 characters long.</small>
+        </div>
+        <div id="edit-password-error" class="login-error hidden" style="margin-top:16px;"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-admin-ghost" id="cancel-edit-password">Cancel</button>
+          <button type="submit" class="btn-admin-primary" id="save-password-btn">Save Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script type="module" src="/src/admins.js"></script>
 </body>
 </html>

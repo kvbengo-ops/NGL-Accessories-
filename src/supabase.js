@@ -143,9 +143,23 @@ export async function getAdmins() {
 export async function getCurrentAdmin() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data, error } = await supabase.from('admins').select('*').eq('id', user.id).single();
-  if (error) return null;
-  return { ...data, email: user.email };
+  const { data: admin, error } = await supabase
+    .from('admins')
+    .select('id, name, role, is_active')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error reading admin profile in getCurrentAdmin:', error);
+    return null;
+  }
+  
+  if (!admin) {
+    console.warn('No admin profile found for the current auth user.');
+    return null;
+  }
+
+  return { ...admin, email: user.email };
 }
 
 /* ── Tasks helpers ───────────────────────────────────────── */
@@ -153,6 +167,11 @@ export async function getTasks(filters = {}) {
   let query = supabase.from('admin_tasks').select('*').order('created_at', { ascending: false });
   if (filters.status) query = query.eq('status', filters.status);
   if (filters.assigned_to) query = query.eq('assigned_to', filters.assigned_to);
+  if (filters.task_type) {
+    query = query.eq('task_type', filters.task_type);
+  } else {
+    query = query.eq('task_type', 'kanban'); // Default for Kanban board
+  }
   
   const { data, error } = await query;
   if (error) throw error;

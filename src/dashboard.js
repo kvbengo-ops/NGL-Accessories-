@@ -6,6 +6,71 @@ import {
   getAllProducts, getTasks, getExpenses
 } from '../src/supabase.js';
 import { requireAuth, renderSidebar, formatPrice, formatDate, statusBadge } from '../src/admin.js';
+import { driver } from 'driver.js';
+import 'driver.js/dist/driver.css';
+
+function startTour() {
+  const driverObj = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: '#tour-welcome',
+        popover: {
+          title: 'Welcome to your Dashboard',
+          description: 'This is your central command hub for NGL Accessories. Let\'s take a quick tour to get you oriented!',
+          side: 'bottom',
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-kpis',
+        popover: {
+          title: 'Performance KPIs',
+          description: 'A quick glance at your crucial metrics: daily/weekly revenue, pending orders, and low stock warnings.',
+          side: 'bottom',
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-chart',
+        popover: {
+          title: 'Sales Trends',
+          description: 'This chart tracks your sales over the last 7 days so you can visually spot performance peaks.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-pnl',
+        popover: {
+          title: 'Profit & Loss',
+          description: 'Your real-time financial health. It calculates your net profit automatically based on orders and expenses.',
+          side: 'left',
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-tasks',
+        popover: {
+          title: 'My To-Do List',
+          description: 'Keep track of your daily tasks right from the dashboard. Click "Open To-Do" to manage them properly.',
+          side: 'left',
+          align: 'start'
+        }
+      },
+      {
+        element: '#tour-pos',
+        popover: {
+          title: 'Point of Sale',
+          description: 'Whenever you have an in-person customer, click here to open the POS terminal to process their order.',
+          side: 'bottom',
+          align: 'end'
+        }
+      }
+    ]
+  });
+  driverObj.drive();
+}
 
 (async () => {
   const admin = await requireAuth();
@@ -15,6 +80,18 @@ import { requireAuth, renderSidebar, formatPrice, formatDate, statusBadge } from
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   document.getElementById('dashboard-greeting').textContent = `${greeting}, ${admin.name} ✦`;
+
+  // Tour Logic
+  const btnStartTour = document.getElementById('btn-start-tour');
+  if (btnStartTour) {
+    btnStartTour.addEventListener('click', startTour);
+  }
+  if (!localStorage.getItem('ngl_admin_tour_seen')) {
+    setTimeout(() => {
+      startTour();
+      localStorage.setItem('ngl_admin_tour_seen', 'true');
+    }, 1000);
+  }
 
   // Load all data in parallel
   const [orders, salesData, products, myTasks, expenses] = await Promise.all([

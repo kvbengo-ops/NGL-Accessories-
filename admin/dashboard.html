@@ -15,160 +15,173 @@
   <div id="sidebar-container"></div>
 
   <main class="admin-main">
-    <header class="admin-header">
-      <div>
+    <div class="dashboard-hero" id="tour-welcome">
+      <div class="hero-content">
         <h1 class="admin-page-title">Dashboard</h1>
         <p class="admin-page-subtitle" id="dashboard-greeting">Good morning</p>
       </div>
-      <div class="admin-header-actions">
-        <a href="/admin/pos.html" class="admin-header-btn">
+      <div class="admin-header-actions" style="display:flex; gap:12px; align-items:center;">
+        <button id="btn-start-tour" class="btn-admin-ghost">
+          <span class="material-symbols-outlined" style="font-size:18px;">explore</span> Take a Tour
+        </button>
+        <a href="/admin/pos.html" class="admin-header-btn" id="tour-pos">
           <span class="material-symbols-outlined">point_of_sale</span>
           Open POS
         </a>
       </div>
-    </header>
-
-    <!-- KPI Cards -->
-    <section class="kpi-grid">
-      <div class="kpi-card kpi-card--gold">
-        <div class="kpi-top">
-          <span class="kpi-label">Today's Revenue</span>
-          <div class="kpi-icon kpi-icon--gold"><span class="material-symbols-outlined">payments</span></div>
-        </div>
-        <span class="kpi-value" id="kpi-today">₱0.00</span>
-      </div>
-      <div class="kpi-card kpi-card--green">
-        <div class="kpi-top">
-          <span class="kpi-label">Today's Profit</span>
-          <div class="kpi-icon kpi-icon--green"><span class="material-symbols-outlined">savings</span></div>
-        </div>
-        <span class="kpi-value" id="kpi-profit-today">₱0.00</span>
-      </div>
-      <div class="kpi-card kpi-card--gold">
-        <div class="kpi-top">
-          <span class="kpi-label">Week's Revenue</span>
-          <div class="kpi-icon kpi-icon--gold"><span class="material-symbols-outlined">trending_up</span></div>
-        </div>
-        <span class="kpi-value" id="kpi-week">₱0.00</span>
-      </div>
-      <div class="kpi-card kpi-card--green">
-        <div class="kpi-top">
-          <span class="kpi-label">Week's Profit</span>
-          <div class="kpi-icon kpi-icon--green"><span class="material-symbols-outlined">account_balance</span></div>
-        </div>
-        <span class="kpi-value" id="kpi-profit-week">₱0.00</span>
-      </div>
-      <div class="kpi-card kpi-card--blue">
-        <div class="kpi-top">
-          <span class="kpi-label">Pending Orders</span>
-          <div class="kpi-icon kpi-icon--blue"><span class="material-symbols-outlined">pending_actions</span></div>
-        </div>
-        <span class="kpi-value" id="kpi-pending">0</span>
-      </div>
-      <div class="kpi-card kpi-card--red">
-        <div class="kpi-top">
-          <span class="kpi-label">Low Stock</span>
-          <div class="kpi-icon kpi-icon--red"><span class="material-symbols-outlined">warning</span></div>
-        </div>
-        <span class="kpi-value" id="kpi-lowstock">0</span>
-      </div>
-    </section>
-
-    <!-- Charts + Recent -->
-    <div class="dashboard-grid">
-      <!-- Sales Chart -->
-      <section class="admin-card chart-card">
-        <div class="card-header">
-          <h2 class="card-title">Sales — Last 7 Days</h2>
-        </div>
-        <div class="chart-wrap">
-          <canvas id="sales-chart" height="220"></canvas>
-        </div>
-      </section>
-
-      <!-- Top Products -->
-      <section class="admin-card">
-        <div class="card-header">
-          <h2 class="card-title">Top Products (Sales)</h2>
-        </div>
-        <div class="top-products-list" id="top-products">
-          <div class="table-loading">Loading…</div>
-        </div>
-      </section>
-
-      <section class="admin-card">
-        <div class="card-header">
-          <h2 class="card-title">Trending (Engagement)</h2>
-        </div>
-        <div class="top-products-list" id="trending-products">
-          <div class="table-loading">Loading…</div>
-        </div>
-      </section>
     </div>
 
-    <div class="dashboard-grid">
-      <!-- P&L Summary -->
-      <section class="admin-card">
-        <div class="card-header">
-          <h2 class="card-title">This Month's P&L</h2>
-          <a href="/admin/expenses.html" class="card-link">Expenses</a>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:12px; font-size:14px; padding-top:8px;">
-           <div style="display:flex; justify-content:space-between; color:rgba(245,241,235,0.7);"><span>Total Revenue</span> <span id="pnl-rev">₱0.00</span></div>
-           <div style="display:flex; justify-content:space-between; color:rgba(245,241,235,0.5);"><span>Cost of Goods Sold</span> <span id="pnl-cogs">-₱0.00</span></div>
-           <div style="display:flex; justify-content:space-between; font-weight:600; color:var(--gold-300); padding-bottom:12px; border-bottom:1px solid rgba(201,168,76,0.1);"><span>Gross Profit</span> <span id="pnl-gross">₱0.00</span></div>
-           <div style="display:flex; justify-content:space-between; color:rgba(245,241,235,0.5);"><span>Operating Expenses</span> <span id="pnl-exp">-₱0.00</span></div>
-           <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:700; color:#22c55e; padding-top:8px;"><span>Net Profit</span> <span id="pnl-net">₱0.00</span></div>
-        </div>
-      </section>
+    <!-- Asymmetrical Layout -->
+    <div class="dashboard-masonry-layout">
+      
+      <!-- Left Column: Primary Metrics & Charts -->
+      <div class="dashboard-col-main">
+        
+        <!-- KPI Cards -->
+        <section class="kpi-grid" id="tour-kpis">
+          <div class="kpi-card kpi-card--gold">
+            <div class="kpi-top">
+              <span class="kpi-label">Today's Revenue</span>
+              <div class="kpi-icon kpi-icon--gold"><span class="material-symbols-outlined">payments</span></div>
+            </div>
+            <span class="kpi-value" id="kpi-today">₱0.00</span>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-top">
+              <span class="kpi-label">Today's Profit</span>
+              <div class="kpi-icon kpi-icon--green"><span class="material-symbols-outlined">savings</span></div>
+            </div>
+            <span class="kpi-value" id="kpi-profit-today">₱0.00</span>
+          </div>
+          <div class="kpi-card kpi-card--gold">
+            <div class="kpi-top">
+              <span class="kpi-label">Week's Revenue</span>
+              <div class="kpi-icon kpi-icon--gold"><span class="material-symbols-outlined">trending_up</span></div>
+            </div>
+            <span class="kpi-value" id="kpi-week">₱0.00</span>
+          </div>
+          <div class="kpi-card kpi-card--green">
+            <div class="kpi-top">
+              <span class="kpi-label">Week's Profit</span>
+              <div class="kpi-icon kpi-icon--green"><span class="material-symbols-outlined">account_balance</span></div>
+            </div>
+            <span class="kpi-value" id="kpi-profit-week">₱0.00</span>
+          </div>
+          <div class="kpi-card kpi-card--blue">
+            <div class="kpi-top">
+              <span class="kpi-label">Pending Orders</span>
+              <div class="kpi-icon kpi-icon--blue"><span class="material-symbols-outlined">pending_actions</span></div>
+            </div>
+            <span class="kpi-value" id="kpi-pending">0</span>
+          </div>
+          <div class="kpi-card kpi-card--red">
+            <div class="kpi-top">
+              <span class="kpi-label">Low Stock</span>
+              <div class="kpi-icon kpi-icon--red"><span class="material-symbols-outlined">warning</span></div>
+            </div>
+            <span class="kpi-value" id="kpi-lowstock">0</span>
+          </div>
+        </section>
 
-      <!-- My Pending Tasks -->
-      <section class="admin-card">
-        <div class="card-header">
-        <h2 class="card-title">My Pending Tasks</h2>
-        <a href="/admin/tasks.html" class="card-link">View all</a>
+        <!-- Sales Chart -->
+        <section class="admin-card chart-card" id="tour-chart">
+          <div class="card-header">
+            <h2 class="card-title">Sales — Last 7 Days</h2>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="sales-chart" height="220"></canvas>
+          </div>
+        </section>
+
+        <!-- Recent Orders -->
+        <section class="admin-card" id="tour-recent-orders">
+          <div class="card-header">
+            <h2 class="card-title">Recent Orders</h2>
+            <a href="/admin/orders.html" class="card-link">View all</a>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table" id="recent-orders-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Type</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recent-orders-body">
+                <tr><td colspan="6" class="table-loading">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
-      <div class="table-wrap">
-        <table class="admin-table" id="pending-tasks-table">
-          <thead>
-            <tr>
-              <th>Task</th>
-              <th>Priority</th>
-              <th>Due Date</th>
-            </tr>
-          </thead>
-          <tbody id="pending-tasks-body">
-            <tr><td colspan="3" class="table-loading">Loading tasks…</td></tr>
-          </tbody>
-        </table>
+
+      <!-- Right Column: Context & Actions -->
+      <div class="dashboard-col-side">
+        
+        <!-- P&L Summary -->
+        <section class="admin-card" id="tour-pnl">
+          <div class="card-header">
+            <h2 class="card-title">This Month's P&L</h2>
+            <a href="/admin/expenses.html" class="card-link">Expenses</a>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:14px; padding-top:8px;">
+             <div style="display:flex; justify-content:space-between; color:rgba(245,241,235,0.7);"><span>Total Revenue</span> <span id="pnl-rev">₱0.00</span></div>
+             <div style="display:flex; justify-content:space-between; color:rgba(245,241,235,0.5);"><span>Cost of Goods Sold</span> <span id="pnl-cogs">-₱0.00</span></div>
+             <div style="display:flex; justify-content:space-between; font-weight:600; color:var(--gold-300); padding-bottom:12px; border-bottom:1px solid rgba(201,168,76,0.1);"><span>Gross Profit</span> <span id="pnl-gross">₱0.00</span></div>
+             <div style="display:flex; justify-content:space-between; color:rgba(245,241,235,0.5);"><span>Operating Expenses</span> <span id="pnl-exp">-₱0.00</span></div>
+             <div style="display:flex; justify-content:space-between; font-size:18px; font-weight:700; color:#22c55e; padding-top:8px;"><span>Net Profit</span> <span id="pnl-net">₱0.00</span></div>
+          </div>
+        </section>
+
+        <!-- My Pending Tasks -->
+        <section class="admin-card" id="tour-tasks">
+          <div class="card-header">
+            <h2 class="card-title">My Pending Tasks</h2>
+            <a href="/admin/todo.html" class="card-link">Open To-Do</a>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table" id="pending-tasks-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Priority</th>
+                  <th>Due</th>
+                </tr>
+              </thead>
+              <tbody id="pending-tasks-body">
+                <tr><td colspan="3" class="table-loading">Loading tasks…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Top Products -->
+        <section class="admin-card" id="tour-trending">
+          <div class="card-header">
+            <h2 class="card-title">Top Products (Sales)</h2>
+          </div>
+          <div class="top-products-list" id="top-products">
+            <div class="table-loading">Loading…</div>
+          </div>
+        </section>
+        
+        <!-- Trending -->
+        <section class="admin-card">
+          <div class="card-header">
+            <h2 class="card-title">Trending (Engagement)</h2>
+          </div>
+          <div class="top-products-list" id="trending-products">
+            <div class="table-loading">Loading…</div>
+          </div>
+        </section>
+
       </div>
-    </section>
     </div>
 
-    <!-- Recent Orders -->
-    <section class="admin-card">
-      <div class="card-header">
-        <h2 class="card-title">Recent Orders</h2>
-        <a href="/admin/orders.html" class="card-link">View all</a>
-      </div>
-      <div class="table-wrap">
-        <table class="admin-table" id="recent-orders-table">
-          <thead>
-            <tr>
-              <th>Order #</th>
-              <th>Customer</th>
-              <th>Type</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody id="recent-orders-body">
-            <tr><td colspan="6" class="table-loading">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
   </main>
 
   <script type="module" src="/src/dashboard.js"></script>

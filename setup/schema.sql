@@ -326,23 +326,18 @@ END;
 $$;
 
 -- ============================================================
--- 8. SECURE ADMIN USER CREATION
+-- 8. SECURE ADMIN USER MANAGEMENT
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION public.create_admin_user(
-  p_email text,
-  p_password text,
-  p_name text,
-  p_role text,
-  p_creator_id uuid
+-- Function to safely set the role of a newly created admin (Superadmin only)
+CREATE OR REPLACE FUNCTION public.set_admin_role(
+  p_target_user_id uuid,
+  p_role text
 )
-RETURNS jsonb
+RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
-DECLARE
-  v_user_id uuid;
-  v_encrypted_pw text;
 BEGIN
   IF auth.role() <> 'authenticated' THEN
     RAISE EXCEPTION 'Not authenticated';
@@ -352,39 +347,40 @@ BEGIN
     SELECT 1 FROM public.admins
     WHERE id = auth.uid() AND role = 'superadmin' AND is_active = true
   ) THEN
-    RAISE EXCEPTION 'Unauthorized: Only superadmins can create new admins';
+    RAISE EXCEPTION 'Unauthorized: Only superadmins can assign roles';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM auth.users WHERE email = p_email) THEN
-    RAISE EXCEPTION 'Email already registered';
+  UPDATE public.admins 
+  SET role = p_role, created_by = auth.uid()
+  WHERE id = p_target_user_id;
+END;
+$$;
+
+-- Function to safely update another admin's password (Superadmin only)
+CREATE OR REPLACE FUNCTION public.update_admin_password(
+  p_user_id uuid,
+  p_new_password text
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF auth.role() <> 'authenticated' THEN
+    RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  v_user_id := gen_random_uuid();
-  v_encrypted_pw := crypt(p_password, gen_salt('bf'));
+  IF NOT EXISTS (
+    SELECT 1 FROM public.admins
+    WHERE id = auth.uid() AND role = 'superadmin' AND is_active = true
+  ) THEN
+    RAISE EXCEPTION 'Unauthorized: Only superadmins can change passwords';
+  END IF;
 
-  INSERT INTO auth.users (
-    id, instance_id, email, encrypted_password, email_confirmed_at,
-    raw_app_meta_data, raw_user_meta_data, aud, role, created_at, updated_at
-  ) VALUES (
-    v_user_id, '00000000-0000-0000-0000-000000000000', p_email, v_encrypted_pw, now(),
-    '{"provider":"email","providers":["email"]}'::jsonb, jsonb_build_object('name', p_name),
-    'authenticated', 'authenticated', now(), now()
-  );
-
-  INSERT INTO auth.identities (
-    id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
-  ) VALUES (
-    v_user_id, v_user_id, jsonb_build_object('sub', v_user_id, 'email', p_email),
-    'email', now(), now(), now()
-  );
-
-  INSERT INTO public.admins (id, name, role, is_active, created_by, created_at)
-  VALUES (v_user_id, p_name, p_role, true, p_creator_id, now());
-
-  RETURN jsonb_build_object(
-    'success', true,
-    'user_id', v_user_id
-  );
+  UPDATE auth.users
+  SET encrypted_password = crypt(p_new_password, gen_salt('bf', 10)),
+      updated_at = now()
+  WHERE id = p_user_id;
 END;
 $$;
 
@@ -401,6 +397,7 @@ CREATE TABLE IF NOT EXISTS admin_tasks (
   assigned_to uuid REFERENCES admins(id) ON DELETE SET NULL,
   created_by uuid REFERENCES admins(id) ON DELETE SET NULL,
   due_date timestamptz,
+  task_type text DEFAULT 'kanban',
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -450,7 +447,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN null;
 END $$;
 
--- A secure remote procedure call to increment likes 
+-- A secure remote procedure call to increment likes
 -- without exposing direct write access to anonymous users.
 CREATE OR REPLACE FUNCTION increment_engagement(product_id uuid, type text)
 RETURNS void
@@ -463,3 +460,43 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- ============================================================
+-- 12. RESTORE STOCK WHEN AN ORDER IS CANCELLED / VOIDED
+-- ------------------------------------------------------------
+-- create_order_safely() decrements inventory at order time.
+-- Without this, cancelling/voiding an order would permanently
+-- lose that stock. This adds the quantities back, but only on
+-- the transition INTO cancelled/voided (so re-saving an already
+-- cancelled order can't double-restore).
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.restore_stock_on_cancel()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  r record;
+BEGIN
+  IF NEW.status IN ('cancelled','voided')
+     AND OLD.status NOT IN ('cancelled','voided') THEN
+    FOR r IN
+      SELECT product_id, quantity
+      FROM public.order_items
+      WHERE order_id = NEW.id AND product_id IS NOT NULL
+    LOOP
+      UPDATE public.inventory
+      SET stock = stock + r.quantity,
+          updated_at = now()
+      WHERE product_id = r.product_id;
+    END LOOP;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS orders_restore_stock ON public.orders;
+CREATE TRIGGER orders_restore_stock
+  AFTER UPDATE OF status ON public.orders
+  FOR EACH ROW EXECUTE FUNCTION public.restore_stock_on_cancel();

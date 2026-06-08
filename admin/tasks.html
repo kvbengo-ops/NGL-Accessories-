@@ -44,25 +44,39 @@
       </select>
     </div>
 
-    <!-- Table -->
-    <section class="admin-card">
-      <div class="table-wrap">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Assigned To</th>
-              <th>Due Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tasks-body">
-            <tr><td colspan="6" class="table-loading">Loading tasks…</td></tr>
-          </tbody>
-        </table>
+    <!-- Kanban Board -->
+    <section class="kanban-board" id="kanban-board">
+      
+      <!-- Pending Column -->
+      <div class="kanban-column" data-status="pending">
+        <div class="kanban-column-header">
+          <h3 class="kanban-column-title"><span class="kanban-status-dot pending"></span>Pending <span class="kanban-count" id="count-pending">0</span></h3>
+        </div>
+        <div class="kanban-column-body" id="col-pending">
+          <!-- Cards injected here -->
+        </div>
       </div>
+
+      <!-- In Progress Column -->
+      <div class="kanban-column" data-status="in_progress">
+        <div class="kanban-column-header">
+          <h3 class="kanban-column-title"><span class="kanban-status-dot in_progress"></span>In Progress <span class="kanban-count" id="count-in_progress">0</span></h3>
+        </div>
+        <div class="kanban-column-body" id="col-in_progress">
+          <!-- Cards injected here -->
+        </div>
+      </div>
+
+      <!-- Completed Column -->
+      <div class="kanban-column" data-status="completed">
+        <div class="kanban-column-header">
+          <h3 class="kanban-column-title"><span class="kanban-status-dot completed"></span>Completed <span class="kanban-count" id="count-completed">0</span></h3>
+        </div>
+        <div class="kanban-column-body" id="col-completed">
+          <!-- Cards injected here -->
+        </div>
+      </div>
+
     </section>
   </main>
 

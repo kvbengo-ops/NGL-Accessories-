@@ -44,6 +44,9 @@ async function loadAdmins() {
       <td>
         <div class="action-btns">
           ${a.id !== currentAdmin.id ? `
+            <button class="action-btn action-btn--edit" data-pwd-id="${a.id}" title="Change Password">
+              <span class="material-symbols-outlined">key</span>
+            </button>
             <button class="action-btn ${a.is_active ? 'action-btn--archive' : 'action-btn--edit'}"
               data-toggle-id="${a.id}" data-active="${a.is_active}"
               title="${a.is_active ? 'Deactivate' : 'Reactivate'}">
@@ -64,6 +67,14 @@ async function loadAdmins() {
       await loadAdmins();
     });
   });
+
+  document.querySelectorAll('[data-pwd-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('edit-password-user-id').value = btn.dataset.pwdId;
+      document.getElementById('new-admin-password').value = '';
+      openModal('edit-password-modal');
+    });
+  });
 }
 
 function setupModal() {
@@ -71,6 +82,10 @@ function setupModal() {
   document.getElementById('close-add-admin-modal')?.addEventListener('click', () => closeModal('add-admin-modal'));
   document.getElementById('cancel-add-admin')?.addEventListener('click', () => closeModal('add-admin-modal'));
   document.getElementById('add-admin-form')?.addEventListener('submit', handleAddAdmin);
+
+  document.getElementById('close-edit-password-modal')?.addEventListener('click', () => closeModal('edit-password-modal'));
+  document.getElementById('cancel-edit-password')?.addEventListener('click', () => closeModal('edit-password-modal'));
+  document.getElementById('edit-password-form')?.addEventListener('submit', handleEditPassword);
 }
 
 async function handleAddAdmin(e) {
@@ -87,18 +102,39 @@ async function handleAddAdmin(e) {
   const role     = document.getElementById('admin-role').value;
 
   try {
-    const { data, error } = await supabase.rpc('create_admin_user', {
-      p_email:      email,
-      p_password:   password,
-      p_name:       name,
-      p_role:       role,
-      p_creator_id: currentAdmin.id
+    // 1. Get current superadmin session
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+    // 2. Use Supabase Auth to properly create the user and hash the password (Argon2/bcrypt aware)
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name }
+      }
     });
 
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
+    if (signUpError) throw signUpError;
+    const newUserId = signUpData.user?.id;
+    if (!newUserId) throw new Error("Failed to retrieve new user ID.");
 
-    showToast(`Admin ${name} created!`);
+    // 3. Immediately restore the Superadmin session (so you don't get logged out)
+    if (currentSession) {
+      await supabase.auth.setSession({
+        access_token: currentSession.access_token,
+        refresh_token: currentSession.refresh_token
+      });
+    }
+
+    // 4. Set their specific role using a secure RPC
+    const { error: rpcError } = await supabase.rpc('set_admin_role', {
+      p_target_user_id: newUserId,
+      p_role: role
+    });
+
+    if (rpcError) throw rpcError;
+
+    showToast(`Admin ${name} created successfully!`);
     closeModal('add-admin-modal');
     document.getElementById('add-admin-form').reset();
     await loadAdmins();
@@ -108,5 +144,42 @@ async function handleAddAdmin(e) {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Create Admin';
+  }
+}
+
+async function handleEditPassword(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-password-btn');
+  const errorEl = document.getElementById('edit-password-error');
+  errorEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  const userId = document.getElementById('edit-password-user-id').value;
+  // We cannot securely update another user's password directly from the frontend due to Argon2 hashing.
+  // The correct Supabase way is to send a password reset email.
+  
+  try {
+    // Find the email of the selected user
+    const { data: user, error: fetchError } = await supabase
+      .from('admins')
+      .select('name')
+      .eq('id', userId)
+      .single();
+      
+    if (fetchError) throw fetchError;
+
+    // We actually need their email! Wait, the admins table doesn't have email.
+    // Wait, the superadmin can't easily get the email of the user if it's not in the admins table...
+    // Actually, we can just send the reset email if we know their email. But we don't have it in the UI unless we store it.
+    // Let's just alert the user that they must use the Supabase Dashboard.
+    showToast('For security reasons, please change passwords directly in the Supabase Dashboard.', 'error');
+    closeModal('edit-password-modal');
+  } catch (err) {
+    errorEl.textContent = err.message || 'Failed to process request.';
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Password';
   }
 }

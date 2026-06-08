@@ -149,15 +149,70 @@ function updateSummary() {
 }
 
 /* ── Step 2: Details form ────────────────────────────────── */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// PH mobile: 09XXXXXXXXX, +639XXXXXXXXX, or 639XXXXXXXXX
+const PH_PHONE_RE = /^(09\d{9}|(\+?63)9\d{9})$/;
+
+function setFieldError(id, msg) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  input.classList.add('invalid');
+  let err = input.parentElement.querySelector('.form-error');
+  if (!err) {
+    err = document.createElement('span');
+    err.className = 'form-error';
+    input.parentElement.appendChild(err);
+  }
+  err.textContent = msg;
+}
+
+function clearFieldError(id) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  input.classList.remove('invalid');
+  input.parentElement.querySelector('.form-error')?.remove();
+}
+
+// Clear a field's error as soon as the user edits it
+['c-name', 'c-email', 'c-phone', 'c-address'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', () => clearFieldError(id));
+});
+
 document.getElementById('details-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
-  details = {
+
+  const values = {
     name:    document.getElementById('c-name').value.trim(),
     email:   document.getElementById('c-email').value.trim(),
     phone:   document.getElementById('c-phone').value.trim(),
     address: document.getElementById('c-address').value.trim(),
     notes:   document.getElementById('c-notes').value.trim(),
   };
+
+  // Validate
+  let firstInvalid = null;
+  const fail = (id, msg) => {
+    setFieldError(id, msg);
+    if (!firstInvalid) firstInvalid = id;
+  };
+
+  if (!values.name)  fail('c-name', 'Please enter your full name.');
+
+  if (!values.email)                  fail('c-email', 'Please enter your email address.');
+  else if (!EMAIL_RE.test(values.email)) fail('c-email', 'Please enter a valid email address.');
+
+  const phoneDigits = values.phone.replace(/[\s-]/g, '');
+  if (!values.phone)                       fail('c-phone', 'Please enter your phone number.');
+  else if (!PH_PHONE_RE.test(phoneDigits)) fail('c-phone', 'Enter a valid PH mobile number (e.g. 0917 123 4567).');
+
+  if (!values.address) fail('c-address', 'Please enter your delivery address.');
+
+  if (firstInvalid) {
+    document.getElementById(firstInvalid)?.focus();
+    return;
+  }
+
+  details = values;
   goToStep(3);
 });
 
