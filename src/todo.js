@@ -1,5 +1,5 @@
 import { supabase } from './supabase.js';
-import { requireAuth, renderSidebar, showToast, formatDate } from './admin.js';
+import { requireAuth, renderSidebar, showToast, formatDate, openModal, closeModal } from './admin.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import 'flatpickr/dist/themes/dark.css';
@@ -60,7 +60,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+let pendingConfirmCallback = null;
+
+function showConfirmModal(title, desc, onConfirm) {
+  document.getElementById('confirm-modal-title').textContent = title;
+  document.getElementById('confirm-modal-desc').textContent = desc;
+  pendingConfirmCallback = onConfirm;
+  openModal('confirm-modal');
+}
+
 function setupEventListeners() {
+  document.getElementById('confirm-modal-cancel').addEventListener('click', () => {
+    closeModal('confirm-modal');
+    pendingConfirmCallback = null;
+  });
+  
+  document.getElementById('confirm-modal-confirm').addEventListener('click', () => {
+    closeModal('confirm-modal');
+    if (pendingConfirmCallback) {
+      pendingConfirmCallback();
+      pendingConfirmCallback = null;
+    }
+  });
+
   const quickForm = document.getElementById('todo-quick-form');
   if (quickForm) {
     quickForm.addEventListener('submit', async (e) => {
@@ -171,13 +193,60 @@ function setupEventListeners() {
         showToast('Failed to save title', 'error');
       }
     }
+  });
+
+  document.querySelector('.todo-layout').addEventListener('click', async (e) => {
+    // Tapping anywhere on a task row (except its buttons/checkbox) toggles completion,
+    // giving a comfortable touch target instead of the small checkbox alone.
+    const row = e.target.closest('.todo-item');
+    if (row && !e.target.closest('button') && !e.target.closest('.todo-checkbox-wrap')) {
+      const cb = row.querySelector('.todo-checkbox');
+      if (cb) {
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      return;
+    }
+
+    // Handling Archive Individual Task
+    if (e.target.closest('.archive-todo-btn')) {
+      const btn = e.target.closest('.archive-todo-btn');
+      const taskId = btn.dataset.id;
+      try {
+        const { error } = await supabase.from('admin_tasks').update({ status: 'archived' }).eq('id', taskId);
+        if (error) throw error;
+        showToast('Task archived', 'success');
+        await fetchTasks();
+      } catch (err) {
+        console.error('Error archiving task:', err);
+        showToast('Failed to archive task', 'error');
+      }
+    }
+
+    // Handling Delete Individual Task
+    if (e.target.closest('.delete-todo-btn')) {
+      const btn = e.target.closest('.delete-todo-btn');
+      const taskId = btn.dataset.id;
+      
+      showConfirmModal('Delete Task?', 'Are you sure you want to delete this task? This cannot be undone.', async () => {
+        try {
+          const { error } = await supabase.from('admin_tasks').delete().eq('id', taskId);
+          if (error) throw error;
+          showToast('Task deleted', 'success');
+          await fetchTasks();
+        } catch (err) {
+          console.error('Error deleting task:', err);
+          showToast('Failed to delete task', 'error');
+        }
+      });
+    }
 
     // Handling Delete Entire Card
     if (e.target.closest('.todo-card-delete-btn')) {
       const btn = e.target.closest('.todo-card-delete-btn');
       const dateStr = btn.dataset.date;
       
-      if (confirm('Are you sure you want to delete this entire list and all its tasks? This cannot be undone.')) {
+      showConfirmModal('Delete List?', 'Are you sure you want to delete this entire list and all its tasks? This cannot be undone.', async () => {
         try {
           const tasksToDelete = allTasks.filter(t => {
             let dStr = t.due_date ? t.due_date.split('T')[0] : 'Unscheduled';
@@ -195,7 +264,7 @@ function setupEventListeners() {
           console.error('Error deleting list:', err);
           showToast('Failed to delete list', 'error');
         }
-      }
+      });
     }
   });
 }
@@ -287,6 +356,8 @@ function renderCards() {
   const titles = {};
   
   allTasks.forEach(task => {
+    if (task.status === 'archived') return;
+
     let dateStr = task.due_date ? task.due_date.split('T')[0] : 'Unscheduled';
     if (!groups[dateStr]) {
       groups[dateStr] = { pending: [], done: [] };
@@ -354,29 +425,47 @@ function renderCards() {
     const titleId = titleObj ? titleObj.id : '';
     const statusStyle = statusText === 'Overdue' ? 'color:#f87171;' : statusText === 'Focus' ? 'color:var(--gold-300);' : '';
 
+    // Per-list progress (drives the progress bar + count and motivates completion)
+    const doneCount = group.done.length;
+    const total = group.pending.length + doneCount;
+    const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+    const allDone = total > 0 && doneCount === total;
+
+    // Accent the most important lists so hierarchy reads by more than colour alone
+    let cardModifier = '';
+    if (statusText === 'Focus') cardModifier = ' is-today';
+    else if (statusText === 'Overdue') cardModifier = ' is-overdue';
+    if (allDone) cardModifier += ' is-complete';
+
     let pendingHtml = group.pending.map(t => createTodoHtml(t, false)).join('');
     let doneHtml = group.done.map(t => createTodoHtml(t, true)).join('');
 
     html += `
-      <div class="todo-date-card">
+      <div class="todo-date-card${cardModifier}">
         <div class="todo-card-header">
-          <input type="text" class="todo-card-title-input" data-date="${dateStr}" data-id="${titleId}" value="${escapeHtml(customTitle)}" placeholder="Name this list..." />
-          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+          <div class="todo-card-heading">
+            <input type="text" class="todo-card-title-input" data-date="${dateStr}" data-id="${titleId}" value="${escapeHtml(customTitle)}" placeholder="Name this list…" aria-label="List name for ${displayDate}" />
+            <div class="todo-card-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${doneCount}" aria-label="${doneCount} of ${total} tasks done">
+              <span class="todo-card-progress-track"><span class="todo-card-progress-fill" style="width:${pct}%;"></span></span>
+              <span class="todo-card-progress-count">${doneCount}/${total}${allDone ? ' <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>' : ''}</span>
+            </div>
+          </div>
+          <div class="todo-card-meta">
+            <div class="todo-card-meta-text">
               <span class="todo-card-date">${displayDate}</span>
               <span class="todo-card-status" style="${statusStyle}">${statusText}</span>
             </div>
-            <button class="todo-card-delete-btn" data-date="${dateStr}" title="Delete entire list">
-              <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+            <button class="todo-card-delete-btn" type="button" data-date="${dateStr}" title="Delete entire list" aria-label="Delete the ${displayDate} list">
+              <span class="material-symbols-outlined" style="font-size:18px;" aria-hidden="true">delete</span>
             </button>
           </div>
         </div>
         <div class="todo-card-body">
-          ${pendingHtml ? `<div class="todo-group-pending">${pendingHtml}</div>` : ''}
+          ${pendingHtml ? `<div class="todo-group-pending" role="list">${pendingHtml}</div>` : ''}
           ${doneHtml ? `
             <div class="todo-group-done">
-              <span class="todo-group-done-title"><span class="material-symbols-outlined" style="font-size:12px;">done_all</span> Completed</span>
-              ${doneHtml}
+              <span class="todo-group-done-title"><span class="material-symbols-outlined" style="font-size:12px;" aria-hidden="true">done_all</span> Completed</span>
+              <div role="list">${doneHtml}</div>
             </div>
           ` : ''}
         </div>
@@ -388,20 +477,33 @@ function renderCards() {
 }
 
 function createTodoHtml(task, isCompleted) {
-  const priorityMeta = task.priority === 'high' 
-    ? `<span class="badge badge--error"><span class="material-symbols-outlined" style="font-size:12px;margin-right:4px;">priority_high</span>High Priority</span>`
+  const priorityMeta = task.priority === 'high'
+    ? `<span class="badge badge--error"><span class="material-symbols-outlined" style="font-size:12px;margin-right:4px;" aria-hidden="true">priority_high</span>High Priority</span>`
     : '';
 
+  const safeTitle = escapeHtml(task.title);
+  const checkLabel = isCompleted
+    ? `Mark “${safeTitle}” as not done`
+    : `Mark “${safeTitle}” as done`;
+
   return `
-    <div class="todo-item ${isCompleted ? 'completed' : ''}">
+    <div class="todo-item ${isCompleted ? 'completed' : ''}" role="listitem">
       <div class="todo-checkbox-wrap">
-        <input type="checkbox" class="todo-checkbox" data-id="${task.id}" ${isCompleted ? 'checked' : ''} />
-        <span class="material-symbols-outlined todo-checkbox-icon">check</span>
+        <input type="checkbox" class="todo-checkbox" data-id="${task.id}" ${isCompleted ? 'checked' : ''} aria-label="${checkLabel}" />
+        <span class="material-symbols-outlined todo-checkbox-icon" aria-hidden="true">check</span>
       </div>
       <div class="todo-content">
-        <div class="todo-title">${escapeHtml(task.title)}</div>
-        ${task.description ? `<div class="todo-desc">${escapeHtml(task.description)}</div>` : ''}
+        <div class="todo-title">${safeTitle}</div>
+        ${task.description ? `<div class="todo-desc" title="${escapeHtml(task.description)}">${escapeHtml(task.description)}</div>` : ''}
         ${priorityMeta ? `<div class="todo-meta">${priorityMeta}</div>` : ''}
+      </div>
+      <div class="todo-item-actions">
+        <button class="todo-action-btn archive-todo-btn" type="button" data-id="${task.id}" title="Archive" aria-label="Archive “${safeTitle}”">
+          <span class="material-symbols-outlined" style="font-size:16px;" aria-hidden="true">inventory_2</span>
+        </button>
+        <button class="todo-action-btn delete-todo-btn" type="button" data-id="${task.id}" title="Delete" aria-label="Delete “${safeTitle}”">
+          <span class="material-symbols-outlined" style="font-size:16px;" aria-hidden="true">delete</span>
+        </button>
       </div>
     </div>
   `;

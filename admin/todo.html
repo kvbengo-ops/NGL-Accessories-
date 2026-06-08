@@ -17,8 +17,8 @@
   <main class="admin-main todo-main">
     <header class="admin-header">
       <div style="display:flex;align-items:center;gap:12px;">
-        <button id="todo-nav-toggle" class="todo-back-btn" title="Back to Dashboard">
-          <span class="material-symbols-outlined" style="font-size:18px;">arrow_back_ios_new</span>
+        <button id="todo-nav-toggle" class="todo-back-btn" type="button" title="Toggle navigation menu" aria-label="Toggle navigation menu">
+          <span class="material-symbols-outlined" style="font-size:18px;" aria-hidden="true">arrow_back_ios_new</span>
         </button>
         <div>
           <h1 class="admin-page-title">My To-Do</h1>
@@ -44,10 +44,15 @@
 
     <div class="todo-quick-add">
       <form id="todo-quick-form" class="todo-quick-form">
-        <span class="material-symbols-outlined todo-quick-icon">add</span>
-        <input type="text" id="todo-quick-input" class="todo-quick-input" placeholder="Quickly add a task..." required autocomplete="off" />
-        <input type="text" id="todo-quick-date" class="todo-quick-date" placeholder="Select Date" />
-        <button type="submit" class="todo-quick-btn">Add</button>
+        <span class="material-symbols-outlined todo-quick-icon" aria-hidden="true">add</span>
+        <label class="sr-only" for="todo-quick-input">New task</label>
+        <input type="text" id="todo-quick-input" class="todo-quick-input" placeholder="Quickly add a task…" required autocomplete="off" />
+        <label class="sr-only" for="todo-quick-date">Due date</label>
+        <input type="text" id="todo-quick-date" class="todo-quick-date" placeholder="Select date" aria-label="Due date" />
+        <button type="submit" class="todo-quick-btn">
+          <span class="material-symbols-outlined" aria-hidden="true">add_task</span>
+          <span>Add</span>
+        </button>
       </form>
     </div>
 
@@ -58,7 +63,7 @@
       </div>
 
       <!-- Dynamic Cards Container -->
-      <div id="todo-cards-container" class="todo-cards-container"></div>
+      <div id="todo-cards-container" class="todo-cards-container" aria-label="Your to-do lists"></div>
       
       <!-- Empty State -->
       <div id="todo-empty" class="todo-empty-state" style="display:none;">
@@ -115,6 +120,28 @@
           <button type="submit" class="btn-admin-primary" id="btn-save-task">Save Changes</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="admin-modal-backdrop" id="confirm-modal">
+    <div class="admin-modal" style="max-width:380px; padding:32px 24px; text-align:center;">
+      
+      <!-- Styled Icon Wrapper -->
+      <div style="width:64px; height:64px; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto; box-shadow:0 0 20px rgba(239, 68, 68, 0.05);">
+        <span class="material-symbols-outlined" style="font-size:32px; color:#ef4444;">delete_forever</span>
+      </div>
+      
+      <!-- Typography -->
+      <h2 class="modal-title" id="confirm-modal-title" style="font-size:22px; font-weight:500; margin-bottom:12px; color:#fff;">Are you sure?</h2>
+      <p id="confirm-modal-desc" style="color:rgba(245,241,235,0.55); font-size:15px; line-height:1.5; margin-bottom:32px;">This action cannot be undone.</p>
+      
+      <!-- Full-width Action Buttons -->
+      <div style="display:flex; gap:12px; width:100%;">
+        <button type="button" class="btn-admin-ghost" id="confirm-modal-cancel" style="flex:1; padding:12px 0; justify-content:center; font-weight:500;">Cancel</button>
+        <button type="button" class="btn-admin-primary" id="confirm-modal-confirm" style="flex:1; padding:12px 0; justify-content:center; background:#ef4444; border-color:#ef4444; color:#fff; font-weight:600; box-shadow:0 4px 12px rgba(239,68,68,0.2);">Delete</button>
+      </div>
+
     </div>
   </div>
 

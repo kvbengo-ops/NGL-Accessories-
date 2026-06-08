@@ -3,6 +3,41 @@
    ============================================================ */
 import { getTasks, createTask, updateTask, deleteTask, getAdmins } from './supabase.js';
 import { requireAuth, renderSidebar, showToast, formatDate, openModal, closeModal } from './admin.js';
+import { startTour, maybeAutoStartTour } from './tour.js';
+
+/* Walkthrough steps for the Tasks board. */
+const TOUR_STEPS = [
+  {
+    title: 'Welcome to your Tasks board 👋',
+    body: 'This is a Kanban board for tracking team work. Tasks move left to right through three stages: <b>Pending → In Progress → Completed</b>. This quick tour shows you how to use it — you can reopen it anytime with the <b>Guide</b> button.',
+  },
+  {
+    target: '#btn-create-task',
+    title: 'Create a task',
+    body: 'Click <b>New Task</b> to add work. Give it a title, an optional description, a priority, an assignee, and a due date. New tasks land in <b>Pending</b> by default.',
+  },
+  {
+    target: '.filter-bar',
+    title: 'Search & filter',
+    body: 'Quickly narrow the board: <b>search</b> by title or description, filter by <b>status</b>, or filter by <b>assignee</b> (pick “Me” to see only your tasks).',
+  },
+  {
+    target: '.kanban-board',
+    title: 'The three stages',
+    body: 'Each column is a stage and shows a live count. <b>Drag a card</b> from one column to another to update its status instantly — no need to open it.',
+  },
+  {
+    target: '.kanban-card',
+    title: 'Anatomy of a task card',
+    body: 'Each card shows its <b>priority</b> (top-left), <b>assignee</b> and <b>due date</b> (bottom — overdue dates turn red). Hover a card to reveal the <b>edit</b> ✏️ and <b>delete</b> 🗑️ buttons, or change the assignee right from the dropdown.',
+  },
+  {
+    title: "You're all set ✦",
+    body: 'That\'s the whole board. Reopen this walkthrough anytime from the <b>Guide</b> button up top. Happy organizing!',
+  },
+];
+
+const TOUR_KEY = 'ngl_tasks_tour_seen';
 
 let allTasks = [];
 let allAdmins = [];
@@ -47,6 +82,10 @@ let currentUser = null;
 
   // Kanban Drag and Drop setup
   setupDragAndDrop();
+
+  // Walkthrough: manual replay + first-visit auto-start
+  document.getElementById('btn-tour').addEventListener('click', () => startTour(TOUR_STEPS, { finishKey: TOUR_KEY }));
+  maybeAutoStartTour(TOUR_STEPS, TOUR_KEY);
 })();
 
 async function loadAdmins() {
