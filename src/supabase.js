@@ -109,6 +109,35 @@ export async function updateOrderStatus(id, status) {
   if (error) throw error;
 }
 
+export async function updateOrderFulfilment(id, courier, trackingNumber) {
+  const { error } = await supabase
+    .from('orders')
+    .update({ courier: courier || null, tracking_number: trackingNumber || null })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+/* ── Store settings ──────────────────────────────────────── */
+export const DEFAULT_SETTINGS = {
+  shipping_fee:            '150',
+  free_shipping_threshold: '1500',
+  gcash_number:            '09XX-XXX-XXXX',
+  gcash_name:              'NGL Accessories',
+  bank_accounts:           'BDO: Account # 0012-3456-7890 · NGL Accessories\nBPI: Account # 1234-5678-90 · NGL Accessories',
+};
+
+export async function getStoreSettings() {
+  const { data, error } = await supabase.from('store_settings').select('key, value');
+  if (error) throw error;
+  return { ...DEFAULT_SETTINGS, ...Object.fromEntries((data || []).map(r => [r.key, r.value])) };
+}
+
+export async function updateStoreSettings(settings) {
+  const rows = Object.entries(settings).map(([key, value]) => ({ key, value: String(value) }));
+  const { error } = await supabase.from('store_settings').upsert(rows);
+  if (error) throw error;
+}
+
 /* ── Sales summary ───────────────────────────────────────── */
 export async function getSalesSummary(days = 7) {
   const since = new Date();

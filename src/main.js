@@ -203,10 +203,23 @@ newsletterForm?.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
   submitBtn.style.opacity = '0.65';
 
-  try {
-    await supabase.from('newsletter_subscribers').insert([{ email }]);
-  } catch (err) {
-    console.error('Newsletter error:', err);
+  // Supabase returns errors in the response object, NOT as thrown exceptions —
+  // we must inspect `error` rather than rely on try/catch.
+  const { error } = await supabase
+    .from('newsletter_subscribers')
+    .insert([{ email }]);
+
+  // 23505 = unique_violation → already subscribed, treat as success.
+  if (error && error.code !== '23505') {
+    console.error('Newsletter signup failed:', error);
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = '';
+    setNlError(
+      error.code === '42P01'
+        ? 'Subscriptions aren’t set up yet — please try again later.'
+        : 'Sorry, something went wrong. Please try again.'
+    );
+    return;
   }
 
   // Animate form out, success in
@@ -226,7 +239,7 @@ newsletterForm?.addEventListener('submit', async (e) => {
           Welcome to the circle.
         </p>
         <p style="font-family:var(--font-sans);font-size:12px;font-weight:300;color:rgba(245,241,235,0.4);letter-spacing:0.08em">
-          Check your inbox for a warm welcome from NGL.
+          You'll be first to know about new drops &amp; private offers.
         </p>
       </div>
     `;
@@ -237,6 +250,24 @@ newsletterForm?.addEventListener('submit', async (e) => {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function setNlError(msg) {
+  let errorEl = document.getElementById('nl-error-msg');
+  if (!errorEl) {
+    errorEl = document.createElement('p');
+    errorEl.id = 'nl-error-msg';
+    errorEl.setAttribute('role', 'alert');
+    errorEl.style.cssText = [
+      'font-family:var(--font-sans)',
+      'font-size:11px',
+      'color:var(--coral)',
+      'letter-spacing:0.05em',
+      'margin-top:-4px',
+    ].join(';');
+    newsletterEmail.closest('.nl-input-row').insertAdjacentElement('afterend', errorEl);
+  }
+  errorEl.textContent = msg;
 }
 
 function shake(el) {
@@ -250,22 +281,7 @@ function shake(el) {
   ];
   el.animate(kf, { duration: 480, easing: 'ease-in-out' });
   el.focus();
-
-  let errorEl = document.getElementById('nl-error-msg');
-  if (!errorEl) {
-    errorEl = document.createElement('p');
-    errorEl.id = 'nl-error-msg';
-    errorEl.setAttribute('role', 'alert');
-    errorEl.style.cssText = [
-      'font-family:var(--font-sans)',
-      'font-size:11px',
-      'color:var(--coral)',
-      'letter-spacing:0.05em',
-      'margin-top:-4px',
-    ].join(';');
-    el.closest('.nl-input-row').insertAdjacentElement('afterend', errorEl);
-  }
-  errorEl.textContent = 'Please enter a valid email address.';
+  setNlError('Please enter a valid email address.');
 }
 
 /* Inject success animation keyframe */

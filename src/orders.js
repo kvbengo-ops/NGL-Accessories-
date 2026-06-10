@@ -1,7 +1,7 @@
 /* ============================================================
    NGL Admin — Orders Management
    ============================================================ */
-import { supabase, getOrders, updateOrderStatus } from '../src/supabase.js';
+import { supabase, getOrders, updateOrderStatus, updateOrderFulfilment } from '../src/supabase.js';
 import { requireAuth, renderSidebar, showToast, formatPrice, formatDate, statusBadge, openModal, closeModal, escapeHtml } from '../src/admin.js';
 
 let allOrders = [];
@@ -138,6 +138,26 @@ function showOrderDetail(id) {
         <p>Date: ${formatDate(o.created_at)}</p>
       </div>
     </div>
+    ${o.type === 'online' ? `
+    <div class="order-detail-section">
+      <h3 class="order-detail-heading">Fulfilment</h3>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label class="form-label" for="fulfil-courier">Courier</label>
+          <input type="text" id="fulfil-courier" class="form-input" placeholder="e.g. J&amp;T, LBC, Flash"
+            value="${escapeHtml(o.courier || '')}" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fulfil-tracking">Tracking Number</label>
+          <input type="text" id="fulfil-tracking" class="form-input" placeholder="Tracking #"
+            value="${escapeHtml(o.tracking_number || '')}" />
+        </div>
+      </div>
+      <button class="btn-admin-primary" id="save-fulfilment" type="button">
+        <span class="material-symbols-outlined">local_shipping</span>
+        Save Fulfilment
+      </button>
+    </div>` : ''}
     <div class="order-detail-section">
       <h3 class="order-detail-heading">Items</h3>
       <div class="order-detail-items">${items || '<p>No items</p>'}</div>
@@ -149,13 +169,30 @@ function showOrderDetail(id) {
     </div>
   `;
 
+  document.getElementById('save-fulfilment')?.addEventListener('click', async () => {
+    const btn      = document.getElementById('save-fulfilment');
+    const courier  = document.getElementById('fulfil-courier').value.trim();
+    const tracking = document.getElementById('fulfil-tracking').value.trim();
+    btn.disabled = true;
+    try {
+      await updateOrderFulfilment(o.id, courier, tracking);
+      o.courier = courier;
+      o.tracking_number = tracking;
+      showToast('Fulfilment details saved');
+    } catch (err) {
+      showToast('Failed to save: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
   openModal('order-detail-modal');
 }
 
 /* ── CSV Export ──────────────────────────────────────────── */
 function setupExport() {
   document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-    const headers = ['Order #','Type','Status','Customer','Email','Phone','Total','Payment','Date'];
+    const headers = ['Order #','Type','Status','Customer','Email','Phone','Total','Payment','Courier','Tracking #','Date'];
     const rows = allOrders.map(o => [
       o.order_number, o.type, o.status,
       o.customer_name || '',
@@ -163,6 +200,8 @@ function setupExport() {
       o.customer_phone || '',
       o.total,
       o.payment_method || '',
+      o.courier || '',
+      o.tracking_number || '',
       new Date(o.created_at).toLocaleString('en-PH'),
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');

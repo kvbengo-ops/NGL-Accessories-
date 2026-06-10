@@ -17,7 +17,10 @@
 //      WEBHOOK_SECRET=some-long-random-string
 // ============================================================
 
+// @ts-ignore
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+declare const Deno: any;
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_EMAIL      = Deno.env.get("FROM_EMAIL") ?? "NGL Accessories <onboarding@resend.dev>";
@@ -175,7 +178,7 @@ async function sendEmail(to: string, subject: string, html: string) {
   return res.ok;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Shared-secret check (function is deployed with --no-verify-jwt)
   if (WEBHOOK_SECRET && req.headers.get("x-webhook-secret") !== WEBHOOK_SECRET) {
     return new Response("Unauthorized", { status: 401 });

@@ -3,3 +3,8 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local

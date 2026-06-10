@@ -20,10 +20,16 @@
         <h1 class="admin-page-title">Expenses Ledger</h1>
         <p class="admin-page-subtitle">Track your business expenses to calculate true Net Profit.</p>
       </div>
-      <button class="btn-admin-primary" id="btn-create-expense">
-        <span class="material-symbols-outlined">add</span>
-        Log Expense
-      </button>
+      <div style="display:flex;gap:12px;">
+        <button class="btn-admin-ghost" id="btn-export-expenses">
+          <span class="material-symbols-outlined">download</span>
+          Export CSV
+        </button>
+        <button class="btn-admin-primary" id="btn-create-expense">
+          <span class="material-symbols-outlined">add</span>
+          Log Expense
+        </button>
+      </div>
     </header>
 
     <!-- Filters -->

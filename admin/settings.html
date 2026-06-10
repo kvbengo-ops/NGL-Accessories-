@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store Settings — NGL Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="admin-page">
+  <div id="sidebar-container"></div>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div>
+        <h1 class="admin-page-title">Store Settings</h1>
+        <p class="admin-page-subtitle">Shipping rules and payment account details shown at checkout.</p>
+      </div>
+    </header>
+
+    <section class="admin-card" style="max-width:720px;">
+      <form id="settings-form" class="modal-form" style="padding:24px;">
+
+        <h3 class="order-detail-heading">Shipping</h3>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="set-shipping-fee">Shipping Fee (₱) *</label>
+            <input type="number" id="set-shipping-fee" class="form-input" min="0" step="0.01" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="set-free-threshold">Free Shipping Over (₱) *</label>
+            <input type="number" id="set-free-threshold" class="form-input" min="0" step="0.01" required />
+          </div>
+        </div>
+
+        <h3 class="order-detail-heading" style="margin-top:16px;">GCash</h3>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="set-gcash-number">GCash Number *</label>
+            <input type="text" id="set-gcash-number" class="form-input" placeholder="09XX-XXX-XXXX" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="set-gcash-name">Account Name *</label>
+            <input type="text" id="set-gcash-name" class="form-input" placeholder="NGL Accessories" required />
+          </div>
+        </div>
+
+        <h3 class="order-detail-heading" style="margin-top:16px;">Bank Transfer</h3>
+        <div class="form-field">
+          <label class="form-label" for="set-bank-accounts">Bank Accounts (one per line)</label>
+          <textarea id="set-bank-accounts" class="form-input form-textarea" rows="3"
+            placeholder="BDO: Account # 0012-3456-7890 · NGL Accessories"></textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn-admin-primary" id="btn-save-settings">
+            <span class="material-symbols-outlined">save</span>
+            Save Settings
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="/src/settings.js"></script>
+</body>
+</html>

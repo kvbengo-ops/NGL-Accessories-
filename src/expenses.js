@@ -27,7 +27,42 @@ let currentUser = null;
   
   // Table actions
   document.getElementById('expenses-body').addEventListener('click', handleTableAction);
+
+  // CSV export
+  document.getElementById('btn-export-expenses').addEventListener('click', exportExpensesCsv);
 })();
+
+function exportExpensesCsv() {
+  const rows = getFilteredExpenses();
+  if (rows.length === 0) {
+    showToast('No expenses to export', 'warning');
+    return;
+  }
+
+  const headers = ['Date', 'Description', 'Category', 'Amount', 'Logged By'];
+  const escapeCsv = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+  const lines = rows.map(e => {
+    const admin = allAdmins.find(a => a.id === e.created_by);
+    return [
+      e.expense_date || '',
+      e.title,
+      e.category,
+      Number(e.amount).toFixed(2),
+      admin ? admin.name : 'Unknown',
+    ].map(escapeCsv).join(',');
+  });
+
+  const csv  = [headers.map(escapeCsv).join(','), ...lines].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `ngl-expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Expenses exported');
+}
 
 async function loadAdmins() {
   try {
@@ -75,17 +110,21 @@ async function refreshExpenses() {
   }
 }
 
-function renderExpenses() {
+function getFilteredExpenses() {
   const search = document.getElementById('expenses-search').value.toLowerCase();
   const category = document.getElementById('expenses-filter-category').value;
   const month = document.getElementById('expenses-filter-month').value;
 
-  const filtered = allExpenses.filter(e => {
+  return allExpenses.filter(e => {
     if (search && !e.title.toLowerCase().includes(search)) return false;
     if (category && e.category !== category) return false;
     if (month && !e.expense_date?.startsWith(month)) return false;
     return true;
   });
+}
+
+function renderExpenses() {
+  const filtered = getFilteredExpenses();
 
   const tbody = document.getElementById('expenses-body');
   if (filtered.length === 0) {

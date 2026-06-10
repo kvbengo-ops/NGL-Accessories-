@@ -62,6 +62,16 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_column THEN null;
 END $$;
 
+-- Fulfilment tracking (courier + tracking number, set when an order ships)
+DO $$ BEGIN
+  ALTER TABLE orders ADD COLUMN courier text;
+EXCEPTION WHEN duplicate_column THEN null;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE orders ADD COLUMN tracking_number text;
+EXCEPTION WHEN duplicate_column THEN null;
+END $$;
+
 
 -- 4. ORDER ITEMS
 CREATE TABLE IF NOT EXISTS order_items (
@@ -246,6 +256,13 @@ DECLARE
   v_item_profit numeric(10,2);
   v_order_total_cost numeric(10,2) := 0;
   v_order_profit numeric(10,2) := 0;
+  v_computed_subtotal numeric(10,2) := 0;
+  v_discount numeric(10,2) := 0;
+  v_shipping numeric(10,2) := 0;
+  v_net_subtotal numeric(10,2) := 0;
+  v_order_total numeric(10,2) := 0;
+  v_ship_fee numeric(10,2);
+  v_free_at numeric(10,2);
 BEGIN
   v_order_number := p_order_data->>'order_number';
   IF EXISTS (SELECT 1 FROM public.orders WHERE order_number = v_order_number) THEN
@@ -290,18 +307,27 @@ BEGIN
     (p_order_data->>'handled_by')::uuid
   ) RETURNING id INTO v_order_id;
 
+  v_discount := coalesce((p_order_data->>'discount')::numeric(10,2), 0);
+
   FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
     v_product_id := (v_item->>'product_id')::uuid;
     v_qty := (v_item->>'quantity')::integer;
-    v_price := (v_item->>'price')::numeric(10,2);
-    v_name := v_item->>'product_name';
-    v_subtotal := v_price * v_qty;
 
-    SELECT coalesce(cost_price, 0) INTO v_item_cost FROM public.products WHERE id = v_product_id;
-    
+    -- Source price + cost from the products table, never from the client payload,
+    -- so a tampered request can't change what the customer is charged.
+    SELECT name, price, coalesce(cost_price, 0)
+      INTO v_name, v_price, v_item_cost
+    FROM public.products
+    WHERE id = v_product_id;
+
+    IF v_price IS NULL THEN
+      RAISE EXCEPTION 'Product with ID % not found', v_product_id;
+    END IF;
+
+    v_subtotal := v_price * v_qty;
     v_item_profit := v_subtotal - (v_item_cost * v_qty);
+    v_computed_subtotal := v_computed_subtotal + v_subtotal;
     v_order_total_cost := v_order_total_cost + (v_item_cost * v_qty);
-    v_order_profit := v_order_profit + v_item_profit;
 
     INSERT INTO public.order_items (order_id, product_id, product_name, cost_price, price, quantity, subtotal, profit)
     VALUES (v_order_id, v_product_id, v_name, v_item_cost, v_price, v_qty, v_subtotal, v_item_profit);
@@ -312,10 +338,29 @@ BEGIN
     WHERE product_id = v_product_id;
   END LOOP;
 
-  -- Update order with total cost and profit
+  -- Compute shipping server-side for online orders using the store's rule
+  -- from store_settings (falls back to flat ₱150, free over ₱1,500 if the
+  -- settings rows are missing). POS orders have no shipping.
+  IF (p_order_data->>'type') = 'online' THEN
+    SELECT coalesce((SELECT value FROM public.store_settings WHERE key = 'shipping_fee')::numeric, 150)
+      INTO v_ship_fee;
+    SELECT coalesce((SELECT value FROM public.store_settings WHERE key = 'free_shipping_threshold')::numeric, 1500)
+      INTO v_free_at;
+    v_shipping := CASE WHEN v_computed_subtotal >= v_free_at THEN 0 ELSE v_ship_fee END;
+  END IF;
+
+  -- Authoritative totals from server-side prices. The client-supplied discount is
+  -- honoured, but subtotal/shipping/total are trusted from the database only.
+  v_net_subtotal := greatest(0, v_computed_subtotal - v_discount);
+  v_order_total  := v_net_subtotal + v_shipping;
+  v_order_profit := v_net_subtotal - v_order_total_cost;  -- merchandise margin, excludes shipping
+
   UPDATE public.orders
-  SET total_cost = v_order_total_cost,
-      profit = v_order_profit
+  SET subtotal   = v_computed_subtotal,
+      discount   = v_discount,
+      total      = v_order_total,
+      total_cost = v_order_total_cost,
+      profit     = v_order_profit
   WHERE id = v_order_id;
 
   RETURN jsonb_build_object(
@@ -574,3 +619,119 @@ BEGIN
   -- Note: The orders_restore_stock trigger will automatically return inventory.
 END;
 $$;
+
+-- ------------------------------------------------------------
+-- Schedule the cleanup to run hourly via pg_cron.
+-- Enable pg_cron first in Supabase: Database → Extensions → pg_cron.
+-- This block no-ops gracefully if the extension isn't enabled yet,
+-- and is safe to re-run (it replaces any existing job of the same name).
+-- ------------------------------------------------------------
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'ngl-auto-cancel-stale-orders') THEN
+      PERFORM cron.unschedule('ngl-auto-cancel-stale-orders');
+    END IF;
+    PERFORM cron.schedule(
+      'ngl-auto-cancel-stale-orders',
+      '0 * * * *',
+      'SELECT public.auto_cancel_stale_orders();'
+    );
+  ELSE
+    RAISE NOTICE 'pg_cron is not enabled — auto_cancel_stale_orders() will not run automatically. Enable pg_cron and re-run this script.';
+  END IF;
+END $$;
+
+-- ============================================================
+-- 16. CUSTOMER ORDER TRACKING (order number + email lookup)
+-- ------------------------------------------------------------
+-- Lets a logged-out customer look up their order status without
+-- exposing a broad anon SELECT. The email must match the order,
+-- so an order number alone can't reveal anyone's details.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.get_order_status(p_order_number text, p_email text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_order record;
+  v_items jsonb;
+BEGIN
+  SELECT * INTO v_order
+  FROM public.orders
+  WHERE order_number = trim(p_order_number)
+    AND lower(customer_email) = lower(trim(p_email))
+    AND type = 'online';
+
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+
+  SELECT jsonb_agg(jsonb_build_object(
+    'product_name', product_name,
+    'quantity', quantity,
+    'subtotal', subtotal
+  )) INTO v_items
+  FROM public.order_items
+  WHERE order_id = v_order.id;
+
+  RETURN jsonb_build_object(
+    'order_number',     v_order.order_number,
+    'status',           v_order.status,
+    'total',            v_order.total,
+    'payment_method',   v_order.payment_method,
+    'delivery_address', v_order.delivery_address,
+    'courier',          v_order.courier,
+    'tracking_number',  v_order.tracking_number,
+    'created_at',       v_order.created_at,
+    'updated_at',       v_order.updated_at,
+    'items',            coalesce(v_items, '[]'::jsonb)
+  );
+END;
+$$;
+
+-- ============================================================
+-- 17. STORE SETTINGS (shipping rules + payment account details)
+-- ------------------------------------------------------------
+-- Editable from Admin → Store Settings (superadmin only).
+-- Public read is required: the checkout page shows the payment
+-- account details and computes the shipping preview from these.
+-- create_order_safely() reads the same rows server-side, so the
+-- charged total always follows the configured rule.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS store_settings (
+  key        text PRIMARY KEY,
+  value      text NOT NULL DEFAULT '',
+  updated_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "settings_public_read" ON store_settings;
+CREATE POLICY "settings_public_read" ON store_settings FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "settings_superadmin_write" ON store_settings;
+CREATE POLICY "settings_superadmin_write" ON store_settings FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM public.admins
+    WHERE id = auth.uid() AND role = 'superadmin' AND is_active = true
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM public.admins
+    WHERE id = auth.uid() AND role = 'superadmin' AND is_active = true
+  ));
+
+DROP TRIGGER IF EXISTS store_settings_updated_at ON store_settings;
+CREATE TRIGGER store_settings_updated_at
+  BEFORE UPDATE ON store_settings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- Seed defaults (kept if rows already exist)
+INSERT INTO store_settings (key, value) VALUES
+  ('shipping_fee',            '150'),
+  ('free_shipping_threshold', '1500'),
+  ('gcash_number',            '09XX-XXX-XXXX'),
+  ('gcash_name',              'NGL Accessories'),
+  ('bank_accounts',           E'BDO: Account # 0012-3456-7890 · NGL Accessories\nBPI: Account # 1234-5678-90 · NGL Accessories')
+ON CONFLICT (key) DO NOTHING;

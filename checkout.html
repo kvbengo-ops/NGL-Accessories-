@@ -124,9 +124,9 @@
             <div class="gcash-info">
               <div class="gcash-number">
                 <span class="material-symbols-outlined">phone_iphone</span>
-                <span>GCash Number: <strong>09XX-XXX-XXXX</strong></span>
+                <span>GCash Number: <strong id="gcash-number-display">09XX-XXX-XXXX</strong></span>
               </div>
-              <p class="gcash-name">Account Name: <strong>NGL Accessories</strong></p>
+              <p class="gcash-name">Account Name: <strong id="gcash-name-display">NGL Accessories</strong></p>
             </div>
             <div class="form-field">
               <label class="form-label" for="gcash-ref">GCash Reference Number *</label>
@@ -147,9 +147,9 @@
             </div>
           </label>
           <div class="payment-detail-panel hidden" id="bank-detail">
-            <div class="bank-info">
-              <p><strong>BDO:</strong> Account # 0012-3456-7890 · NGL Accessories</p>
-              <p><strong>BPI:</strong> Account # 1234-5678-90 · NGL Accessories</p>
+            <div class="bank-info" id="bank-accounts-display">
+              <p>BDO: Account # 0012-3456-7890 · NGL Accessories</p>
+              <p>BPI: Account # 1234-5678-90 · NGL Accessories</p>
             </div>
             <div class="form-field">
               <label class="form-label" for="bank-ref">Bank Reference Number *</label>
@@ -215,7 +215,7 @@
           </div>
           <div class="checkout-trust-item">
             <span class="material-symbols-outlined">local_shipping</span>
-            <span>Free shipping over ₱1,500</span>
+            <span id="trust-free-shipping">Free shipping over ₱1,500</span>
           </div>
         </div>
       </div>

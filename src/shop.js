@@ -503,6 +503,7 @@ class SwipeStack {
 
 /* ── GRID RENDERER ── */
 let activeFilter = 'all';
+let searchQuery  = '';
 
 function buildProductCard(product) {
   const card = document.createElement('div');
@@ -603,10 +604,26 @@ function buildProductCard(product) {
 function renderGrid() {
   const grid = document.getElementById('products-grid');
   if (!grid) return;
-  const filtered = activeFilter === 'all'
-    ? PRODUCTS
-    : PRODUCTS.filter(p => p.category === activeFilter);
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = PRODUCTS.filter(p => {
+    const matchFilter = activeFilter === 'all' || p.category === activeFilter;
+    const matchSearch = !q
+      || p.name.toLowerCase().includes(q)
+      || (p.desc || '').toLowerCase().includes(q)
+      || (p.tags || []).some(t => t.toLowerCase().includes(q));
+    return matchFilter && matchSearch;
+  });
   grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="shop-no-results" style="grid-column:1/-1;text-align:center;padding:48px 16px;opacity:0.7;">
+        <span class="material-symbols-outlined" style="font-size:40px;opacity:0.5;">search_off</span>
+        <p style="margin-top:12px;font-family:var(--font-sans);">No pieces match “${searchQuery}”.</p>
+      </div>`;
+    return;
+  }
+
   filtered.forEach((p, i) => {
     const card = buildProductCard(p);
     card.style.setProperty('--stagger-i', String(Math.min(i, 8)));
@@ -716,6 +733,12 @@ document.querySelectorAll('.filter-pill').forEach(btn => {
     
     renderGrid();
   });
+});
+
+// Product search (grid view)
+document.getElementById('shop-search')?.addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  renderGrid();
 });
 
 // Cart button click listener

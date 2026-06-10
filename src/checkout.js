@@ -1,13 +1,49 @@
 /* ============================================================
    NGL — Checkout Flow Logic
    ============================================================ */
-import { supabase, createOrder, generateOrderNumber, getProducts } from './supabase.js';
+import { supabase, createOrder, generateOrderNumber, getProducts, getStoreSettings, DEFAULT_SETTINGS } from './supabase.js';
 
-const FREE_SHIPPING_THRESHOLD = 1500;
+let settings = { ...DEFAULT_SETTINGS };
 
 let cart     = [];
 let step     = 1;
 let details  = {};
+
+function shippingFee()          { return Number(settings.shipping_fee) || 0; }
+function freeShipThreshold()    { return Number(settings.free_shipping_threshold) || 0; }
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+// Fill the payment panels + free-shipping trust line from store settings
+function renderSettings() {
+  const gcashNum  = document.getElementById('gcash-number-display');
+  const gcashName = document.getElementById('gcash-name-display');
+  const bankInfo  = document.getElementById('bank-accounts-display');
+  const trustShip = document.getElementById('trust-free-shipping');
+
+  if (gcashNum)  gcashNum.textContent  = settings.gcash_number;
+  if (gcashName) gcashName.textContent = settings.gcash_name;
+  if (bankInfo) {
+    bankInfo.innerHTML = settings.bank_accounts
+      .split('\n').filter(Boolean)
+      .map(line => `<p>${escapeHtml(line)}</p>`).join('');
+  }
+  if (trustShip) trustShip.textContent = `Free shipping over ${formatPrice(freeShipThreshold())}`;
+}
+
+async function loadSettings() {
+  try {
+    settings = await getStoreSettings();
+  } catch (err) {
+    console.error('Could not load store settings, using defaults:', err);
+  }
+  renderSettings();
+  updateSummary();
+}
 
 // Load cart from localStorage
 function loadCart() {
@@ -31,7 +67,7 @@ function getSubtotal() {
 }
 
 function getShipping(subtotal) {
-  return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 150;
+  return subtotal >= freeShipThreshold() ? 0 : shippingFee();
 }
 
 /* ── Step Navigation ─────────────────────────────────────── */
@@ -124,11 +160,11 @@ function updateSummary() {
   // Shipping note
   const noteEl = document.getElementById('checkout-shipping-note');
   if (noteEl) {
-    if (subtotal < FREE_SHIPPING_THRESHOLD && subtotal > 0) {
-      const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+    if (subtotal < freeShipThreshold() && subtotal > 0) {
+      const remaining = freeShipThreshold() - subtotal;
       noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Add <strong>${formatPrice(remaining)}</strong> more for free shipping!`;
       noteEl.style.display = '';
-    } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    } else if (subtotal >= freeShipThreshold()) {
       noteEl.innerHTML = `<span class="material-symbols-outlined">check_circle</span>You qualify for <strong>free shipping</strong>!`;
       noteEl.style.display = '';
     } else {
@@ -248,13 +284,10 @@ async function placeOrder() {
     const shipping = getShipping(subtotal);
     const total    = subtotal + shipping;
 
-    // --- STUB: Payment Gateway Integration (PayMongo/GCash) ---
-    if (['gcash', 'card', 'bank_transfer'].includes(payMethod)) {
-      console.log(`[STUB] Initiating ${payMethod.toUpperCase()} payment via PayMongo API...`);
-      await new Promise(r => setTimeout(r, 600)); // Simulate API delay
-      console.log(`[STUB] Payment intent successful for ${formatPrice(total)}`);
-    }
-    // ----------------------------------------------------------
+    // Payment is confirmed manually via the reference number the customer
+    // enters (GCash / bank transfer). The order is created as `pending` and an
+    // admin verifies the payment before fulfilment. There is no automated
+    // gateway yet — see README ("Going further") to wire up PayMongo.
 
     const order = await createOrder({
       order_number:     generateOrderNumber(),
@@ -279,10 +312,9 @@ async function placeOrder() {
     // Clear cart
     localStorage.removeItem('ngl_cart');
 
-    // --- STUB: Transactional Emails (Resend API) ---
-    console.log(`[STUB] Sending order confirmation email to ${details.email} via Resend API...`);
-    // await fetch('https://api.resend.com/emails', { method: 'POST', body: JSON.stringify(...) });
-    // -----------------------------------------------
+    // Confirmation + admin-alert emails are sent server-side: a Postgres trigger
+    // on `orders` INSERT calls the `order-notification` Edge Function (Resend).
+    // See setup/order-emails.sql — nothing to send from the client.
 
     // Redirect to confirmation
     window.location.href = `/order-confirm.html?id=${order.id}`;
@@ -303,3 +335,4 @@ loadCart();
 renderCartReview();
 updateSummary();
 goToStep(1);
+loadSettings();

@@ -152,16 +152,36 @@ async function handleEditPassword(e) {
   const btn = document.getElementById('save-password-btn');
   const errorEl = document.getElementById('edit-password-error');
   errorEl.classList.add('hidden');
+
+  const userId      = document.getElementById('edit-password-user-id').value;
+  const newPassword = document.getElementById('new-admin-password').value;
+
+  if (!userId) {
+    errorEl.textContent = 'Could not determine which admin to update.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  if (!newPassword || newPassword.length < 8) {
+    errorEl.textContent = 'Password must be at least 8 characters long.';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
   btn.disabled = true;
-  btn.textContent = 'Sending...';
+  btn.textContent = 'Saving…';
 
   try {
-    // Mock updating password
-    await new Promise(resolve => setTimeout(resolve, 600));
-    showToast('Password updated successfully (mocked)!', 'success');
+    const { error } = await supabase.rpc('update_admin_password', {
+      p_user_id: userId,
+      p_new_password: newPassword,
+    });
+    if (error) throw error;
+
+    showToast('Password updated successfully', 'success');
     closeModal('edit-password-modal');
+    document.getElementById('edit-password-form').reset();
   } catch (err) {
-    errorEl.textContent = err.message || 'Failed to process request.';
+    errorEl.textContent = err.message || 'Failed to update password.';
     errorEl.classList.remove('hidden');
   } finally {
     btn.disabled = false;

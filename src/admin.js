@@ -51,6 +51,7 @@ export function renderSidebar(activePage, admin) {
     { href: '/admin/expenses.html',  icon: 'receipt',         label: 'Expenses'  },
     { section: 'Settings', superadminOnly: true },
     { href: '/admin/admins.html',    icon: 'manage_accounts', label: 'Admins', superadminOnly: true },
+    { href: '/admin/settings.html',  icon: 'settings',        label: 'Store Settings', superadminOnly: true },
   ];
 
   const isSuperadmin = admin?.role === 'superadmin';
