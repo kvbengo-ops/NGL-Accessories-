@@ -20,10 +20,20 @@
         <h1 class="admin-page-title">Inventory</h1>
         <p class="admin-page-subtitle">Manage products and stock levels</p>
       </div>
-      <button class="admin-header-btn" id="btn-add-product">
-        <span class="material-symbols-outlined">add</span>
-        Add Product
-      </button>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="admin-header-btn" id="btn-export-csv" style="background: transparent; border: 1px solid rgba(245,241,235,0.2); color: rgba(245,241,235,0.8);">
+          <span class="material-symbols-outlined">download</span>
+          Export CSV
+        </button>
+        <button class="admin-header-btn" id="btn-open-import" style="background: transparent; border: 1px solid rgba(201,161,74,0.4); color: var(--gold-300);">
+          <span class="material-symbols-outlined">upload_file</span>
+          Batch Import
+        </button>
+        <button class="admin-header-btn" id="btn-add-product">
+          <span class="material-symbols-outlined">add</span>
+          Add Product
+        </button>
+      </div>
     </header>
 
     <!-- Filters -->
@@ -199,6 +209,101 @@
       <div style="display: flex; gap: 12px; padding: 0 16px 8px;">
         <button type="button" class="btn-admin-ghost" id="cancel-delete-product" style="flex: 1; border: 1px solid rgba(245,241,235,0.2);">Keep It</button>
         <button type="button" class="btn-admin-primary" id="confirm-delete-product" style="flex: 1; background: #ef4444; border-color: #ef4444; color: #fff;">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch Import Modal -->
+  <div class="admin-modal-backdrop" id="batch-import-modal">
+    <div class="admin-modal" style="max-width: 520px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Batch Import Products</h2>
+        <button class="modal-close-btn" id="close-batch-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="modal-form" style="padding: 0 24px 24px;">
+
+        <!-- Step 1 — Smart Template Generator -->
+        <div style="margin-bottom: 20px; padding: 16px; background: rgba(201,161,74,0.08); border: 1px solid rgba(201,161,74,0.2); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="background: var(--gold-300); color: #141210; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">1</span>
+            <span style="font-weight: 500; color: rgba(245,241,235,0.9);">Download Template</span>
+          </div>
+          <p style="color: rgba(245,241,235,0.6); font-size: 13px; line-height: 1.5; margin-bottom: 12px;">Choose a collection and category to pre-fill, or leave as "Any" for a blank template. Pick how many rows you need.</p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 8px; margin-bottom: 12px;">
+            <select id="tpl-collection" class="form-input" style="font-size: 13px; padding: 8px 10px;">
+              <option value="">Any Collection</option>
+              <option value="Natural">Natural</option>
+              <option value="Grace">Grace</option>
+              <option value="Lush">Lush</option>
+            </select>
+            <select id="tpl-category" class="form-input" style="font-size: 13px; padding: 8px 10px;">
+              <option value="">Any Category</option>
+              <option value="Earrings">Earrings</option>
+              <option value="Rings">Rings</option>
+              <option value="Bracelets">Bracelets</option>
+              <option value="Necklaces">Necklaces</option>
+              <option value="Anklets">Anklets</option>
+            </select>
+            <select id="tpl-rows" class="form-input" style="font-size: 13px; padding: 8px 10px;">
+              <option value="5">5 rows</option>
+              <option value="10" selected>10 rows</option>
+              <option value="20">20 rows</option>
+              <option value="50">50 rows</option>
+            </select>
+          </div>
+
+          <button class="btn-admin-primary" id="btn-download-template" style="font-size: 13px; padding: 8px 16px;">
+            <span class="material-symbols-outlined" style="font-size: 16px;">download</span>
+            Download Template
+          </button>
+        </div>
+
+        <!-- Step 2 -->
+        <div style="margin-bottom: 20px; padding: 16px; background: rgba(201,161,74,0.08); border: 1px solid rgba(201,161,74,0.2); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="background: var(--gold-300); color: #141210; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">2</span>
+            <span style="font-weight: 500; color: rgba(245,241,235,0.9);">Upload CSV & Images</span>
+          </div>
+          <p style="color: rgba(245,241,235,0.6); font-size: 13px; line-height: 1.5; margin-bottom: 12px;">Upload your filled CSV, and (optionally) select all the product image files that match the 'image_filename' column.</p>
+          
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(245,241,235,0.06); border: 1px dashed rgba(245,241,235,0.2); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+              <span class="material-symbols-outlined" style="color: var(--gold-300); font-size: 20px;">description</span>
+              <span id="import-file-label" style="color: rgba(245,241,235,0.7); font-size: 13px;">1. Choose .csv file…</span>
+              <input type="file" id="import-csv-file" accept=".csv" style="display: none;" />
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(245,241,235,0.06); border: 1px dashed rgba(245,241,235,0.2); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+              <span class="material-symbols-outlined" style="color: var(--gold-300); font-size: 20px;">imagesmode</span>
+              <span id="import-images-label" style="color: rgba(245,241,235,0.7); font-size: 13px;">2. Choose Image files (optional)…</span>
+              <input type="file" id="import-images-file" accept="image/*" multiple style="display: none;" />
+            </label>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div id="import-preview" style="display: none; margin-bottom: 16px;">
+          <p style="color: rgba(245,241,235,0.8); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Preview: <span id="import-count" style="color: var(--gold-300);">0</span> products found</p>
+          <div style="max-height: 180px; overflow-y: auto; border: 1px solid rgba(245,241,235,0.1); border-radius: 8px;">
+            <table class="admin-table" style="font-size: 12px;">
+              <thead>
+                <tr><th>Name</th><th>Collection</th><th>Price</th><th>Stock</th></tr>
+              </thead>
+              <tbody id="import-preview-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div id="import-error" class="login-error hidden" style="margin-bottom: 16px;"></div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button type="button" class="btn-admin-ghost" id="cancel-batch-import">Cancel</button>
+          <button type="button" class="btn-admin-primary" id="confirm-batch-import" disabled style="opacity: 0.5;">Import All</button>
+        </div>
       </div>
     </div>
   </div>

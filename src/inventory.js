@@ -6,6 +6,7 @@ import { requireAuth, renderSidebar, showToast, formatPrice, openModal, closeMod
 
 let allProducts = [];
 let editingId   = null;
+let parsedRows  = [];
 
 (async () => {
   const admin = await requireAuth();
@@ -201,6 +202,18 @@ function setupModal() {
     document.getElementById('delete-product-name').textContent = `${selected.length} selected products`;
     openModal('delete-product-modal');
   });
+
+  // Batch Import/Export
+  document.getElementById('btn-export-csv')?.addEventListener('click', exportCSV);
+  document.getElementById('btn-open-import')?.addEventListener('click', () => {
+    resetBatchImport();
+    openModal('batch-import-modal');
+  });
+  document.getElementById('close-batch-modal')?.addEventListener('click', () => closeModal('batch-import-modal'));
+  document.getElementById('cancel-batch-import')?.addEventListener('click', () => closeModal('batch-import-modal'));
+  document.getElementById('btn-download-template')?.addEventListener('click', downloadTemplate);
+  document.getElementById('import-csv-file')?.addEventListener('change', handleCSVUpload);
+  document.getElementById('confirm-batch-import')?.addEventListener('click', handleBatchImport);
 
   setupImageUpload();
 }
@@ -432,5 +445,264 @@ async function handleSaveProduct(e) {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Save Product';
+  }
+}
+
+/* ── CSV Helpers ───────────────────────────────────────────── */
+const CSV_HEADERS = ['name','collection','category','cost_price','price','description','tags','stock','low_stock_threshold','image_filename'];
+const VALID_COLLECTIONS = ['Natural','Grace','Lush'];
+const VALID_CATEGORIES  = ['Earrings','Rings','Bracelets','Necklaces','Anklets'];
+
+function escapeCSV(val) {
+  const s = String(val ?? '');
+  return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') { current += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else current += ch;
+    } else {
+      if (ch === '"') inQuotes = true;
+      else if (ch === ',') { result.push(current.trim()); current = ''; }
+      else current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function downloadTemplate() {
+  const collection = document.getElementById('tpl-collection')?.value || '';
+  const category   = document.getElementById('tpl-category')?.value || '';
+  const rowCount   = parseInt(document.getElementById('tpl-rows')?.value) || 10;
+
+  const rows = [];
+  for (let i = 0; i < rowCount; i++) {
+    rows.push([
+      '',              // name — user fills this
+      collection,      // pre-filled or blank
+      category,        // pre-filled or blank
+      '',              // cost_price
+      '',              // price
+      '',              // description
+      '',              // tags
+      '',              // stock
+      '5',             // default low_stock_threshold
+      ''               // image_filename
+    ]);
+  }
+
+  const csv = CSV_HEADERS.join(',') + '\n' + rows.map(r => r.map(escapeCSV).join(',')).join('\n') + '\n';
+
+  const parts = ['ngl_template'];
+  if (collection) parts.push(collection.toLowerCase());
+  if (category)   parts.push(category.toLowerCase());
+  const filename = parts.join('_') + '.csv';
+
+  downloadBlob(csv, filename);
+  const desc = (collection || 'All') + ' · ' + (category || 'All Categories') + ' · ' + rowCount + ' rows';
+  showToast(`Template downloaded: ${desc}`, 'success');
+}
+
+function exportCSV() {
+  if (allProducts.length === 0) { showToast('No products to export', 'error'); return; }
+  const rows = allProducts.map(p => [
+    p.name, p.collection, p.category,
+    p.cost_price || 0, p.price,
+    p.description || '', (p.tags || []).join(', '),
+    p.inventory?.stock || 0, p.inventory?.low_stock_threshold || 5,
+    p.image_url || ''
+  ]);
+  const csv = CSV_HEADERS.join(',') + '\n' + rows.map(r => r.map(escapeCSV).join(',')).join('\n') + '\n';
+  downloadBlob(csv, `ngl_inventory_${new Date().toISOString().slice(0,10)}.csv`);
+  showToast(`Exported ${allProducts.length} products!`, 'success');
+}
+
+function downloadBlob(content, filename) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function resetBatchImport() {
+  parsedRows = [];
+  const fileInput = document.getElementById('import-csv-file');
+  if (fileInput) fileInput.value = '';
+  document.getElementById('import-file-label').textContent = '1. Choose .csv file…';
+  
+  const imgInput = document.getElementById('import-images-file');
+  if (imgInput) imgInput.value = '';
+  document.getElementById('import-images-label').textContent = '2. Choose Image files (optional)…';
+
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-error').classList.add('hidden');
+  const btn = document.getElementById('confirm-batch-import');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+}
+
+document.getElementById('import-images-file')?.addEventListener('change', (e) => {
+  const files = e.target.files;
+  const label = document.getElementById('import-images-label');
+  if (files && files.length > 0) {
+    label.textContent = `2. Selected ${files.length} image(s)`;
+  } else {
+    label.textContent = '2. Choose Image files (optional)…';
+  }
+});
+
+function handleCSVUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('import-file-label').textContent = file.name;
+  const errorEl = document.getElementById('import-error');
+  errorEl.classList.add('hidden');
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const text = ev.target.result;
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) throw new Error('CSV must have a header row and at least one data row.');
+
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+      const required = ['name','collection','category','price','stock'];
+      for (const r of required) {
+        if (!headers.includes(r)) throw new Error(`Missing required column: "${r}"`);
+      }
+
+      parsedRows = [];
+      const errors = [];
+      for (let i = 1; i < lines.length; i++) {
+        const vals = parseCSVLine(lines[i]);
+        const row = {};
+        headers.forEach((h, idx) => row[h] = vals[idx] || '');
+
+        if (!row.name) { errors.push(`Row ${i + 1}: Missing product name`); continue; }
+        if (!VALID_COLLECTIONS.includes(row.collection)) { errors.push(`Row ${i + 1}: Invalid collection "${row.collection}" (use Natural, Grace, or Lush)`); continue; }
+        if (!VALID_CATEGORIES.includes(row.category)) { errors.push(`Row ${i + 1}: Invalid category "${row.category}"`); continue; }
+        if (!row.price || isNaN(row.price)) { errors.push(`Row ${i + 1}: Invalid price`); continue; }
+
+        parsedRows.push({
+          name: row.name,
+          collection: row.collection,
+          category: row.category,
+          cost_price: parseFloat(row.cost_price) || 0,
+          price: parseFloat(row.price),
+          description: row.description || null,
+          tags: row.tags ? row.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+          stock: parseInt(row.stock) || 0,
+          low_stock_threshold: parseInt(row.low_stock_threshold) || 5,
+          image_filename: row.image_filename || null,
+        });
+      }
+
+      if (errors.length > 0) {
+        errorEl.textContent = errors.slice(0, 3).join(' \u2022 ') + (errors.length > 3 ? ` \u2022 +${errors.length - 3} more errors` : '');
+        errorEl.classList.remove('hidden');
+      }
+
+      if (parsedRows.length > 0) {
+        document.getElementById('import-count').textContent = parsedRows.length;
+        document.getElementById('import-preview-body').innerHTML = parsedRows.slice(0, 10).map(r => `
+          <tr>
+            <td>${r.name}</td>
+            <td>${r.collection}</td>
+            <td>\u20B1${r.price.toFixed(2)}</td>
+            <td>${r.stock}</td>
+          </tr>
+        `).join('') + (parsedRows.length > 10 ? `<tr><td colspan="4" style="text-align:center; color: rgba(245,241,235,0.5);">+${parsedRows.length - 10} more…</td></tr>` : '');
+        document.getElementById('import-preview').style.display = 'block';
+        const btn = document.getElementById('confirm-batch-import');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove('hidden');
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function handleBatchImport() {
+  if (parsedRows.length === 0) return;
+  const btn = document.getElementById('confirm-batch-import');
+  const errorEl = document.getElementById('import-error');
+  errorEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Importing…';
+
+  try {
+    let successCount = 0;
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: adminRow } = await supabase.from('admins').select('id').eq('id', user.id).maybeSingle();
+
+    const imgInput = document.getElementById('import-images-file');
+    const imageFiles = imgInput?.files || [];
+
+    for (const row of parsedRows) {
+      let finalImageUrl = null;
+      if (row.image_filename && imageFiles.length > 0) {
+        // Find matching file
+        const matchingFile = Array.from(imageFiles).find(f => f.name === row.image_filename);
+        if (matchingFile) {
+          finalImageUrl = await uploadProductImage(matchingFile);
+        }
+      }
+
+      const productData = {
+        name: row.name,
+        collection: row.collection,
+        category: row.category,
+        cost_price: row.cost_price,
+        price: row.price,
+        description: row.description,
+        tags: row.tags,
+        image_url: finalImageUrl,
+        is_active: true,
+      };
+
+      const { data: saved, error: pErr } = await supabase.from('products').insert(productData).select().single();
+      if (pErr) { console.error(`Failed to import "${row.name}":`, pErr); continue; }
+
+      await supabase.from('inventory').upsert({
+        product_id: saved.id,
+        stock: row.stock,
+        low_stock_threshold: row.low_stock_threshold,
+      }, { onConflict: 'product_id' });
+
+      // Auto-log expense
+      if (row.cost_price > 0 && row.stock > 0) {
+        await supabase.from('expenses').insert({
+          title: `Inventory purchase: ${row.name} (\u00d7${row.stock})`,
+          category: 'Packaging Supplies',
+          amount: row.cost_price * row.stock,
+          expense_date: new Date().toISOString().slice(0, 10),
+          created_by: adminRow?.id ?? null,
+        });
+      }
+      successCount++;
+    }
+
+    showToast(`Successfully imported ${successCount} product(s)!`, 'success');
+    closeModal('batch-import-modal');
+    await loadProducts();
+  } catch (err) {
+    errorEl.textContent = 'Import failed: ' + err.message;
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Import All';
   }
 }

@@ -148,7 +148,7 @@ function startTour() {
     .filter(e => e.expense_date && e.expense_date.startsWith(thisMonthStr))
     .reduce((s, e) => s + Number(e.amount), 0);
     
-  const monthNet = monthGross - monthExpenses;
+  const monthNet = Math.max(0, monthGross - monthExpenses);
   
   if(document.getElementById('pnl-rev')) {
     document.getElementById('pnl-rev').textContent = formatPrice(monthRevenue);
@@ -156,7 +156,6 @@ function startTour() {
     document.getElementById('pnl-gross').textContent = formatPrice(monthGross);
     document.getElementById('pnl-exp').textContent = `-${formatPrice(monthExpenses)}`;
     document.getElementById('pnl-net').textContent = formatPrice(monthNet);
-    if(monthNet < 0) document.getElementById('pnl-net').style.color = 'var(--error)';
   }
 
 

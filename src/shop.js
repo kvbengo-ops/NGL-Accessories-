@@ -752,7 +752,9 @@ async function initShop() {
   showSkeleton();
   try {
     const rawProducts = await getProducts();
-    PRODUCTS = rawProducts.map(p => ({
+    PRODUCTS = rawProducts
+      .filter(p => (p.inventory?.stock || 0) > 0)
+      .map(p => ({
       id: p.id,
       name: p.name,
       category: p.collection.toLowerCase(),
