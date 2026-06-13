@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Block admin pages from search engines
+Disallow: /admin/
+Disallow: /checkout.html
+Disallow: /order-confirm.html
+
+# Sitemap location
+Sitemap: https://www.ngluxaries.store/sitemap.xml
