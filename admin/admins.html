@@ -86,6 +86,59 @@
     </div>
   </div>
 
+  <!-- Delete Admin Modal -->
+  <div class="admin-modal-backdrop" id="delete-admin-modal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h2 class="modal-title" style="color: #ef4444;">Delete Admin</h2>
+        <button class="modal-close-btn" id="close-delete-admin-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="delete-admin-form" class="modal-form">
+        <input type="hidden" id="delete-admin-user-id" />
+        <p style="margin-bottom: 24px; color: rgba(245,241,235,0.8); line-height: 1.5;">
+          Are you sure you want to permanently delete <strong id="delete-admin-name" style="color: #c9a14a;"></strong>? This action cannot be undone.
+        </p>
+        <div id="delete-admin-error" class="login-error hidden" style="margin-bottom:16px;"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-admin-ghost" id="cancel-delete-admin">Cancel</button>
+          <button type="submit" class="btn-admin-primary" style="background: #ef4444; border-color: #ef4444; color: #fff;" id="confirm-delete-btn">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Role Modal -->
+  <div class="admin-modal-backdrop" id="edit-role-modal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Role</h2>
+        <button class="modal-close-btn" id="close-edit-role-modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="edit-role-form" class="modal-form">
+        <input type="hidden" id="edit-role-user-id" />
+        <p style="margin-bottom: 16px; color: rgba(245,241,235,0.8); line-height: 1.5; font-size: 14px;">
+          Select a new role for <strong id="edit-role-name" style="color: #c9a14a;"></strong>:
+        </p>
+        <div class="form-field">
+          <label class="form-label" for="edit-admin-role">Role *</label>
+          <select id="edit-admin-role" class="form-input" required>
+            <option value="admin">Admin</option>
+            <option value="superadmin">Superadmin</option>
+          </select>
+        </div>
+        <div id="edit-role-error" class="login-error hidden" style="margin-bottom:16px;"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-admin-ghost" id="cancel-edit-role">Cancel</button>
+          <button type="submit" class="btn-admin-primary" id="save-role-btn">Save Role</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Edit Password Modal -->
   <div class="admin-modal-backdrop" id="edit-password-modal">
     <div class="admin-modal">

@@ -164,9 +164,9 @@ export async function uploadProductImage(file) {
 
 /* ── Admin helpers ───────────────────────────────────────── */
 export async function getAdmins() {
-  const { data, error } = await supabase.from('admins').select('*').order('created_at');
+  const { data, error } = await supabase.rpc('get_admin_users');
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 export async function getCurrentAdmin() {

@@ -44,6 +44,9 @@ async function loadAdmins() {
       <td>
         <div class="action-btns">
           ${a.id !== currentAdmin.id ? `
+            <button class="action-btn action-btn--edit" data-role-id="${a.id}" data-role-name="${a.name}" data-current-role="${a.role}" title="Change Role">
+              <span class="material-symbols-outlined">manage_accounts</span>
+            </button>
             <button class="action-btn action-btn--edit" data-pwd-id="${a.id}" title="Change Password">
               <span class="material-symbols-outlined">key</span>
             </button>
@@ -51,6 +54,9 @@ async function loadAdmins() {
               data-toggle-id="${a.id}" data-active="${a.is_active}"
               title="${a.is_active ? 'Deactivate' : 'Reactivate'}">
               <span class="material-symbols-outlined">${a.is_active ? 'person_off' : 'person'}</span>
+            </button>
+            <button class="action-btn action-btn--delete" data-delete-id="${a.id}" data-delete-name="${a.name}" title="Delete Admin">
+              <span class="material-symbols-outlined" style="color:#ef4444;">delete</span>
             </button>
           ` : '<span class="date-cell">(you)</span>'}
         </div>
@@ -68,11 +74,28 @@ async function loadAdmins() {
     });
   });
 
+  document.querySelectorAll('[data-role-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('edit-role-user-id').value = btn.dataset.roleId;
+      document.getElementById('edit-role-name').textContent = btn.dataset.roleName;
+      document.getElementById('edit-admin-role').value = btn.dataset.currentRole;
+      openModal('edit-role-modal');
+    });
+  });
+
   document.querySelectorAll('[data-pwd-id]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.getElementById('edit-password-user-id').value = btn.dataset.pwdId;
       document.getElementById('new-admin-password').value = '';
       openModal('edit-password-modal');
+    });
+  });
+
+  document.querySelectorAll('[data-delete-id]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('delete-admin-user-id').value = btn.dataset.deleteId;
+      document.getElementById('delete-admin-name').textContent = btn.dataset.deleteName;
+      openModal('delete-admin-modal');
     });
   });
 }
@@ -86,6 +109,74 @@ function setupModal() {
   document.getElementById('close-edit-password-modal')?.addEventListener('click', () => closeModal('edit-password-modal'));
   document.getElementById('cancel-edit-password')?.addEventListener('click', () => closeModal('edit-password-modal'));
   document.getElementById('edit-password-form')?.addEventListener('submit', handleEditPassword);
+
+  document.getElementById('close-delete-admin-modal')?.addEventListener('click', () => closeModal('delete-admin-modal'));
+  document.getElementById('cancel-delete-admin')?.addEventListener('click', () => closeModal('delete-admin-modal'));
+  document.getElementById('delete-admin-form')?.addEventListener('submit', handleDeleteAdmin);
+
+  document.getElementById('close-edit-role-modal')?.addEventListener('click', () => closeModal('edit-role-modal'));
+  document.getElementById('cancel-edit-role')?.addEventListener('click', () => closeModal('edit-role-modal'));
+  document.getElementById('edit-role-form')?.addEventListener('submit', handleEditRole);
+}
+
+async function handleEditRole(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-role-btn');
+  const errorEl = document.getElementById('edit-role-error');
+  errorEl.classList.add('hidden');
+
+  const userId = document.getElementById('edit-role-user-id').value;
+  const newRole = document.getElementById('edit-admin-role').value;
+  if (!userId || !newRole) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const { error } = await supabase.rpc('set_admin_role', { 
+      p_target_user_id: userId,
+      p_role: newRole
+    });
+    if (error) throw error;
+
+    showToast('Role updated successfully', 'success');
+    closeModal('edit-role-modal');
+    await loadAdmins();
+  } catch (err) {
+    errorEl.textContent = err.message || 'Failed to update role.';
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Role';
+  }
+}
+
+async function handleDeleteAdmin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('confirm-delete-btn');
+  const errorEl = document.getElementById('delete-admin-error');
+  errorEl.classList.add('hidden');
+
+  const userId = document.getElementById('delete-admin-user-id').value;
+  if (!userId) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+
+  try {
+    const { error } = await supabase.rpc('delete_admin', { p_user_id: userId });
+    if (error) throw error;
+
+    showToast('Admin deleted successfully', 'success');
+    closeModal('delete-admin-modal');
+    await loadAdmins();
+  } catch (err) {
+    errorEl.textContent = err.message || 'Failed to delete admin.';
+    errorEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+  }
 }
 
 async function handleAddAdmin(e) {

@@ -163,7 +163,7 @@ function adminEmail(order: any, items: OrderItem[]): string {
   );
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string | string[], subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -201,9 +201,29 @@ Deno.serve(async (req: Request) => {
 
     const lineItems: OrderItem[] = items ?? [];
 
-    // 1) Admin alert — always send
+    // 1) Fetch superadmin emails dynamically
+    const { data: superAdmins } = await supabase
+      .from("admins")
+      .select("id")
+      .eq("role", "superadmin")
+      .eq("is_active", true);
+
+    const adminEmails: string[] = [];
+    if (superAdmins) {
+      for (const admin of superAdmins) {
+        const { data: { user } } = await supabase.auth.admin.getUserById(admin.id);
+        if (user?.email) adminEmails.push(user.email);
+      }
+    }
+    
+    // Fallback to the environment variable if no active superadmins found
+    if (adminEmails.length === 0 && ADMIN_EMAIL) {
+      adminEmails.push(...ADMIN_EMAIL.split(',').map(e => e.trim()));
+    }
+
+    // Admin alert — send to all superadmins
     await sendEmail(
-      ADMIN_EMAIL,
+      adminEmails,
       `New order ${order.order_number} — ${peso(order.total)}`,
       adminEmail(order, lineItems)
     );
