@@ -17,7 +17,7 @@ let editingId   = null;
 
 async function loadProducts() {
   const tbody = document.getElementById('inventory-body');
-  tbody.innerHTML = '<tr><td colspan="7" class="table-loading">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9" class="table-loading">Loading…</td></tr>';
   allProducts = await getAllProducts();
   renderTable(allProducts);
 }
@@ -31,13 +31,16 @@ function stockBadge(stock, threshold) {
 function renderTable(products) {
   const tbody = document.getElementById('inventory-body');
   if (products.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No products found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="table-empty">No products found</td></tr>';
     return;
   }
   tbody.innerHTML = products.map(p => {
     const inv = p.inventory || { stock: 0, low_stock_threshold: 5 };
     return `
       <tr data-id="${p.id}">
+        <td style="text-align: center;">
+          <input type="checkbox" class="row-checkbox" value="${p.id}" style="cursor: pointer;" />
+        </td>
         <td>
           <div class="product-cell">
             ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="product-thumb" />` : '<div class="product-thumb-empty"><span class="material-symbols-outlined">diamond</span></div>'}
@@ -69,6 +72,9 @@ function renderTable(products) {
             <button class="action-btn action-btn--archive" data-id="${p.id}" title="${p.is_active ? 'Archive' : 'Restore'}" data-active="${p.is_active}">
               <span class="material-symbols-outlined">${p.is_active ? 'archive' : 'unarchive'}</span>
             </button>
+            <button class="action-btn action-btn--delete" data-delete-id="${p.id}" data-delete-name="${p.name}" title="Delete Product">
+              <span class="material-symbols-outlined" style="color:#ef4444;">delete</span>
+            </button>
           </div>
         </td>
       </tr>
@@ -92,6 +98,20 @@ function renderTable(products) {
   // Edit
   document.querySelectorAll('.action-btn--edit').forEach(btn => {
     btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+  });
+
+  // Row selection
+  document.querySelectorAll('.row-checkbox').forEach(c => {
+    c.addEventListener('change', updateBulkActions);
+  });
+
+  // Delete
+  document.querySelectorAll('.action-btn--delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('delete-product-id').value = btn.dataset.deleteId;
+      document.getElementById('delete-product-name').textContent = btn.dataset.deleteName;
+      openModal('delete-product-modal');
+    });
   });
 
   // Archive/Restore
@@ -137,13 +157,84 @@ function setupFilters() {
   });
 }
 
+/* ── Bulk Actions ────────────────────────────────────────── */
+function updateBulkActions() {
+  const checkboxes = document.querySelectorAll('.row-checkbox');
+  const selected = Array.from(checkboxes).filter(c => c.checked);
+  const bulkBar = document.getElementById('bulk-actions-bar');
+  const countSpan = document.getElementById('bulk-selected-count');
+  const selectAll = document.getElementById('select-all-checkbox');
+  
+  if (selected.length > 0) {
+    bulkBar.style.display = 'flex';
+    countSpan.textContent = selected.length;
+  } else {
+    bulkBar.style.display = 'none';
+  }
+  
+  if (selectAll) {
+    selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
+  }
+}
+
 /* ── Modal ───────────────────────────────────────────────── */
 function setupModal() {
   document.getElementById('btn-add-product')?.addEventListener('click', () => openAddModal());
   document.getElementById('close-product-modal')?.addEventListener('click', () => closeProductModal());
   document.getElementById('cancel-product-modal')?.addEventListener('click', () => closeProductModal());
   document.getElementById('product-form')?.addEventListener('submit', handleSaveProduct);
+
+  document.getElementById('cancel-delete-product')?.addEventListener('click', () => closeModal('delete-product-modal'));
+  document.getElementById('confirm-delete-product')?.addEventListener('click', handleConfirmDeleteProduct);
+
+  document.getElementById('select-all-checkbox')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.row-checkbox').forEach(c => c.checked = e.target.checked);
+    updateBulkActions();
+  });
+
+  document.getElementById('btn-bulk-delete')?.addEventListener('click', () => {
+    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+    if (selected.length === 0) return;
+    
+    const ids = selected.map(c => c.value);
+    document.getElementById('delete-product-id').value = ids.join(',');
+    document.getElementById('delete-product-name').textContent = `${selected.length} selected products`;
+    openModal('delete-product-modal');
+  });
+
   setupImageUpload();
+}
+
+async function handleConfirmDeleteProduct() {
+  const btn = document.getElementById('confirm-delete-product');
+  const idsStr = document.getElementById('delete-product-id').value;
+  if (!idsStr) return;
+  
+  const ids = idsStr.split(',');
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+
+  try {
+    const { error } = await supabase.from('products').delete().in('id', ids);
+    if (error) {
+      if (error.code === '23503') throw new Error('Cannot delete: One or more selected products are part of existing orders. Please Archive them instead.');
+      throw error;
+    }
+    showToast(`${ids.length} product(s) deleted permanently`, 'success');
+    closeModal('delete-product-modal');
+    
+    // Reset bulk state
+    const selectAll = document.getElementById('select-all-checkbox');
+    if (selectAll) selectAll.checked = false;
+    document.getElementById('bulk-actions-bar').style.display = 'none';
+    
+    await loadProducts();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Yes, Delete';
+  }
 }
 
 function setupImageUpload() {
