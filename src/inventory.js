@@ -365,9 +365,19 @@ async function handleSaveProduct(e) {
     const tags = document.getElementById('p-tags').value
       .split(',').map(t => t.trim()).filter(Boolean);
 
+    const costPrice = parseFloat(document.getElementById('p-cost').value) || 0;
+    const newStock  = parseInt(document.getElementById('p-stock').value);
+    const threshold = parseInt(document.getElementById('p-threshold').value);
+    const productName = document.getElementById('p-name').value.trim();
+
+    // Capture old stock before saving (for restock expense calc)
+    const oldProduct = editingId ? allProducts.find(x => x.id === editingId) : null;
+    const oldStock   = oldProduct?.inventory?.stock ?? 0;
+    const oldCost    = oldProduct?.cost_price ?? 0;
+
     const productData = {
-      name:        document.getElementById('p-name').value.trim(),
-      cost_price:  parseFloat(document.getElementById('p-cost').value) || 0,
+      name:        productName,
+      cost_price:  costPrice,
       price:       parseFloat(document.getElementById('p-price').value),
       collection:  document.getElementById('p-collection').value,
       category:    document.getElementById('p-category').value,
@@ -379,10 +389,41 @@ async function handleSaveProduct(e) {
 
     if (editingId) productData.id = editingId;
 
-    const saved     = await upsertProduct(productData);
-    const stock     = parseInt(document.getElementById('p-stock').value);
-    const threshold = parseInt(document.getElementById('p-threshold').value);
-    await updateStock(saved.id, stock, threshold);
+    const saved = await upsertProduct(productData);
+    await updateStock(saved.id, newStock, threshold);
+
+    // —— Auto-log expense ——
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: adminRow } = await supabase.from('admins').select('id').eq('id', user.id).maybeSingle();
+
+    if (!editingId) {
+      // NEW product: log full inventory cost
+      if (costPrice > 0 && newStock > 0) {
+        const totalCost = costPrice * newStock;
+        await supabase.from('expenses').insert({
+          title:        `Inventory purchase: ${productName} (×${newStock})`,
+          category:     'Packaging Supplies',
+          amount:       totalCost,
+          expense_date: new Date().toISOString().slice(0, 10),
+          created_by:   adminRow?.id ?? null,
+        });
+      }
+    } else {
+      // EDIT: log only the ADDED stock as a restock expense
+      const addedStock = newStock - oldStock;
+      const effectiveCost = costPrice || oldCost;
+      if (addedStock > 0 && effectiveCost > 0) {
+        const restockCost = effectiveCost * addedStock;
+        await supabase.from('expenses').insert({
+          title:        `Restock: ${productName} (+${addedStock} units)`,
+          category:     'Packaging Supplies',
+          amount:       restockCost,
+          expense_date: new Date().toISOString().slice(0, 10),
+          created_by:   adminRow?.id ?? null,
+        });
+      }
+    }
+
     showToast(editingId ? 'Product updated!' : 'Product added!');
     closeProductModal();
     await loadProducts();
