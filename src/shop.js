@@ -1,5 +1,7 @@
 import './style.css';
 import { getProducts, trackEngagement } from './supabase.js';
+import { initSearch } from './search.js';
+import { startTour, maybeAutoStartTour } from './tour.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -769,8 +771,26 @@ async function initShop() {
 
     const params = new URLSearchParams(window.location.search);
     const collectionParam = params.get('collection');
+    const productParam    = params.get('product');
+    const searchParam     = params.get('search');
 
-    if (collectionParam) {
+    if (productParam) {
+      // Deep link from the global search → open this product's modal.
+      const product = PRODUCTS.find(p => String(p.id) === String(productParam));
+      if (product) {
+        showGridView();        // a browsable grid sits behind the modal
+        openModal(product);
+        window.history.replaceState({}, '', '/shop.html');
+      } else {
+        showSwipeView();
+      }
+    } else if (searchParam) {
+      // Deep link from the global search → Browse All, pre-filtered.
+      searchQuery = searchParam;
+      const searchInput = document.getElementById('shop-search');
+      if (searchInput) searchInput.value = searchParam;
+      showGridView();
+    } else if (collectionParam) {
       showGridView();
       const pill = document.querySelector(`.filter-pill[data-filter="${collectionParam}"]`);
       if (pill) pill.click();
@@ -784,7 +804,67 @@ async function initShop() {
   }
 }
 
-initShop();
+/* Global product search (nav search icon) */
+initSearch();
+
+/* ── SHOP WALKTHROUGH ──
+   Optional guided tour. Starts on demand from the "How it works"
+   button, and auto-runs once for first-time visitors (unless they
+   arrived via a deep link). */
+const SHOP_TOUR_STEPS = [
+  {
+    title: 'Welcome to the shop ✦',
+    body: 'A quick 30-second tour of how to find and add pieces to your cart. You can reopen it anytime with the <b>How it works</b> button.',
+  },
+  {
+    target: '.view-toggle',
+    title: 'Two ways to browse',
+    body: '<b>Discover</b> shows one piece at a time as a swipeable card. <b>Browse All</b> shows the full collection as a grid you can filter and search.',
+  },
+  {
+    target: '#card-stack',
+    title: 'Swipe to shop',
+    body: 'In Discover, <b>swipe right</b> (or tap ♥) to add a piece to your cart, and <b>swipe left</b> (or tap ✕) to skip it. <b>Double-tap</b> a photo to like it.',
+  },
+  {
+    target: '#swipe-actions',
+    title: 'Prefer buttons?',
+    body: 'Use <b>✕</b> to skip and <b>♥</b> to add to cart. The counter in the middle tracks how many pieces you’ve seen.',
+  },
+  {
+    target: '#btn-fullscreen',
+    title: 'Go full screen',
+    body: 'Tap <b>Full Screen</b> for a distraction-free, immersive swiping experience.',
+  },
+  {
+    target: '#btn-grid-view',
+    title: 'See everything at once',
+    body: 'Switch to <b>Browse All</b> to view every piece in a grid, filter by collection, and search by name.',
+  },
+  {
+    target: '.nav-icon-btn[aria-label="Search"]',
+    title: 'Search anytime',
+    body: 'Looking for something specific? Tap the <b>search</b> icon from any page to find a piece by name, collection, or tag.',
+  },
+  {
+    title: "You're all set ✦",
+    body: 'That’s it! Reopen this walkthrough anytime from the <b>How it works</b> button. Happy shopping.',
+  },
+];
+const SHOP_TOUR_KEY = 'ngl_shop_tour_seen';
+
+document.getElementById('btn-shop-tour')?.addEventListener('click', () => {
+  showSwipeView();   // the tour spotlights the Discover view's controls
+  startTour(SHOP_TOUR_STEPS, { finishKey: SHOP_TOUR_KEY });
+});
+
+// Boot the shop, then auto-run the tour once for new visitors (but not
+// when a deep link has put us into a modal/grid/filtered state). Capture
+// the deep-link flag now — initShop() rewrites the URL as it runs.
+const arrivedViaDeepLink = /[?&](product|search|collection)=/.test(window.location.search);
+initShop().then(() => {
+  if (!arrivedViaDeepLink) maybeAutoStartTour(SHOP_TOUR_STEPS, SHOP_TOUR_KEY);
+});
 
 /* ── FULLSCREEN SWIPE MODE ── */
 (function () {

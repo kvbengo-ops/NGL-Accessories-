@@ -1,7 +1,7 @@
 /* ============================================================
    NGL — Checkout Flow Logic
    ============================================================ */
-import { supabase, createOrder, generateOrderNumber, getProducts, getStoreSettings, DEFAULT_SETTINGS } from './supabase.js';
+import { supabase, createOrder, generateOrderNumber, getProducts, getStoreSettings, DEFAULT_SETTINGS, getShippingConfig } from './supabase.js';
 
 let settings = { ...DEFAULT_SETTINGS };
 
@@ -9,8 +9,17 @@ let cart     = [];
 let step     = 1;
 let details  = {};
 
-function shippingFee()          { return Number(settings.shipping_fee) || 0; }
-function freeShipThreshold()    { return Number(settings.free_shipping_threshold) || 0; }
+// Zone-based shipping (Cebu origin → nationwide). Populated from the DB.
+let zoneById     = {};   // zone_id → { id, label, fee, free_shipping_threshold }
+let provinceZone = {};   // province name → zone_id
+
+function selectedProvince() {
+  return document.getElementById('c-province')?.value || details.province || '';
+}
+function zoneForProvince(prov) {
+  const zid = provinceZone[prov];
+  return zid ? zoneById[zid] : null;
+}
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => (
@@ -32,7 +41,7 @@ function renderSettings() {
       .split('\n').filter(Boolean)
       .map(line => `<p>${escapeHtml(line)}</p>`).join('');
   }
-  if (trustShip) trustShip.textContent = `Free shipping over ${formatPrice(freeShipThreshold())}`;
+  if (trustShip) trustShip.textContent = 'Nationwide delivery — free shipping on qualifying orders';
 }
 
 async function loadSettings() {
@@ -44,6 +53,32 @@ async function loadSettings() {
   renderSettings();
   updateSummary();
 }
+
+// Load the zone rate card + province map and fill the province dropdown.
+async function loadShipping() {
+  const select = document.getElementById('c-province');
+  try {
+    const { zones, provinces } = await getShippingConfig();
+    zoneById     = Object.fromEntries(zones.map(z => [z.id, z]));
+    provinceZone = Object.fromEntries(provinces.map(p => [p.province, p.zone_id]));
+
+    if (select) {
+      // Keep the disabled placeholder, append every province alphabetically.
+      const opts = provinces
+        .map(p => `<option value="${escapeHtml(p.province)}">${escapeHtml(p.province)}</option>`)
+        .join('');
+      select.insertAdjacentHTML('beforeend', opts);
+    }
+  } catch (err) {
+    console.error('Could not load shipping zones:', err);
+  }
+  updateSummary();
+}
+
+document.getElementById('c-province')?.addEventListener('change', () => {
+  clearFieldError('c-province');
+  updateSummary();
+});
 
 // Load cart from localStorage
 function loadCart() {
@@ -66,8 +101,14 @@ function getSubtotal() {
   return cart.reduce((s, c) => s + (c.price * c.quantity), 0);
 }
 
+// Shipping for the chosen province's zone. Returns null when no province
+// is selected yet (so the summary can show "select province" instead of ₱0).
 function getShipping(subtotal) {
-  return subtotal >= freeShipThreshold() ? 0 : shippingFee();
+  const zone = zoneForProvince(selectedProvince());
+  if (!zone) return null;
+  const freeAt = Number(zone.free_shipping_threshold) || 0;
+  if (freeAt > 0 && subtotal >= freeAt) return 0;
+  return Number(zone.fee) || 0;
 }
 
 /* ── Step Navigation ─────────────────────────────────────── */
@@ -148,28 +189,47 @@ function renderCartReview() {
 }
 
 function updateSummary() {
-  const subtotal  = getSubtotal();
-  const shipping  = getShipping(subtotal);
-  const total     = subtotal + shipping;
+  const subtotal = getSubtotal();
+  const zone     = zoneForProvince(selectedProvince());
+  const shipping = getShipping(subtotal);          // number, or null if no province yet
+  const total    = subtotal + (shipping || 0);
 
   document.getElementById('summary-subtotal').textContent = formatPrice(subtotal);
-  document.getElementById('summary-shipping').textContent =
-    shipping === 0 ? '🎉 Free!' : formatPrice(shipping);
-  document.getElementById('summary-total').textContent    = formatPrice(total);
 
-  // Shipping note
+  const shipEl = document.getElementById('summary-shipping');
+  if (shipEl) {
+    if (shipping === null)      shipEl.textContent = 'Select province';
+    else if (shipping === 0)    shipEl.textContent = '🎉 Free!';
+    else                        shipEl.textContent = formatPrice(shipping);
+  }
+  document.getElementById('summary-total').textContent = formatPrice(total);
+
+  // Shipping note — reflects the selected zone's own free-shipping threshold.
   const noteEl = document.getElementById('checkout-shipping-note');
   if (noteEl) {
-    if (subtotal < freeShipThreshold() && subtotal > 0) {
-      const remaining = freeShipThreshold() - subtotal;
-      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Add <strong>${formatPrice(remaining)}</strong> more for free shipping!`;
+    const freeAt = zone ? (Number(zone.free_shipping_threshold) || 0) : 0;
+    if (!zone) {
+      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Select your province at checkout to see shipping.`;
+      noteEl.style.display = subtotal > 0 ? '' : 'none';
+    } else if (freeAt > 0 && subtotal > 0 && subtotal < freeAt) {
+      const remaining = freeAt - subtotal;
+      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Add <strong>${formatPrice(remaining)}</strong> more for free shipping to ${escapeHtml(zone.label)}!`;
       noteEl.style.display = '';
-    } else if (subtotal >= freeShipThreshold()) {
-      noteEl.innerHTML = `<span class="material-symbols-outlined">check_circle</span>You qualify for <strong>free shipping</strong>!`;
+    } else if (freeAt > 0 && subtotal >= freeAt) {
+      noteEl.innerHTML = `<span class="material-symbols-outlined">check_circle</span>You qualify for <strong>free shipping</strong> to ${escapeHtml(zone.label)}!`;
       noteEl.style.display = '';
     } else {
-      noteEl.style.display = 'none';
+      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Shipping to <strong>${escapeHtml(zone.label)}</strong>: ${formatPrice(Number(zone.fee) || 0)}`;
+      noteEl.style.display = '';
     }
+  }
+
+  // Inline hint under the province dropdown
+  const hintEl = document.getElementById('province-ship-hint');
+  if (hintEl) {
+    if (!zone) hintEl.textContent = '';
+    else if (shipping === 0) hintEl.textContent = `Free shipping to ${zone.label}.`;
+    else hintEl.textContent = `Shipping to ${zone.label}: ${formatPrice(shipping)}.`;
   }
 
   // Sidebar items
@@ -218,11 +278,12 @@ document.getElementById('details-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
   const values = {
-    name:    document.getElementById('c-name').value.trim(),
-    email:   document.getElementById('c-email').value.trim(),
-    phone:   document.getElementById('c-phone').value.trim(),
-    address: document.getElementById('c-address').value.trim(),
-    notes:   document.getElementById('c-notes').value.trim(),
+    name:     document.getElementById('c-name').value.trim(),
+    email:    document.getElementById('c-email').value.trim(),
+    phone:    document.getElementById('c-phone').value.trim(),
+    province: document.getElementById('c-province').value,
+    address:  document.getElementById('c-address').value.trim(),
+    notes:    document.getElementById('c-notes').value.trim(),
   };
 
   // Validate
@@ -240,6 +301,8 @@ document.getElementById('details-form')?.addEventListener('submit', (e) => {
   const phoneDigits = values.phone.replace(/[\s-]/g, '');
   if (!values.phone)                       fail('c-phone', 'Please enter your phone number.');
   else if (!PH_PHONE_RE.test(phoneDigits)) fail('c-phone', 'Enter a valid PH mobile number (e.g. 0917 123 4567).');
+
+  if (!values.province) fail('c-province', 'Please select your province.');
 
   if (!values.address) fail('c-address', 'Please enter your delivery address.');
 
@@ -281,7 +344,7 @@ async function placeOrder() {
 
   try {
     const subtotal = getSubtotal();
-    const shipping = getShipping(subtotal);
+    const shipping = getShipping(subtotal) || 0;   // server re-computes authoritatively
     const total    = subtotal + shipping;
 
     // Payment is confirmed manually via the reference number the customer
@@ -297,6 +360,7 @@ async function placeOrder() {
       customer_email:   details.email,
       customer_phone:   details.phone,
       delivery_address: details.address,
+      province:         details.province || null,
       order_notes:      details.notes || null,
       payment_method:   payMethod + (paymentRef ? ` (${paymentRef})` : ''),
       subtotal,
@@ -336,3 +400,4 @@ renderCartReview();
 updateSummary();
 goToStep(1);
 loadSettings();
+loadShipping();

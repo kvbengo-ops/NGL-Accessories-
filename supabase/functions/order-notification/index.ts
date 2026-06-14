@@ -105,6 +105,11 @@ function shell(title: string, inner: string): string {
 }
 
 function customerEmail(order: any, items: OrderItem[]): string {
+  // order_number + customer_email are set at insert time and never change,
+  // so they're safe to read straight from the webhook payload.
+  const trackUrl = STORE_URL
+    ? `${STORE_URL}/track-order.html?order=${encodeURIComponent(order.order_number)}&email=${encodeURIComponent(order.customer_email)}`
+    : "";
   return shell(
     "Thank you for your order!",
     `
@@ -119,13 +124,16 @@ function customerEmail(order: any, items: OrderItem[]): string {
     <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">${itemRows(items)}</table>
     <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">${totalsBlock(order)}</table>
     <div style="font-size:13px;color:${C.muted};line-height:1.7;">
-      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}<br/><br/>
+      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/>${order.province}` : ""}<br/><br/>
       <strong style="color:${C.ink};">Payment</strong><br/>${order.payment_method ?? "—"}
     </div>
     ${
       STORE_URL
         ? `<div style="text-align:center;margin-top:26px;">
-             <a href="${STORE_URL}/shop.html" style="display:inline-block;background:${C.gold};color:#fff;text-decoration:none;font-size:13px;letter-spacing:0.06em;padding:12px 28px;border-radius:999px;">Continue Shopping</a>
+             <a href="${trackUrl}" style="display:inline-block;background:${C.gold};color:#fff;text-decoration:none;font-size:13px;letter-spacing:0.06em;padding:12px 28px;border-radius:999px;">Track your order</a>
+             <div style="margin-top:14px;">
+               <a href="${STORE_URL}/shop.html" style="color:${C.muted};text-decoration:underline;font-size:12px;letter-spacing:0.04em;">Continue shopping</a>
+             </div>
            </div>`
         : ""
     }
@@ -148,7 +156,7 @@ function adminEmail(order: any, items: OrderItem[]): string {
       ${order.customer_name ?? "—"}<br/>
       ${order.customer_email ?? "—"}<br/>
       ${order.customer_phone ?? "—"}<br/><br/>
-      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}<br/><br/>
+      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/><strong style="color:${C.ink};">Province:</strong> ${order.province}` : ""}<br/><br/>
       <strong style="color:${C.ink};">Payment</strong><br/>${order.payment_method ?? "—"}
       ${order.order_notes ? `<br/><br/><strong style="color:${C.ink};">Notes</strong><br/>${order.order_notes}` : ""}
     </div>

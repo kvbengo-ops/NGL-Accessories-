@@ -5,6 +5,7 @@
    ============================================================ */
 import './style.css';
 import { supabase } from './supabase.js';
+import { initSearch } from './search.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -403,3 +404,8 @@ loadCart();
 document.querySelector('.cart-btn')?.addEventListener('click', () => {
   window.location.href = '/checkout.html';
 });
+
+/* ──────────────────────────────────────────────────────────
+   14. GLOBAL PRODUCT SEARCH (nav search icon)
+────────────────────────────────────────────────────────── */
+initSearch();

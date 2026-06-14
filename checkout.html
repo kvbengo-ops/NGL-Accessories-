@@ -15,7 +15,7 @@
 
   <!-- Nav -->
   <nav class="checkout-nav">
-    <a href="/index.html" class="checkout-nav-logo">NGL Accessories</a>
+    <a href="/home.html" class="checkout-nav-logo">NGL Accessories</a>
     <div class="checkout-secure">
       <span class="material-symbols-outlined">lock</span>
       Secure Checkout
@@ -81,9 +81,16 @@
             <input type="email" id="c-email" class="form-input" required placeholder="maria@example.com" />
           </div>
           <div class="form-field">
+            <label class="form-label" for="c-province">Province *</label>
+            <select id="c-province" class="form-input" required>
+              <option value="" disabled selected>Select your province…</option>
+            </select>
+            <span class="form-hint" id="province-ship-hint"></span>
+          </div>
+          <div class="form-field">
             <label class="form-label" for="c-address">Delivery Address *</label>
             <textarea id="c-address" class="form-input form-textarea" rows="3" required
-              placeholder="Street, Barangay, City, Province, ZIP"></textarea>
+              placeholder="Street, Barangay, City / Municipality, ZIP"></textarea>
           </div>
           <div class="form-field">
             <label class="form-label" for="c-notes">Order Notes (optional)</label>
@@ -172,7 +179,7 @@
           <div class="payment-detail-panel hidden" id="cod-detail">
             <p class="cod-note">
               <span class="material-symbols-outlined">info</span>
-              Please have the exact amount ready. COD available within Metro Manila and nearby areas.
+              Please have the exact amount ready. Cash on Delivery is available nationwide via our courier partners.
             </p>
           </div>
         </div>

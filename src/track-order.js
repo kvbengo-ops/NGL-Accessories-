@@ -72,6 +72,11 @@ function renderResult(order) {
     ? new Date(order.created_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })
     : '—';
 
+  // Pre-zone orders have no `shipping` — derive it so the breakdown balances.
+  const shippingVal = order.shipping != null
+    ? Number(order.shipping)
+    : Math.max(0, Number(order.total) - Number(order.subtotal || 0));
+
   document.getElementById('track-order-details').innerHTML = `
     <div class="confirm-detail-grid">
       <div class="confirm-detail-row">
@@ -84,7 +89,7 @@ function renderResult(order) {
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">home</span>
-        <span>${escapeHtml(order.delivery_address) || '—'}</span>
+        <span>${escapeHtml(order.delivery_address) || '—'}${order.province ? `, ${escapeHtml(order.province)}` : ''}</span>
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">payments</span>
@@ -97,6 +102,15 @@ function renderResult(order) {
       </div>` : ''}
     </div>
     <div class="confirm-items">${items}</div>
+    ${order.subtotal != null ? `
+    <div class="confirm-item-row">
+      <span>Subtotal</span>
+      <span>${formatPrice(order.subtotal)}</span>
+    </div>
+    <div class="confirm-item-row">
+      <span>Shipping${order.province ? ` · ${escapeHtml(order.province)}` : ''}</span>
+      <span>${shippingVal > 0 ? formatPrice(shippingVal) : 'Free'}</span>
+    </div>` : ''}
     <div class="confirm-total-row">
       <span>Total</span>
       <span>${formatPrice(order.total)}</span>

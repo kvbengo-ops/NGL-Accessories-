@@ -11,6 +11,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        home: resolve(__dirname, 'home.html'),
         shop: resolve(__dirname, 'shop.html'),
         checkout: resolve(__dirname, 'checkout.html'),
         'order-confirm': resolve(__dirname, 'order-confirm.html'),

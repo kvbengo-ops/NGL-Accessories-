@@ -128,6 +128,7 @@ function showOrderDetail(id) {
         <p>${escapeHtml(o.customer_email) || '—'}</p>
         <p>${escapeHtml(o.customer_phone) || '—'}</p>
         ${o.delivery_address ? `<p class="addr">${escapeHtml(o.delivery_address)}</p>` : ''}
+        ${o.province ? `<p class="addr"><strong>Province:</strong> ${escapeHtml(o.province)}</p>` : ''}
         ${o.order_notes ? `<p class="notes">Notes: ${escapeHtml(o.order_notes)}</p>` : ''}
       </div>
       <div class="order-detail-section">
@@ -164,6 +165,7 @@ function showOrderDetail(id) {
       <div class="order-detail-totals">
         <div class="total-row"><span>Subtotal</span><span>${formatPrice(o.subtotal)}</span></div>
         ${o.discount > 0 ? `<div class="total-row total-row--discount"><span>Discount</span><span>-${formatPrice(o.discount)}</span></div>` : ''}
+        ${o.type === 'online' ? `<div class="total-row"><span>Shipping${o.province ? ` · ${escapeHtml(o.province)}` : ''}</span><span>${formatPrice(o.shipping != null ? o.shipping : (o.total - Math.max(0, o.subtotal - o.discount)))}</span></div>` : ''}
         <div class="total-row total-row--grand"><span>Total</span><span>${formatPrice(o.total)}</span></div>
       </div>
     </div>
@@ -192,12 +194,13 @@ function showOrderDetail(id) {
 /* ── CSV Export ──────────────────────────────────────────── */
 function setupExport() {
   document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-    const headers = ['Order #','Type','Status','Customer','Email','Phone','Total','Payment','Courier','Tracking #','Date'];
+    const headers = ['Order #','Type','Status','Customer','Email','Phone','Province','Total','Payment','Courier','Tracking #','Date'];
     const rows = allOrders.map(o => [
       o.order_number, o.type, o.status,
       o.customer_name || '',
       o.customer_email || '',
       o.customer_phone || '',
+      o.province || '',
       o.total,
       o.payment_method || '',
       o.courier || '',

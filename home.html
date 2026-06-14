@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Primary SEO -->
+  <title>NGL Accessories — Luxury Jewelry Within Reach | Philippines</title>
+  <meta name="description" content="Shop NGL Accessories — premium non-tarnish, hypoallergenic, and waterproof jewelry in the Philippines. Earrings, rings, bracelets, and necklaces across three curated collections: Natural, Grace, and Lush. Luxury within reach." />
+  <meta name="keywords" content="NGL Accessories, jewelry Philippines, non-tarnish jewelry, hypoallergenic jewelry, waterproof jewelry, earrings, bracelets, rings, necklaces, luxury jewelry Philippines" />
+  <meta name="author" content="NGL Accessories" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.ngluxaries.store/home.html" />
+
+  <!-- Open Graph (Facebook / social sharing) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.ngluxaries.store/home.html" />
+  <meta property="og:title" content="NGL Accessories — Luxury Jewelry Within Reach" />
+  <meta property="og:description" content="Premium non-tarnish, hypoallergenic, and waterproof jewelry in the Philippines. Three curated collections for every occasion." />
+  <meta property="og:image" content="https://www.ngluxaries.store/images/hero_jewelry.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="NGL Accessories" />
+  <meta property="og:locale" content="en_PH" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NGL Accessories — Luxury Jewelry Within Reach" />
+  <meta name="twitter:description" content="Premium non-tarnish, hypoallergenic, and waterproof jewelry in the Philippines." />
+  <meta name="twitter:image" content="https://www.ngluxaries.store/images/hero_jewelry.png" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "OnlineStore",
+    "name": "NGL Accessories",
+    "url": "https://www.ngluxaries.store",
+    "logo": "https://www.ngluxaries.store/images/hero_jewelry.png",
+    "description": "Premium non-tarnish, hypoallergenic, and waterproof jewelry in the Philippines.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "PH"
+    },
+    "sameAs": [
+      "https://instagram.com/nglaccessories",
+      "https://tiktok.com/@nglaccessories",
+      "https://facebook.com/nglaccessories"
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+
+
+  <!-- ░░ PRODUCT FULL-VIEW MODAL ░░ -->
+  <div id="product-modal-backdrop" class="product-modal-backdrop" role="dialog" aria-modal="true" aria-label="Product details" aria-hidden="true">
+    <div class="product-modal" id="product-modal">
+      <button class="modal-close" id="modal-close" aria-label="Close product view">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="modal-image-panel" id="modal-image-panel">
+        <img id="modal-img" src="" alt="" />
+        <div class="modal-image-gradient"></div>
+      </div>
+      <div class="modal-info-panel">
+        <span class="modal-category-badge" id="modal-badge"></span>
+        <h2 class="modal-product-name" id="modal-name"></h2>
+        <p class="modal-price" id="modal-price"></p>
+        <div class="modal-divider"></div>
+        <p class="modal-desc" id="modal-desc"></p>
+        <div class="modal-tags" id="modal-tags"></div>
+        <div class="modal-actions">
+          <button class="modal-btn-cart" id="modal-btn-cart">
+            <span class="material-symbols-outlined">add_shopping_cart</span>
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░ ANNOUNCEMENT BANNER ░░ -->
+
+  <div id="banner" class="banner">
+    <div class="banner-marquee">
+      <span>✦ Free shipping on orders over ₱1,500 &nbsp; · &nbsp; Non-Tarnish &nbsp; · &nbsp; Hypoallergenic &nbsp; · &nbsp; Waterproof &nbsp; · &nbsp; Premium Packaging ✦</span>
+      <span aria-hidden="true">✦ Free shipping on orders over ₱1,500 &nbsp; · &nbsp; Non-Tarnish &nbsp; · &nbsp; Hypoallergenic &nbsp; · &nbsp; Waterproof &nbsp; · &nbsp; Premium Packaging ✦</span>
+    </div>
+    <button id="banner-close" class="banner-close" aria-label="Close banner">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- ░░ NAVIGATION ░░ -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-inner">
+
+      <!-- Left: Desktop links -->
+      <div class="nav-left">
+        <button id="nav-toggle" class="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links">
+          <li><a href="shop.html" class="nav-link">Shop All</a></li>
+          <li><a href="#collections" class="nav-link">Collections</a></li>
+          <li><a href="#story" class="nav-link">About</a></li>
+        </ul>
+      </div>
+
+      <!-- Center: Logo -->
+      <a href="#" class="nav-logo">NGL Accessories</a>
+
+      <!-- Right: Icons -->
+      <div class="nav-right">
+        <button class="nav-icon-btn" aria-label="Search"><span class="material-symbols-outlined">search</span></button>
+        <button class="nav-icon-btn nav-icon--desktop" aria-label="Account"><span class="material-symbols-outlined">person</span></button>
+        <button class="nav-icon-btn cart-btn" aria-label="Cart">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          <span class="cart-count" aria-label="0 items">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile drawer -->
+    <div class="nav-drawer" id="nav-drawer" aria-hidden="true">
+      <a href="shop.html" class="drawer-link">Shop All</a>
+      <a href="#collections" class="drawer-link">Collections</a>
+      <a href="#story" class="drawer-link">About</a>
+      <a href="#newsletter" class="drawer-link">Join Inner Circle</a>
+    </div>
+  </nav>
+
+  <!-- ░░ HERO ░░ -->
+  <section id="hero" class="hero">
+    <div class="hero-bg">
+      <img src="/images/hero_jewelry.png" alt="Delicate gold bracelets on wrist" class="hero-img" id="hero-img" width="1920" height="1080" fetchpriority="high" />
+      <div class="hero-overlay"></div>
+      <div class="hero-grain" aria-hidden="true"></div>
+    </div>
+
+    <!-- Large background watermark -->
+    <div class="hero-watermark" aria-hidden="true">NGL</div>
+
+    <div class="hero-content">
+      <!-- Eyebrow -->
+      <div class="line-wrap" style="--d:0ms">
+        <div class="line-inner hero-eyebrow-text">
+          <span class="eyebrow-pip"></span>
+          Premium Jewelry · Curated for Every Occasion
+          <span class="eyebrow-pip"></span>
+        </div>
+      </div>
+
+      <!-- Title — each word is its own clip-path reveal -->
+      <h1 class="hero-title">
+        <span class="line-wrap" style="--d:80ms"><span class="line-inner">Luxury</span></span>
+        <span class="line-wrap" style="--d:200ms"><span class="line-inner">Within</span></span>
+        <span class="line-wrap" style="--d:320ms"><span class="line-inner italic-accent">Reach</span></span>
+      </h1>
+
+      <!-- Descriptor -->
+      <div class="line-wrap" style="--d:520ms">
+        <div class="line-inner hero-descriptor">
+          Non-Tarnish &nbsp;·&nbsp; Hypoallergenic &nbsp;·&nbsp; Waterproof
+        </div>
+      </div>
+
+      <!-- CTAs -->
+      <div class="hero-cta line-wrap" style="--d:680ms">
+        <div class="line-inner">
+          <a href="shop.html" class="btn btn--ghost mag-btn" id="hero-shop-all">Shop All</a>
+          <a href="#collections" class="btn btn--solid mag-btn" id="hero-explore">Find Your Collection</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating trust badges -->
+    <div class="hero-badge hero-badge--left" id="badge-left">
+      <span class="badge-icon material-symbols-outlined">diamond</span>
+      <div class="badge-text">
+        <strong>Non-Tarnish</strong>
+        <span>Enduring brilliance</span>
+      </div>
+    </div>
+    <div class="hero-badge hero-badge--right" id="badge-right">
+      <span class="badge-icon material-symbols-outlined">water_drop</span>
+      <div class="badge-text">
+        <strong>Waterproof</strong>
+        <span>Shower & swim safe</span>
+      </div>
+    </div>
+
+    <!-- Scroll cue -->
+    <div class="scroll-cue">
+      <span class="scroll-cue-line"></span>
+      <span class="scroll-cue-label">Scroll</span>
+    </div>
+  </section>
+
+  <!-- ░░ MARQUEE TICKER ░░ -->
+  <section class="marquee-section" aria-hidden="true">
+    <div class="marquee-track">
+      <div class="marquee-content" id="marquee-content">
+        <span class="marquee-item">Natural</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Grace</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Lush</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Earrings</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Rings</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Bracelets</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Necklaces</span><span class="marquee-sep">✦</span>
+        <span class="marquee-item">Luxury Within Reach</span><span class="marquee-sep">✦</span>
+        <!-- JS duplicates this -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ PHILOSOPHY STRIP ░░ -->
+  <section class="philosophy">
+    <div class="philosophy-inner">
+      <blockquote class="philosophy-quote">
+        <span class="line-wrap reveal-line" style="--d:0ms">
+          <span class="line-inner">"Quality, comfort, and durability are equally important.</span>
+        </span>
+        <span class="line-wrap reveal-line" style="--d:140ms">
+          <span class="line-inner">That is why every NGL piece is non-tarnish, hypoallergenic,</span>
+        </span>
+        <span class="line-wrap reveal-line" style="--d:280ms">
+          <span class="line-inner">and waterproof — timeless elegance without compromise."</span>
+        </span>
+      </blockquote>
+
+      <div class="philosophy-rule reveal-fade-el" style="--d:440ms">
+        <span class="rule-line-gold"></span>
+        <span class="rule-diamond-gold">◆</span>
+        <span class="rule-line-gold"></span>
+      </div>
+
+      <div class="philosophy-pillars">
+        <div class="pillar reveal-up-el" style="--d:200ms">
+          <div class="pillar-num">01</div>
+          <div class="pillar-icon"><span class="material-symbols-outlined">diamond</span></div>
+          <h3 class="pillar-title">Non-Tarnish</h3>
+          <p class="pillar-body">Enduring brilliance for everyday wear</p>
+        </div>
+        <div class="pillar reveal-up-el" style="--d:340ms">
+          <div class="pillar-num">02</div>
+          <div class="pillar-icon"><span class="material-symbols-outlined">spa</span></div>
+          <h3 class="pillar-title">Hypoallergenic</h3>
+          <p class="pillar-body">Gentle on all skin types, worry-free</p>
+        </div>
+        <div class="pillar reveal-up-el" style="--d:480ms">
+          <div class="pillar-num">03</div>
+          <div class="pillar-icon"><span class="material-symbols-outlined">water_drop</span></div>
+          <h3 class="pillar-title">Waterproof</h3>
+          <p class="pillar-body">Shower, swim, and live freely</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ STORY ░░ -->
+  <section id="story" class="story">
+    <div class="story-inner">
+      <div class="story-image-wrap reveal-left-el" style="--d:0ms">
+        <div class="story-image-frame">
+          <img src="/images/hero_jewelry.png" alt="NGL Accessories — accessible luxury jewelry" class="story-image" id="story-img" width="600" height="800" loading="lazy" />
+        </div>
+        <div class="story-accent-border"></div>
+        <div class="story-accent-label">Est. 2024</div>
+      </div>
+
+      <div class="story-content reveal-right-el" style="--d:0ms">
+        <span class="label-caps gold">About NGL Accessories</span>
+        <h2 class="story-title">
+          <span class="line-wrap reveal-line-fast" style="--d:80ms"><span class="line-inner">Premium Jewelry</span></span>
+          <span class="line-wrap reveal-line-fast" style="--d:200ms"><span class="line-inner">for Every Occasion</span></span>
+        </h2>
+        <div class="story-rule"></div>
+        <p class="story-body">
+          NGL Accessories is a premium jewelry brand dedicated to providing stylish, high-quality accessories for every occasion. Our collection includes earrings, rings, bracelets, and necklaces designed to complement different lifestyles, personalities, and fashion preferences.
+        </p>
+        <p class="story-body">
+          Beyond quality, NGL offers something many brands overlook — <strong class="text-gold">CONVENIENCE</strong>. Through our observations of consumer shopping behavior, we found that many individuals spend significant time searching for accessories that match their outfit or occasion. That's why we built three thoughtfully curated collections.
+        </p>
+        <a href="#collections" class="link-underline mag-btn">
+          Explore Our Collections
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+
+        <!-- Stats -->
+        <div class="story-stats">
+          <div class="stat-item">
+            <span class="stat-num" data-target="5000">0</span><span class="stat-suffix">+</span>
+            <span class="stat-label">Happy Customers</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-num" data-target="3">0</span>
+            <span class="stat-label">Curated Collections</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-num" data-target="100">0</span><span class="stat-suffix">+</span>
+            <span class="stat-label">Unique Pieces</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ COLLECTIONS ░░ -->
+  <section id="collections" class="collections">
+    <div class="collections-header">
+      <span class="label-caps gold reveal-up-el" style="--d:0ms">Curated Collections</span>
+      <h2 class="collections-title reveal-up-el" style="--d:100ms">Find Your Perfect Style</h2>
+      <p class="collections-subtitle reveal-up-el" style="--d:200ms">
+        Three thoughtfully curated collections organized by lifestyle and occasion —<br />
+        so you spend less time searching and more time shining.
+      </p>
+    </div>
+
+    <div class="collections-grid">
+
+      <!-- Natural — Flip Card -->
+      <div class="flip-card reveal-up-el" style="--d:0ms">
+        <div class="flip-card-inner" id="flip-natural">
+          <!-- FRONT -->
+          <div class="flip-face flip-front">
+            <div class="collection-num">01</div>
+            <div class="collection-image-wrap">
+              <img src="/images/natural_collection.png" alt="Natural Collection" class="collection-image" width="800" height="1200" loading="lazy" />
+            </div>
+            <div class="collection-overlay"></div>
+            <div class="collection-info">
+              <span class="collection-tag">Everyday Essentials</span>
+              <h3 class="collection-name">Natural</h3>
+              <span class="flip-hint">
+                <span class="material-symbols-outlined">touch_app</span> Tap to discover
+              </span>
+            </div>
+          </div>
+          <!-- BACK -->
+          <div class="flip-face flip-back flip-back--sage">
+            <button class="flip-close" aria-label="Close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flip-back-content">
+              <span class="flip-back-num">01</span>
+              <span class="flip-back-tag">Everyday Essentials</span>
+              <h3 class="flip-back-title">Natural</h3>
+              <div class="flip-back-rule"></div>
+              <p class="flip-back-body">
+                Designed for everyday wear, <strong>Natural</strong> features minimalist and versatile pieces that effortlessly complement casual outfits and daily activities.
+              </p>
+              <p class="flip-back-body">
+                These accessories are perfect for individuals who appreciate <em>simplicity, elegance, and timeless style</em> — pieces you can wear from morning to night without a second thought.
+              </p>
+              <div class="flip-back-traits">
+                <span>✦ Minimalist</span>
+                <span>✦ Versatile</span>
+                <span>✦ Everyday</span>
+              </div>
+              <a href="shop.html?collection=natural" class="btn btn--ghost flip-back-cta">
+                Shop Natural <span class="material-symbols-outlined">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grace — Flip Card -->
+      <div class="flip-card reveal-up-el" style="--d:120ms">
+        <div class="flip-card-inner" id="flip-grace">
+          <!-- FRONT -->
+          <div class="flip-face flip-front">
+            <div class="collection-num collection-num--gold">02</div>
+            <div class="collection-image-wrap">
+              <img src="/images/grace_collection.png" alt="Grace Collection" class="collection-image" width="800" height="1200" loading="lazy" />
+            </div>
+            <div class="collection-overlay collection-overlay--dark"></div>
+            <div class="collection-info">
+              <span class="collection-tag collection-tag--gold">Formal &amp; Glamorous</span>
+              <h3 class="collection-name collection-name--gold">Grace</h3>
+              <span class="flip-hint flip-hint--gold">
+                <span class="material-symbols-outlined">touch_app</span> Tap to discover
+              </span>
+            </div>
+          </div>
+          <!-- BACK -->
+          <div class="flip-face flip-back flip-back--grace">
+            <button class="flip-close flip-close--gold" aria-label="Close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flip-back-content">
+              <span class="flip-back-num flip-back-num--gold">02</span>
+              <span class="flip-back-tag flip-back-tag--gold">Formal &amp; Glamorous</span>
+              <h3 class="flip-back-title flip-back-title--gold">Grace</h3>
+              <div class="flip-back-rule flip-back-rule--gold"></div>
+              <p class="flip-back-body flip-back-body--light">
+                <strong>Grace</strong> is our collection of bold and refined statement pieces created for formal occasions, glamorous events, celebrations, and special gatherings.
+              </p>
+              <p class="flip-back-body flip-back-body--light">
+                These designs are made for those who want to express <em>confidence, sophistication, and elevated elegance</em> at every milestone moment.
+              </p>
+              <div class="flip-back-traits flip-back-traits--gold">
+                <span>✦ Statement</span>
+                <span>✦ Refined</span>
+                <span>✦ Glamorous</span>
+              </div>
+              <a href="shop.html?collection=grace" class="btn btn--ghost flip-back-cta flip-back-cta--gold">
+                Shop Grace <span class="material-symbols-outlined">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lush — Flip Card -->
+      <div class="flip-card reveal-up-el" style="--d:240ms">
+        <div class="flip-card-inner" id="flip-lush">
+          <!-- FRONT -->
+          <div class="flip-face flip-front">
+            <div class="collection-num collection-num--coral">03</div>
+            <div class="collection-image-wrap">
+              <img src="/images/lush_collection.png" alt="Lush Collection" class="collection-image" width="800" height="1200" loading="lazy" />
+            </div>
+            <div class="collection-overlay collection-overlay--lush"></div>
+            <div class="collection-info">
+              <span class="collection-tag collection-tag--coral">Resort &amp; Vacation</span>
+              <h3 class="collection-name">Lush</h3>
+              <span class="flip-hint flip-hint--coral">
+                <span class="material-symbols-outlined">touch_app</span> Tap to discover
+              </span>
+            </div>
+          </div>
+          <!-- BACK -->
+          <div class="flip-face flip-back flip-back--lush">
+            <button class="flip-close flip-close--coral" aria-label="Close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+            <div class="flip-back-content">
+              <span class="flip-back-num flip-back-num--coral">03</span>
+              <span class="flip-back-tag flip-back-tag--coral">Resort &amp; Vacation</span>
+              <h3 class="flip-back-title flip-back-title--coral">Lush</h3>
+              <div class="flip-back-rule flip-back-rule--coral"></div>
+              <p class="flip-back-body">
+                Inspired by <strong>tropical destinations, beach vacations, and the vibrant energy of summer</strong>, Lush offers refreshing and stylish pieces for every getaway.
+              </p>
+              <p class="flip-back-body">
+                Pair beautifully with resort wear, vacation outfits, and relaxed seasonal looks — jewelry that feels as <em>free-spirited as the ocean breeze</em>.
+              </p>
+              <div class="flip-back-traits flip-back-traits--coral">
+                <span>✦ Tropical</span>
+                <span>✦ Vibrant</span>
+                <span>✦ Resort</span>
+              </div>
+              <a href="shop.html?collection=lush" class="btn btn--ghost flip-back-cta flip-back-cta--coral">
+                Shop Lush <span class="material-symbols-outlined">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ░░ TESTIMONIALS ░░ -->
+  <section class="testimonials">
+    <div class="testimonials-inner">
+      <div class="testimonials-header">
+        <span class="label-caps gold reveal-up-el" style="--d:0ms">Customer Love</span>
+        <h2 class="testimonials-title reveal-up-el" style="--d:100ms">Loved By Many</h2>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal-up-el" style="--d:0ms">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-body">"The Natural collection is perfect for everyday wear. My bracelet still looks brand new after 3 months — including swimming!"</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">MR</div>
+            <div>
+              <p class="testimonial-name">Mia R.</p>
+              <p class="testimonial-verified">✦ Verified Buyer</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal-up-el" style="--d:120ms">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-body">"Wore my Grace necklace to a debut and received so many compliments. The packaging alone is stunning — perfect for gifting!"</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">AT</div>
+            <div>
+              <p class="testimonial-name">Angela T.</p>
+              <p class="testimonial-verified">✦ Verified Buyer</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal-up-el" style="--d:240ms">
+          <div class="testimonial-stars">★★★★★</div>
+          <p class="testimonial-body">"Finally found jewelry that doesn't irritate my skin. The hypoallergenic promise is real. I've ordered from all three collections now!"</p>
+          <div class="testimonial-footer">
+            <div class="testimonial-avatar">CS</div>
+            <div>
+              <p class="testimonial-name">Camille S.</p>
+              <p class="testimonial-verified">✦ Verified Buyer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ TRUST BAR ░░ -->
+  <section class="trust">
+    <div class="trust-inner">
+      <div class="trust-item reveal-up-el" style="--d:0ms">
+        <div class="trust-icon"><span class="material-symbols-outlined">water_drop</span></div>
+        <h4 class="trust-title">Waterproof</h4>
+        <p class="trust-body">Shower &amp; swim safe</p>
+      </div>
+      <div class="trust-item reveal-up-el" style="--d:100ms">
+        <div class="trust-icon"><span class="material-symbols-outlined">diamond</span></div>
+        <h4 class="trust-title">Non-Tarnish</h4>
+        <p class="trust-body">Enduring brilliance</p>
+      </div>
+      <div class="trust-item reveal-up-el" style="--d:200ms">
+        <div class="trust-icon"><span class="material-symbols-outlined">spa</span></div>
+        <h4 class="trust-title">Hypoallergenic</h4>
+        <p class="trust-body">Gentle on all skin</p>
+      </div>
+      <div class="trust-item reveal-up-el" style="--d:300ms">
+        <div class="trust-icon"><span class="material-symbols-outlined">redeem</span></div>
+        <h4 class="trust-title">Premium Packaging</h4>
+        <p class="trust-body">Ready to gift</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ NEWSLETTER ░░ -->
+  <section id="newsletter" class="newsletter">
+    <div class="newsletter-art" aria-hidden="true">
+      <div class="nl-orb nl-orb--1"></div>
+      <div class="nl-orb nl-orb--2"></div>
+    </div>
+    <div class="newsletter-inner">
+      <div class="newsletter-left reveal-left-el" style="--d:0ms">
+        <span class="label-caps gold">Exclusive Access</span>
+        <h2 class="newsletter-title">Join the<br/><em>Inner Circle</em></h2>
+        <p class="newsletter-body">
+          Be the first to discover new collections, exclusive events, and styling inspiration. Pieces that make every moment feel effortlessly beautiful.
+        </p>
+        <div class="newsletter-perks">
+          <div class="perk-item">
+            <span class="material-symbols-outlined">local_shipping</span>
+            <span>Early access to new arrivals</span>
+          </div>
+          <div class="perk-item">
+            <span class="material-symbols-outlined">loyalty</span>
+            <span>Member-only discounts</span>
+          </div>
+          <div class="perk-item">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            <span>Exclusive styling guides</span>
+          </div>
+        </div>
+      </div>
+      <div class="newsletter-right reveal-right-el" style="--d:0ms">
+        <form class="newsletter-form" id="newsletter-form" novalidate>
+          <label class="nl-label" for="newsletter-email">Your email address</label>
+          <div class="nl-input-row">
+            <input
+              type="email"
+              id="newsletter-email"
+              class="nl-input"
+              placeholder="hello@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn--solid nl-btn mag-btn">
+            Subscribe Now
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+          <p class="nl-legal">We respect your privacy. Unsubscribe anytime.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ FOOTER ░░ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <p class="footer-logo">NGL Accessories</p>
+        <p class="footer-tagline">Luxury Within Reach — premium earrings, rings, bracelets, and necklaces for every occasion.</p>
+        <div class="footer-socials">
+          <a href="https://instagram.com/nglaccessories" target="_blank" rel="noopener" class="social-link" aria-label="Instagram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://tiktok.com/@nglaccessories" target="_blank" rel="noopener" class="social-link" aria-label="TikTok">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+          </a>
+          <a href="https://facebook.com/nglaccessories" target="_blank" rel="noopener" class="social-link" aria-label="Facebook">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <nav class="footer-nav" aria-label="Collections">
+        <h5 class="footer-nav-heading">Collections</h5>
+        <a href="/shop.html?collection=natural" class="footer-nav-link">Natural — Everyday</a>
+        <a href="/shop.html?collection=grace" class="footer-nav-link">Grace — Formal</a>
+        <a href="/shop.html?collection=lush" class="footer-nav-link">Lush — Resort</a>
+        <a href="/shop.html" class="footer-nav-link">Shop All</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Customer Care">
+        <h5 class="footer-nav-heading">Customer Care</h5>
+        <a href="/support.html#shipping" class="footer-nav-link">Shipping &amp; Returns</a>
+        <a href="/support.html#contact" class="footer-nav-link">Contact Us</a>
+        <a href="/track-order.html" class="footer-nav-link">Track Order</a>
+        <a href="/support.html#faq" class="footer-nav-link">FAQ</a>
+      </nav>
+
+      <nav class="footer-nav" aria-label="Legal">
+        <h5 class="footer-nav-heading">Legal</h5>
+        <a href="/privacy.html" class="footer-nav-link">Privacy Policy</a>
+        <a href="/terms.html" class="footer-nav-link">Terms of Service</a>
+        <a href="/privacy.html" class="footer-nav-link">Cookie Policy</a>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 NGL Accessories. All rights reserved. &nbsp;✦&nbsp; Luxury Within Reach.</p>
+      <p>Made with love in the Philippines 🇵🇭</p>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

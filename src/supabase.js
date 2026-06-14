@@ -138,6 +138,20 @@ export async function updateStoreSettings(settings) {
   if (error) throw error;
 }
 
+/* ── Shipping zones (province → zone rate card) ───────────── */
+// Returns the zone rate card + the province→zone map. The checkout
+// uses this to PREVIEW the fee; create_order_safely() recomputes it
+// server-side from the same tables so the charged total is trusted.
+export async function getShippingConfig() {
+  const [zonesRes, provincesRes] = await Promise.all([
+    supabase.from('shipping_zones').select('*').order('sort_order'),
+    supabase.from('province_zones').select('province, zone_id').order('province'),
+  ]);
+  if (zonesRes.error) throw zonesRes.error;
+  if (provincesRes.error) throw provincesRes.error;
+  return { zones: zonesRes.data || [], provinces: provincesRes.data || [] };
+}
+
 /* ── Sales summary ───────────────────────────────────────── */
 export async function getSalesSummary(days = 7) {
   const since = new Date();

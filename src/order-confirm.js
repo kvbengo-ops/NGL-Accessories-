@@ -24,6 +24,12 @@ function formatPrice(n) {
     return;
   }
 
+  // Older orders (placed before zone shipping) have no `shipping` column —
+  // derive it from total − subtotal so the breakdown still balances.
+  const shippingVal = order.shipping != null
+    ? Number(order.shipping)
+    : Math.max(0, Number(order.total) - Number(order.subtotal));
+
   document.getElementById('confirm-order-number').textContent = order.order_number;
   document.getElementById('confirm-order-details').innerHTML = `
     <div class="confirm-detail-grid">
@@ -52,11 +58,30 @@ function formatPrice(n) {
         </div>
       `).join('')}
     </div>
+    <div class="confirm-item-row">
+      <span>Subtotal</span>
+      <span>${formatPrice(order.subtotal)}</span>
+    </div>
+    <div class="confirm-item-row">
+      <span>Shipping${order.province ? ` · ${order.province}` : ''}</span>
+      <span>${shippingVal > 0 ? formatPrice(shippingVal) : 'Free'}</span>
+    </div>
     <div class="confirm-total-row">
       <span>Total Paid</span>
       <span>${formatPrice(order.total)}</span>
     </div>
   `;
+
+  // Deep-link the tracker with this order pre-filled (track-order.js
+  // auto-submits when both order + email are present in the URL).
+  const trackLink = document.getElementById('confirm-track-link');
+  if (trackLink && order.order_number && order.customer_email) {
+    const q = new URLSearchParams({
+      order: order.order_number,
+      email: order.customer_email,
+    });
+    trackLink.href = `/track-order.html?${q.toString()}`;
+  }
 
   // Animate check icon
   document.querySelector('.confirm-icon')?.classList.add('animated');
