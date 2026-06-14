@@ -164,6 +164,13 @@ function go(to) {
   back.style.visibility = index === 0 ? 'hidden' : 'visible';
   next.textContent = index === steps.length - 1 ? 'Done' : 'Next';
 
+  // Replay the staggered content reveal for this step (reduced-motion
+  // is handled in CSS, which neutralises the animation).
+  const tip = els.tooltip;
+  tip.classList.remove('tour-animate-in');
+  void tip.offsetWidth;        // force reflow so the animation restarts
+  tip.classList.add('tour-animate-in');
+
   position();
   // Reposition after layout settles (fonts/scroll/reflow).
   requestAnimationFrame(position);

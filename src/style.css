@@ -2150,7 +2150,7 @@ strong { font-weight: 600; }
   font-size: 9px;
   font-weight: 400;
   letter-spacing: 0.06em;
-  color: rgba(245,241,235,0.52);
+  color: rgba(245,241,235,0.7);
 }
 .card-price-row {
   display: flex;
@@ -2627,6 +2627,19 @@ strong { font-weight: 600; }
   .card-image { height: 280px; }
   .swipe-btn { width: 56px; height: 56px; }
 }
+/* Touch devices: guarantee ≥44px tap targets on the compact grid controls
+   (desktop keeps its denser sizing via the pointer:coarse gate). */
+@media (pointer: coarse) {
+  .filter-pill,
+  .btn-add-cart,
+  .card-view-btn {
+    min-height: 44px;
+  }
+  .card-view-btn {
+    min-width: 44px;
+    justify-content: center;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .product-card { animation: none; opacity: 1; }
   .product-card-image img,
@@ -2935,7 +2948,7 @@ strong { font-weight: 600; }
   text-transform: uppercase;
   border-radius: var(--r-full);
   border: 1px solid rgba(245,241,235,0.2);
-  color: rgba(245,241,235,0.65);
+  color: rgba(245,241,235,0.8);
   background: rgba(245,241,235,0.06);
   cursor: pointer;
   transition: all var(--dur-2) var(--ease-expo);
@@ -3303,120 +3316,184 @@ strong { font-weight: 600; }
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
 }
 .tour-overlay.open { opacity: 1; pointer-events: auto; }
-.tour-overlay.tour-overlay--dim { background: rgba(6,5,3,0.74); }
+.tour-overlay.tour-overlay--dim { background: rgba(6,5,3,0.78); }
 
 .tour-spotlight {
   position: fixed;
   top: 0; left: 0;
   width: 0; height: 0;
-  border-radius: 12px;
-  box-shadow: 0 0 0 9999px rgba(6,5,3,0.74), 0 0 0 2px rgba(212,168,83,0.7);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 9999px rgba(6,5,3,0.78),
+    0 0 0 1.5px rgba(212,168,83,0.9),
+    0 0 26px 2px rgba(212,168,83,0.35);
   pointer-events: none;
   opacity: 0;
-  transition: top 0.32s cubic-bezier(0.4,0,0.2,1), left 0.32s cubic-bezier(0.4,0,0.2,1),
-              width 0.32s cubic-bezier(0.4,0,0.2,1), height 0.32s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.2s;
+  transition: top 0.4s cubic-bezier(0.22,1,0.36,1), left 0.4s cubic-bezier(0.22,1,0.36,1),
+              width 0.4s cubic-bezier(0.22,1,0.36,1), height 0.4s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.25s;
 }
 
 .tour-tooltip {
   position: fixed;
   z-index: 1001;
-  width: min(340px, calc(100vw - 32px));
-  background: #18150f;
-  border: 1px solid rgba(212,168,83,0.22);
-  border-top-color: rgba(212,168,83,0.4);
-  border-radius: 14px;
-  padding: 20px 20px 16px;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.55);
-  transition: top 0.32s cubic-bezier(0.4,0,0.2,1), left 0.32s cubic-bezier(0.4,0,0.2,1);
+  width: min(360px, calc(100vw - 32px));
+  background:
+    radial-gradient(125% 100% at 0% 0%, rgba(212,168,83,0.09), transparent 58%),
+    linear-gradient(180deg, #1c1810 0%, #141109 100%);
+  border: 1px solid rgba(212,168,83,0.28);
+  border-radius: 18px;
+  padding: 22px 22px 18px;
+  box-shadow:
+    0 28px 70px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: top 0.4s cubic-bezier(0.22,1,0.36,1), left 0.4s cubic-bezier(0.22,1,0.36,1);
 }
+/* Gold hairline along the top edge */
+.tour-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 22px; right: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,168,83,0.7), transparent);
+}
+/* Entrance when the walkthrough opens */
+.tour-overlay.open .tour-tooltip {
+  animation: tour-pop 0.45s cubic-bezier(0.16,1,0.3,1) both;
+}
+
 .tour-close {
   position: absolute;
   top: 12px; right: 12px;
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
   background: transparent;
   border: none;
-  color: rgba(245,241,235,0.3);
+  color: rgba(245,241,235,0.4);
   cursor: pointer;
-  padding: 2px;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: color 0.16s, background 0.16s;
 }
-.tour-close:hover { color: rgba(245,241,235,0.85); background: rgba(245,241,235,0.06); }
+.tour-close:hover { color: var(--gold-200, #e3c77e); background: rgba(245,241,235,0.07); }
 .tour-close .material-symbols-outlined { font-size: 18px; display: block; }
+
 .tour-step-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
+.tour-step-count::before { content: '✦'; font-size: 9px; opacity: 0.85; }
 .tour-title {
   font-family: var(--font-serif);
-  font-size: 19px;
+  font-size: 22px;
   font-weight: 500;
-  color: rgba(245,241,235,0.94);
-  margin: 0 0 8px;
-  line-height: 1.3;
+  color: rgba(245,241,235,0.96);
+  margin: 0 0 9px;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
 }
 .tour-body {
-  font-size: 13px;
-  line-height: 1.6;
-  color: rgba(245,241,235,0.66);
-  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(245,241,235,0.72);
+  margin: 0 0 18px;
 }
-.tour-body b { color: rgba(245,241,235,0.92); font-weight: 600; }
+.tour-body b { color: var(--gold-200, #e3c77e); font-weight: 600; }
+
 .tour-progress {
-  height: 3px;
-  background: rgba(245,241,235,0.08);
-  border-radius: 3px;
+  height: 4px;
+  background: rgba(245,241,235,0.09);
+  border-radius: 999px;
   overflow: hidden;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .tour-progress-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #b8852e, #d4a853);
-  border-radius: 3px;
-  transition: width 0.3s ease;
+  background: linear-gradient(90deg, #b8852e, #e3c77e);
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(212,168,83,0.5);
+  transition: width 0.4s cubic-bezier(0.22,1,0.36,1);
 }
+
 .tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .tour-nav { display: flex; gap: 8px; }
 .tour-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
   font-family: var(--font-sans);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  padding: 8px 16px;
-  border-radius: 8px;
+  letter-spacing: 0.08em;
+  padding: 9px 18px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.2s cubic-bezier(0.22,1,0.36,1);
 }
 .tour-skip {
   background: transparent;
   border: none;
-  color: rgba(245,241,235,0.34);
+  color: rgba(245,241,235,0.4);
+  padding-left: 4px; padding-right: 4px;
 }
-.tour-skip:hover { color: rgba(245,241,235,0.7); }
+.tour-skip:hover { color: rgba(245,241,235,0.75); }
 .tour-back {
   background: transparent;
-  border: 1px solid rgba(212,168,83,0.18);
-  color: rgba(245,241,235,0.5);
+  border: 1px solid rgba(212,168,83,0.25);
+  color: rgba(245,241,235,0.6);
 }
-.tour-back:hover { border-color: rgba(212,168,83,0.4); color: rgba(245,241,235,0.85); }
+.tour-back:hover { border-color: rgba(212,168,83,0.5); color: rgba(245,241,235,0.9); }
 .tour-next {
-  background: linear-gradient(135deg, #b8852e, #d4a853);
+  background: linear-gradient(135deg, #b8852e, #e3c77e);
   border: none;
-  color: #0e0a00;
+  color: #1a1305;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   font-weight: 700;
-  box-shadow: 0 2px 12px rgba(172,128,40,0.25);
+  box-shadow: 0 4px 16px rgba(184,133,46,0.3);
 }
-.tour-next:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.tour-next:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(184,133,46,0.4); }
+.tour-next:active { transform: translateY(0); }
+
+/* Staggered content reveal on each step change */
+.tour-tooltip.tour-animate-in .tour-step-count,
+.tour-tooltip.tour-animate-in .tour-title,
+.tour-tooltip.tour-animate-in .tour-body {
+  animation: tour-content-in 0.4s cubic-bezier(0.16,1,0.3,1) both;
+}
+.tour-tooltip.tour-animate-in .tour-title { animation-delay: 0.05s; }
+.tour-tooltip.tour-animate-in .tour-body  { animation-delay: 0.1s; }
+
+@keyframes tour-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes tour-content-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Respect reduced-motion: keep the walkthrough readable, drop the motion */
+@media (prefers-reduced-motion: reduce) {
+  .tour-spotlight,
+  .tour-tooltip,
+  .tour-progress-fill { transition: none; }
+  .tour-overlay.open .tour-tooltip,
+  .tour-tooltip.tour-animate-in .tour-step-count,
+  .tour-tooltip.tour-animate-in .tour-title,
+  .tour-tooltip.tour-animate-in .tour-body { animation: none; }
+}
 
 /* ── 30. SHOP "HOW IT WORKS" GUIDE BUTTON ────────────────── */
 .shop-guide-btn {
@@ -3558,7 +3635,7 @@ strong { font-weight: 600; }
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(245,241,235,0.45);
+  color: rgba(245,241,235,0.62);
 }
 .search-result-price {
   font-family: var(--font-serif);
