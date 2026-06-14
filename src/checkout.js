@@ -97,6 +97,29 @@ function formatPrice(n) {
   return `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 }
 
+function showStockWarning(maxStock) {
+  let toast = document.getElementById('checkout-stock-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'checkout-stock-toast';
+    toast.style.cssText = [
+      'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
+      'background:var(--charcoal-2)', 'color:var(--coral-light)',
+      'font-family:var(--font-sans)', 'font-size:12px', 'letter-spacing:0.05em',
+      'padding:10px 20px', 'border-radius:4px',
+      'border:1px solid rgba(232,112,90,0.3)',
+      'box-shadow:0 4px 24px rgba(0,0,0,0.18)',
+      'display:flex', 'align-items:center', 'gap:8px',
+      'z-index:9999', 'opacity:0', 'transition:opacity 0.25s',
+    ].join(';');
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">warning</span>Only ${maxStock} in stock — that's the maximum you can order.`;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+}
+
 function getSubtotal() {
   return cart.reduce((s, c) => s + (c.price * c.quantity), 0);
 }
@@ -153,8 +176,9 @@ function renderCartReview() {
       <div class="cart-review-qty">
         <button class="qty-btn" data-idx="${i}" data-action="minus">−</button>
         <span class="qty-val">${item.quantity}</span>
-        <button class="qty-btn" data-idx="${i}" data-action="plus">+</button>
+        <button class="qty-btn" data-idx="${i}" data-action="plus" ${item.quantity >= (item.stock || 99) ? 'disabled title="Max stock reached"' : ''}>+</button>
       </div>
+      ${item.stock && item.quantity >= item.stock ? `<span class="cart-stock-warn"><span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle">warning</span> Only ${item.stock} in stock</span>` : ''}
       <div class="cart-review-subtotal">${formatPrice(item.price * item.quantity)}</div>
       <button class="cart-review-remove" data-idx="${i}" title="Remove">
         <span class="material-symbols-outlined">close</span>
@@ -167,7 +191,15 @@ function renderCartReview() {
     btn.addEventListener('click', () => {
       const i   = parseInt(btn.dataset.idx);
       const act = btn.dataset.action;
-      if (act === 'plus')  cart[i].quantity = Math.min(cart[i].quantity + 1, 99);
+      if (act === 'plus') {
+        const maxStock = cart[i].stock || 99;
+        if (cart[i].quantity >= maxStock) {
+          // Already at stock limit — show a brief warning toast
+          showStockWarning(maxStock);
+          return;
+        }
+        cart[i].quantity = Math.min(cart[i].quantity + 1, maxStock);
+      }
       if (act === 'minus' && cart[i].quantity > 1) cart[i].quantity--;
       else if (act === 'minus' && cart[i].quantity === 1) cart.splice(i, 1);
       saveCart();

@@ -3886,10 +3886,13 @@ select.form-input option { color: #1a1812; }
 .cart-review-qty { display: flex; align-items: center; gap: 8px; }
 .qty-btn { width: 28px; height: 28px; border-radius: 6px; background: rgba(201,168,76,0.1); color: var(--gold-300); font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; cursor: pointer; }
 .qty-btn:hover { background: rgba(201,168,76,0.2); }
+.qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.qty-btn:disabled:hover { background: rgba(201,168,76,0.1); }
 .qty-val { font-size: 14px; font-weight: 600; min-width: 24px; text-align: center; }
 .cart-review-subtotal { font-size: 14px; font-weight: 600; color: var(--gold-300); min-width: 70px; text-align: right; }
 .cart-review-remove { color: rgba(245,241,235,0.2); transition: color 0.2s; padding: 4px; cursor: pointer; }
 .cart-review-remove:hover { color: #f87171; }
+.cart-stock-warn { font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.08em; color: var(--coral-light); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
 .cart-review-remove .material-symbols-outlined { font-size: 16px; }
 .checkout-shipping-note { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.12); border-radius: 8px; font-size: 12px; color: rgba(201,168,76,0.8); }
 .checkout-shipping-note .material-symbols-outlined { font-size: 14px; }
