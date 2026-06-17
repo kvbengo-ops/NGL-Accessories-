@@ -506,6 +506,7 @@ class SwipeStack {
 
 /* ── GRID RENDERER ── */
 let activeFilter = 'all';
+let activeCategory = 'all';
 let searchQuery  = '';
 
 function buildProductCard(product) {
@@ -604,25 +605,34 @@ function buildProductCard(product) {
   return card;
 }
 
+function updateCount(id, n) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = `${n} ${n === 1 ? 'piece' : 'pieces'}`;
+}
+
 function renderGrid() {
   const grid = document.getElementById('products-grid');
   if (!grid) return;
   const q = searchQuery.trim().toLowerCase();
   const filtered = PRODUCTS.filter(p => {
     const matchFilter = activeFilter === 'all' || p.category === activeFilter;
+    const matchCategory = activeCategory === 'all' || p.itemCategory === activeCategory;
     const matchSearch = !q
       || p.name.toLowerCase().includes(q)
       || (p.desc || '').toLowerCase().includes(q)
       || (p.tags || []).some(t => t.toLowerCase().includes(q));
-    return matchFilter && matchSearch;
+    return matchFilter && matchCategory && matchSearch;
   });
+
+  updateCount('grid-count', filtered.length);
   grid.innerHTML = '';
 
   if (filtered.length === 0) {
+    const msg = q ? `No pieces match “${searchQuery}”.` : 'No pieces match these filters.';
     grid.innerHTML = `
       <div class="shop-no-results" style="grid-column:1/-1;text-align:center;padding:48px 16px;opacity:0.7;">
         <span class="material-symbols-outlined" style="font-size:40px;opacity:0.5;">search_off</span>
-        <p style="margin-top:12px;font-family:var(--font-sans);">No pieces match “${searchQuery}”.</p>
+        <p style="margin-top:12px;font-family:var(--font-sans);">${msg}</p>
       </div>`;
     return;
   }
@@ -657,13 +667,96 @@ const btnGrid     = document.getElementById('btn-grid-view');
 const cardStackEl = document.getElementById('card-stack');
 
 let swipeStack = null;
+let swipeFilterCollection = 'all';
+let swipeFilterCategory = 'all';
+
+function getFilteredSwipeProducts() {
+  return PRODUCTS.filter(p => {
+    const matchCol = swipeFilterCollection === 'all' || p.collection === swipeFilterCollection;
+    const matchCat = swipeFilterCategory === 'all' || p.itemCategory === swipeFilterCategory;
+    return matchCol && matchCat;
+  });
+}
 
 function initSwipeStack() {
-  if (!swipeStack && cardStackEl) {
-    cardStackEl.innerHTML = '';
-    swipeStack = new SwipeStack(cardStackEl, PRODUCTS);
+  if (!cardStackEl) return;
+  
+  const filteredSwipeProducts = getFilteredSwipeProducts();
+  updateCount('swipe-count', filteredSwipeProducts.length);
+
+  if (swipeStack) {
+    swipeStack.destroy();
+    swipeStack = null;
+  }
+  
+  cardStackEl.innerHTML = '';
+  const emptyState = document.getElementById('swipe-empty');
+  const swipeActions = document.getElementById('swipe-actions');
+
+  if (filteredSwipeProducts.length === 0) {
+    if (emptyState) emptyState.classList.remove('hidden');
+    if (swipeActions) swipeActions.classList.add('hidden');
+    const swipeCounter = document.getElementById('swipe-counter');
+    if (swipeCounter) swipeCounter.textContent = '0 / 0';
+  } else {
+    if (emptyState) emptyState.classList.add('hidden');
+    if (swipeActions) swipeActions.classList.remove('hidden');
+    swipeStack = new SwipeStack(cardStackEl, filteredSwipeProducts);
   }
 }
+
+/* ── Unified filters: collection tabs (sliding underline) + category chips ── */
+function moveIndicator(tabsEl) {
+  if (!tabsEl) return;
+  const indicator = tabsEl.querySelector('.tab-indicator');
+  const active = tabsEl.querySelector('.collection-tab.active');
+  if (!indicator || !active) return;
+  indicator.style.width = `${active.offsetWidth}px`;
+  indicator.style.transform = `translateX(${active.offsetLeft}px)`;
+}
+
+function setupCollectionTabs(tabsEl, onChange) {
+  if (!tabsEl) return;
+  const tabs = tabsEl.querySelectorAll('.collection-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      moveIndicator(tabsEl);
+      onChange(tab);
+    });
+  });
+}
+
+function setupCategoryChips(chipsEl, onChange) {
+  if (!chipsEl) return;
+  const chips = chipsEl.querySelectorAll('.category-chip');
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
+      chip.classList.add('active');
+      chip.setAttribute('aria-pressed', 'true');
+      onChange(chip);
+    });
+  });
+}
+
+// Discover (swipe) filters
+setupCollectionTabs(document.getElementById('swipe-collection-tabs'), (tab) => {
+  swipeFilterCollection = tab.dataset.col;
+  initSwipeStack();
+});
+setupCategoryChips(document.getElementById('swipe-category-chips'), (chip) => {
+  swipeFilterCategory = chip.dataset.cat;
+  initSwipeStack();
+});
+
+// Keep the active underline aligned on resize
+window.addEventListener('resize', () => {
+  moveIndicator(document.getElementById('swipe-collection-tabs'));
+  moveIndicator(document.getElementById('grid-collection-tabs'));
+});
 
 function showSwipeView() {
   swipeViewEl?.classList.remove('hidden');
@@ -673,6 +766,7 @@ function showSwipeView() {
   btnSwipe?.setAttribute('aria-pressed', 'true');
   btnGrid?.setAttribute('aria-pressed', 'false');
   initSwipeStack();
+  requestAnimationFrame(() => moveIndicator(document.getElementById('swipe-collection-tabs')));
 }
 
 function showGridView() {
@@ -683,6 +777,7 @@ function showGridView() {
   btnGrid?.setAttribute('aria-pressed', 'true');
   btnSwipe?.setAttribute('aria-pressed', 'false');
   renderGrid();
+  requestAnimationFrame(() => moveIndicator(document.getElementById('grid-collection-tabs')));
 }
 
 btnSwipe?.addEventListener('click', showSwipeView);
@@ -692,18 +787,14 @@ document.getElementById('btn-action-skip')?.addEventListener('click', () => swip
 document.getElementById('btn-action-like')?.addEventListener('click', () => swipeStack?.like());
 document.getElementById('btn-reset-swipe')?.addEventListener('click', () => swipeStack?.reset());
 
-document.querySelectorAll('.filter-pill').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeFilter = btn.dataset.filter;
-    
+/* Browse All (grid) — collection theme + description, then re-render */
+function applyGridTheme() {
     // Change body theme based on filter
     document.body.classList.remove('theme-natural', 'theme-grace', 'theme-lush');
     if (activeFilter !== 'all') {
       document.body.classList.add(`theme-${activeFilter}`);
     }
-    
+
     // Update description
     const descMap = {
       'all': `
@@ -733,9 +824,16 @@ document.querySelectorAll('.filter-pill').forEach(btn => {
         descEl.style.transform = 'translateY(0)';
       }, 200); // Wait for fade out
     }
-    
-    renderGrid();
-  });
+}
+
+setupCollectionTabs(document.getElementById('grid-collection-tabs'), (tab) => {
+  activeFilter = tab.dataset.filter;
+  applyGridTheme();
+  renderGrid();
+});
+setupCategoryChips(document.getElementById('grid-category-chips'), (chip) => {
+  activeCategory = chip.dataset.cat;
+  renderGrid();
 });
 
 // Product search (grid view)
@@ -760,6 +858,9 @@ async function initShop() {
       .map(p => ({
       id: p.id,
       name: p.name,
+      collection: p.collection.toLowerCase(),
+      collectionLabel: p.collection,
+      itemCategory: p.category,
       category: p.collection.toLowerCase(),
       categoryLabel: p.collection,
       price: Number(p.price),
@@ -820,7 +921,7 @@ async function initShop() {
       showGridView();
     } else if (collectionParam) {
       showGridView();
-      const pill = document.querySelector(`.filter-pill[data-filter="${collectionParam}"]`);
+      const pill = document.querySelector(`.collection-tab[data-filter="${collectionParam}"]`);
       if (pill) pill.click();
     } else {
       showSwipeView();
@@ -948,8 +1049,9 @@ initShop().then(() => {
     const mainCounter = document.getElementById('swipe-counter');
     if (mainCounter && fsCounter) fsCounter.textContent = mainCounter.textContent;
 
-    // Create a new SwipeStack using all products from the current position
-    fsSwipeStack = new SwipeStack(fsStack, PRODUCTS);
+    // Create a new SwipeStack using the filtered products
+    const filteredSwipeProducts = getFilteredSwipeProducts();
+    fsSwipeStack = new SwipeStack(fsStack, filteredSwipeProducts);
 
     // Override counter to also update fs counter
     const origUpdate = fsSwipeStack._updateCounter.bind(fsSwipeStack);

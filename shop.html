@@ -184,6 +184,24 @@
 
       <!-- ── SWIPE VIEW ── -->
       <div class="swipe-view" id="swipe-view">
+        <div class="shop-filters">
+          <div class="collection-tabs" id="swipe-collection-tabs" role="tablist" aria-label="Filter by collection">
+            <button class="collection-tab active" role="tab" aria-selected="true" data-col="all">All</button>
+            <button class="collection-tab" role="tab" aria-selected="false" data-col="natural">Natural</button>
+            <button class="collection-tab" role="tab" aria-selected="false" data-col="grace">Grace</button>
+            <button class="collection-tab" role="tab" aria-selected="false" data-col="lush">Lush</button>
+            <span class="tab-indicator" aria-hidden="true"></span>
+          </div>
+          <div class="category-chips" id="swipe-category-chips" role="group" aria-label="Filter by category">
+            <button class="category-chip active" aria-pressed="true" data-cat="all">All</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Earrings">Earrings</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Rings">Rings</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Bracelets">Bracelets</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Necklaces">Necklaces</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Anklets">Anklets</button>
+          </div>
+          <p class="filter-count" id="swipe-count" aria-live="polite"></p>
+        </div>
         <div class="swipe-hint" aria-hidden="true">
           <div class="hint-chip hint-chip--skip">
             <span class="material-symbols-outlined">close</span> Skip
@@ -222,11 +240,23 @@
 
       <!-- ── GRID VIEW ── -->
       <div class="grid-view hidden" id="grid-view">
-        <div class="shop-filter-bar" role="group" aria-label="Filter by collection">
-          <button class="filter-pill active" data-filter="all">All</button>
-          <button class="filter-pill" data-filter="natural">Natural</button>
-          <button class="filter-pill" data-filter="grace">Grace</button>
-          <button class="filter-pill" data-filter="lush">Lush</button>
+        <div class="shop-filters">
+          <div class="collection-tabs" id="grid-collection-tabs" role="tablist" aria-label="Filter by collection">
+            <button class="collection-tab active" role="tab" aria-selected="true" data-filter="all">All</button>
+            <button class="collection-tab" role="tab" aria-selected="false" data-filter="natural">Natural</button>
+            <button class="collection-tab" role="tab" aria-selected="false" data-filter="grace">Grace</button>
+            <button class="collection-tab" role="tab" aria-selected="false" data-filter="lush">Lush</button>
+            <span class="tab-indicator" aria-hidden="true"></span>
+          </div>
+          <div class="category-chips" id="grid-category-chips" role="group" aria-label="Filter by category">
+            <button class="category-chip active" aria-pressed="true" data-cat="all">All</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Earrings">Earrings</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Rings">Rings</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Bracelets">Bracelets</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Necklaces">Necklaces</button>
+            <button class="category-chip" aria-pressed="false" data-cat="Anklets">Anklets</button>
+          </div>
+          <p class="filter-count" id="grid-count" aria-live="polite"></p>
         </div>
         <div class="shop-search-wrap" style="position:relative;max-width:420px;margin:18px auto 0;">
           <span class="material-symbols-outlined" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:0.5;font-size:20px;pointer-events:none;">search</span>
@@ -270,7 +300,7 @@
       <nav class="footer-nav" aria-label="Customer Care">
         <h5 class="footer-nav-heading">Customer Care</h5>
         <a href="/support.html#shipping" class="footer-nav-link">Delivery &amp; Returns</a>
-        <a href="#" class="footer-nav-link">Contact Us</a>
+        <a href="/contact.html" class="footer-nav-link">Contact Us</a>
         <a href="#" class="footer-nav-link">Store Locator</a>
         <a href="#" class="footer-nav-link">FAQ</a>
       </nav>

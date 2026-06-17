@@ -19,6 +19,7 @@ export default defineConfig({
         privacy: resolve(__dirname, 'privacy.html'),
         terms: resolve(__dirname, 'terms.html'),
         support: resolve(__dirname, 'support.html'),
+        contact: resolve(__dirname, 'contact.html'),
         '404': resolve(__dirname, '404.html'),
         'admin-login': resolve(__dirname, 'admin/login.html'),
         'admin-dashboard': resolve(__dirname, 'admin/dashboard.html'),

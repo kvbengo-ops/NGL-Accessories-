@@ -9,6 +9,7 @@ const fields = {
   social_tiktok:    'set-social-tiktok',
   social_facebook:  'set-social-facebook',
   contact_email:    'set-contact-email',
+  contact_phone:    'set-contact-phone',
 };
 
 (async () => {

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/jpeg" href="/images/logo.jpg" />
+  <title>Contact Us | NGL Accessories</title>
+  <meta name="description" content="Get in touch with NGL Accessories. Email or message us about your order, our waterproof jewelry, delivery, returns, and more." />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://www.ngluxaries.store/home.html"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Contact Us",
+        "item": "https://www.ngluxaries.store/contact.html"
+      }
+    ]
+  }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+  
+  <style>
+    :root {
+      --contact-bg: #fdfcf9;
+      --contact-card: rgba(255, 255, 255, 0.7);
+      --contact-border: rgba(201, 168, 76, 0.2);
+      --obsidian: #1a1a1a;
+    }
+
+    body {
+      background: var(--contact-bg);
+      background-image: radial-gradient(circle at 10% 20%, rgba(201, 168, 76, 0.03) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(201, 168, 76, 0.05) 0%, transparent 50%);
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .contact-container {
+      max-width: 1200px;
+      margin: 120px auto 80px;
+      padding: 0 24px;
+      flex: 1;
+      width: 100%;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+
+    /* ── LEFT COLUMN: INFO ── */
+    .contact-info {
+      padding-top: 20px;
+    }
+
+    .contact-eyebrow {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-500);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .contact-info h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(40px, 5vw, 56px);
+      font-weight: 300;
+      color: var(--obsidian);
+      line-height: 1.1;
+      margin-bottom: 24px;
+    }
+
+    .contact-info p {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 40px;
+      max-width: 480px;
+    }
+
+    .contact-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-card {
+      background: var(--contact-card);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--contact-border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .info-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.04);
+      border-color: rgba(201, 168, 76, 0.4);
+    }
+
+    .info-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(201, 168, 76, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-500);
+      flex-shrink: 0;
+    }
+
+    .info-icon .material-symbols-outlined {
+      font-size: 24px;
+    }
+
+    .info-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #6e6e6e;
+    }
+
+    .info-value {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--obsidian);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    a.info-value:hover {
+      color: var(--gold-500);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .social-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--obsidian);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .social-links a:hover {
+      color: var(--gold-500);
+      border-bottom-color: var(--gold-500);
+    }
+
+    /* ── RIGHT COLUMN: FORM ── */
+    .contact-form-wrapper {
+      background: #ffffff;
+      border: 1px solid var(--contact-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-header {
+      margin-bottom: 32px;
+    }
+
+    .form-header h2 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--obsidian);
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: #6b6b6b;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #ddd;
+      padding: 12px 0;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      color: var(--obsidian);
+      transition: border-color 0.3s ease;
+      resize: none;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-bottom-color: var(--gold-500);
+    }
+
+    .form-label {
+      position: absolute;
+      top: 12px;
+      left: 0;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      color: #6b6b6b;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus ~ .form-label,
+    .form-input:not(:placeholder-shown) ~ .form-label,
+    .form-textarea:focus ~ .form-label,
+    .form-textarea:not(:placeholder-shown) ~ .form-label {
+      top: -12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--gold-500);
+    }
+
+    /* Hide actual placeholder so label animation works */
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: transparent;
+    }
+
+    .submit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: var(--obsidian);
+      color: #ffffff;
+      border: none;
+      border-radius: 99px;
+      padding: 16px 32px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn:hover {
+      background: var(--gold-500);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(201, 168, 76, 0.2);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loader {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-text {
+      transition: opacity 0.2s;
+    }
+
+    .submitting .btn-text {
+      opacity: 0;
+    }
+    
+    .submitting .loader {
+      display: block;
+      position: absolute;
+    }
+
+    /* Form Messages */
+    .form-message {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 12px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      animation: slideDown 0.3s ease forwards;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-message.success {
+      display: flex;
+      background: rgba(34, 197, 94, 0.1);
+      color: #166534;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .form-message.error {
+      display: flex;
+      background: rgba(239, 68, 68, 0.1);
+      color: #991b1b;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* ── Touch targets, focus, reduced motion (UI/UX pass) ── */
+    a.info-value {
+      display: inline-block;
+      padding: 6px 0;
+      touch-action: manipulation;
+    }
+    .social-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    .submit-btn { touch-action: manipulation; }
+    .form-label .req { color: var(--gold-500); }
+
+    .submit-btn:focus-visible,
+    a.info-value:focus-visible,
+    .social-links a:focus-visible,
+    .form-input:focus-visible,
+    .form-textarea:focus-visible {
+      outline: 2px solid var(--gold-500);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .info-card,
+      .submit-btn,
+      .info-value,
+      .social-links a,
+      .form-input,
+      .form-textarea,
+      .form-label { transition: none !important; }
+      .info-card:hover { transform: none; box-shadow: none; }
+      .submit-btn:hover { transform: none; box-shadow: none; }
+      .form-message { animation: none !important; }
+      /* .loader keeps spinning — it conveys progress, not decoration */
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .contact-form-wrapper {
+        padding: 32px 24px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .contact-info h1 {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar scrolled">
+    <div class="nav-inner">
+      <a href="/home.html" class="nav-logo">NGL Accessories</a>
+    </div>
+  </nav>
+
+  <main class="contact-container">
+    <div class="contact-grid">
+      
+      <!-- Left Column: Info -->
+      <div class="contact-info">
+        <span class="contact-eyebrow">Contact Us</span>
+        <h1>Let's start a conversation</h1>
+        <p>Questions about an order, our waterproof jewelry, or a return? We'd love to hear from you. We typically reply within 1-2 business days.</p>
+        
+        <div class="contact-cards">
+          
+          <div class="info-card">
+            <div class="info-icon">
+              <span class="material-symbols-outlined" aria-hidden="true">mail</span>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Email Us</span>
+              <a href="mailto:support@nglaccessories.com" class="info-value" data-cms="contact_email">support@nglaccessories.com</a>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <span class="material-symbols-outlined" aria-hidden="true">call</span>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Phone / Mobile</span>
+              <a href="#" class="info-value" data-cms="contact_phone" data-cms-empty-hide=".info-card">—</a>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Follow & Message</span>
+              <div class="social-links">
+                <a href="#" target="_blank" rel="noopener" data-cms="social_instagram">Instagram</a>
+                <a href="#" target="_blank" rel="noopener" data-cms="social_tiktok">TikTok</a>
+                <a href="#" target="_blank" rel="noopener" data-cms="social_facebook">Facebook</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="info-icon">
+              <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
+            </div>
+            <div class="info-content">
+              <span class="info-label">Delivery Area</span>
+              <span class="info-value">Metro Cebu (Cebu City to Consolacion)</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Column: Form -->
+      <div class="contact-form-wrapper">
+        <div class="form-header">
+          <h2>Send a Message</h2>
+          <p>Fill out the form below and we'll get back to you shortly.</p>
+        </div>
+
+        <form id="contact-form" novalidate>
+          <!-- Honeypot: off-screen, catches bots; ignored by humans & screen readers -->
+          <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" id="name" name="name" class="form-input" placeholder="Name" autocomplete="name" maxlength="100" required />
+              <label for="name" class="form-label">Your Name <span class="req" aria-hidden="true">*</span></label>
+            </div>
+            <div class="form-group">
+              <input type="email" id="email" name="email" class="form-input" placeholder="Email" autocomplete="email" maxlength="150" required />
+              <label for="email" class="form-label">Email Address <span class="req" aria-hidden="true">*</span></label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" id="subject" name="subject" class="form-input" placeholder="Subject" maxlength="150" required />
+              <label for="subject" class="form-label">Subject <span class="req" aria-hidden="true">*</span></label>
+            </div>
+            <div class="form-group">
+              <input type="tel" id="phone" name="phone" class="form-input" placeholder="Phone Number" autocomplete="tel" maxlength="30" />
+              <label for="phone" class="form-label">Phone Number (Optional)</label>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 32px;">
+            <textarea id="message" name="message" class="form-textarea" rows="5" placeholder="Message" maxlength="2000" required></textarea>
+            <label for="message" class="form-label">Your Message <span class="req" aria-hidden="true">*</span></label>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn">
+            <span class="btn-text">Send Message</span>
+            <div class="loader" aria-hidden="true"></div>
+          </button>
+
+          <div id="form-message" class="form-message" role="status" aria-live="polite" aria-atomic="true"></div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module" src="/src/cms-frontend.js"></script>
+  <script type="module" src="/src/contact.js"></script>
+</body>
+</html>

@@ -135,6 +135,7 @@ export const DEFAULT_SETTINGS = {
   social_tiktok:           'https://tiktok.com/@nglaccessories',
   social_facebook:         'https://facebook.com/nglaccessories',
   contact_email:           'support@nglaccessories.com',
+  contact_phone:           '',
 };
 
 export async function getStoreSettings() {
