@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content & Socials — NGL Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body class="admin-page">
+  <div id="sidebar-container"></div>
+
+  <main class="admin-main">
+    <header class="admin-header">
+      <div>
+        <h1 class="admin-page-title">Content & Socials</h1>
+        <p class="admin-page-subtitle">Manage your website's social links and contact information.</p>
+      </div>
+    </header>
+
+    <section class="admin-card" style="max-width:720px;">
+      <form id="cms-form" class="modal-form" style="padding:24px;">
+
+        <h3 class="order-detail-heading">Social Links</h3>
+        <p class="form-hint" style="margin:-4px 0 16px;line-height:1.6;">
+          These links will automatically update the social icons in the footer across all pages. Leave blank to hide a specific social link (if implemented in your theme).
+        </p>
+
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="set-social-instagram">Instagram URL</label>
+            <input type="url" id="set-social-instagram" class="form-input" placeholder="https://instagram.com/nglaccessories" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="set-social-tiktok">TikTok URL</label>
+            <input type="url" id="set-social-tiktok" class="form-input" placeholder="https://tiktok.com/@nglaccessories" />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="set-social-facebook">Facebook URL</label>
+            <input type="url" id="set-social-facebook" class="form-input" placeholder="https://facebook.com/nglaccessories" />
+          </div>
+        </div>
+
+        <h3 class="order-detail-heading" style="margin-top:24px;">Contact Information</h3>
+        <p class="form-hint" style="margin:-4px 0 16px;line-height:1.6;">
+          This contact information will be displayed on the Help & Support page and anywhere customers need to reach you.
+        </p>
+
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="form-label" for="set-contact-email">Support Email Address</label>
+            <input type="email" id="set-contact-email" class="form-input" placeholder="support@nglaccessories.com" />
+          </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top:32px;">
+          <button type="submit" class="btn-admin-primary" id="btn-save-cms">
+            <span class="material-symbols-outlined">save</span>
+            Save Content
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="/src/cms.js"></script>
+</body>
+</html>

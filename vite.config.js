@@ -30,6 +30,7 @@ export default defineConfig({
         'admin-expenses': resolve(__dirname, 'admin/expenses.html'),
         'admin-todo': resolve(__dirname, 'admin/todo.html'),
         'admin-settings': resolve(__dirname, 'admin/settings.html'),
+        'admin-cms': resolve(__dirname, 'admin/cms.html'),
       },
     },
   },

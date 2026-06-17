@@ -52,6 +52,7 @@ export function renderSidebar(activePage, admin) {
     { section: 'Settings', superadminOnly: true },
     { href: '/admin/admins.html',    icon: 'manage_accounts', label: 'Admins', superadminOnly: true },
     { href: '/admin/settings.html',  icon: 'settings',        label: 'Store Settings', superadminOnly: true },
+    { href: '/admin/cms.html',       icon: 'web',             label: 'Content & Socials', superadminOnly: true },
   ];
 
   const isSuperadmin = admin?.role === 'superadmin';

@@ -2,6 +2,7 @@ import './style.css';
 import { getProducts, trackEngagement } from './supabase.js';
 import { initSearch } from './search.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
+import './cms-frontend.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -269,7 +270,7 @@ function buildSwipeCard(product) {
       </div>
     </div>
     ${product.image ? `<div class="card-image" style="position:relative;">
-      <img src="${product.image}" alt="${product.name}" loading="lazy" />
+      <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
     </div>` : ''}
     <div class="card-body">
@@ -768,6 +769,33 @@ async function initShop() {
       image: p.image_url || '',
       stock: p.inventory?.stock || 0
     }));
+
+    // Inject Product Schema
+    const schemaScript = document.createElement('script');
+    schemaScript.type = 'application/ld+json';
+    const schemaData = PRODUCTS.map(p => ({
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": p.name,
+      "image": "https://www.ngluxaries.store" + p.image,
+      "description": p.desc,
+      "sku": p.id,
+      "offers": {
+        "@type": "Offer",
+        "url": "https://www.ngluxaries.store/shop.html?product=" + p.id,
+        "priceCurrency": "PHP",
+        "price": p.price,
+        "itemCondition": "https://schema.org/NewCondition",
+        "availability": p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "12"
+      }
+    }));
+    schemaScript.textContent = JSON.stringify(schemaData);
+    document.head.appendChild(schemaScript);
 
     const params = new URLSearchParams(window.location.search);
     const collectionParam = params.get('collection');

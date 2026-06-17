@@ -131,6 +131,10 @@ export const DEFAULT_SETTINGS = {
   gcash_number:            '09XX-XXX-XXXX',
   gcash_name:              'NGL Accessories',
   bank_accounts:           'BDO: Account # 0012-3456-7890 · NGL Accessories\nBPI: Account # 1234-5678-90 · NGL Accessories',
+  social_instagram:        'https://instagram.com/nglaccessories',
+  social_tiktok:           'https://tiktok.com/@nglaccessories',
+  social_facebook:         'https://facebook.com/nglaccessories',
+  contact_email:           'support@nglaccessories.com',
 };
 
 export async function getStoreSettings() {

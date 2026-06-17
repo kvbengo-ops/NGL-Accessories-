@@ -6,6 +6,7 @@
 import './style.css';
 import { supabase } from './supabase.js';
 import { initSearch } from './search.js';
+import './cms-frontend.js';
 
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
