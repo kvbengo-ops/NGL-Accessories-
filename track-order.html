@@ -4,66 +4,712 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Track Your Order — NGL Accessories</title>
+  <meta name="description" content="Track your NGL Accessories order status in real time. Enter your order number and email to get a live update." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
+
+  <style>
+    /* ── Track-order page overrides ──────────────────── */
+    .track-page {
+      background: var(--charcoal);
+      min-height: 100vh;
+    }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .track-layout {
+      min-height: calc(100vh - 65px);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 24px 80px;
+    }
+    .track-container {
+      width: 100%;
+      max-width: 620px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Page header ─────────────────────────────────── */
+    .track-header {
+      text-align: center;
+      padding-bottom: 8px;
+    }
+    .track-eyebrow {
+      font-family: var(--font-sans);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold-500);
+      display: block;
+      margin-bottom: 10px;
+    }
+    .track-title {
+      font-family: var(--font-serif);
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 300;
+      color: rgba(245,241,235,0.92);
+      margin-bottom: 8px;
+    }
+    .track-subtitle {
+      font-size: 13px;
+      color: rgba(245,241,235,0.4);
+      line-height: 1.6;
+    }
+
+    /* ── Lookup card ─────────────────────────────────── */
+    .track-form-card {
+      background: rgba(26,23,20,0.85);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 20px;
+      padding: 32px;
+    }
+    .track-form-card h2 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 400;
+      color: rgba(245,241,235,0.8);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .track-form-card h2 .material-symbols-outlined {
+      font-size: 20px;
+      color: var(--gold-500);
+    }
+    .track-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .track-form .form-label {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245,241,235,0.5);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .track-form .form-input {
+      width: 100%;
+      background: rgba(245,241,235,0.04);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: rgba(245,241,235,0.85);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .track-form .form-input::placeholder { color: rgba(245,241,235,0.25); }
+    .track-form .form-input:focus {
+      border-color: rgba(201,168,76,0.4);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
+    }
+    .track-error-msg {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--coral-light);
+      background: rgba(232,112,90,0.08);
+      border: 1px solid rgba(232,112,90,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .track-error-msg .material-symbols-outlined { font-size: 16px; }
+    .track-submit-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      background: var(--gold-500);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 24px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(117,91,0,0.35);
+      margin-top: 4px;
+    }
+    .track-submit-btn:hover:not(:disabled) {
+      background: var(--gold-400);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(117,91,0,0.45);
+    }
+    .track-submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    /* ── Result wrapper ───────────────────────────────── */
+    .track-result { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Status hero card ────────────────────────────── */
+    .track-status-card {
+      background: rgba(26,23,20,0.85);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 20px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .track-status-icon {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 28px;
+    }
+    .track-status-icon .material-symbols-outlined {
+      font-size: 28px;
+      font-variation-settings: 'wght' 200;
+    }
+    .status-icon--pending    { background: rgba(201,168,76,0.12); border: 2px solid rgba(201,168,76,0.3); color: var(--gold-300); }
+    .status-icon--processing { background: rgba(96,165,250,0.1);  border: 2px solid rgba(96,165,250,0.3);  color: #60a5fa; }
+    .status-icon--shipped    { background: rgba(167,139,250,0.1); border: 2px solid rgba(167,139,250,0.3); color: #a78bfa; }
+    .status-icon--delivered  { background: rgba(34,197,94,0.1);   border: 2px solid rgba(34,197,94,0.3);   color: #22c55e; }
+    .status-icon--cancelled  { background: rgba(232,112,90,0.1);  border: 2px solid rgba(232,112,90,0.3);  color: var(--coral-light); }
+    .track-status-text { flex: 1; }
+    .track-order-num-label {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--gold-500);
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+    .track-status-label {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: rgba(245,241,235,0.92);
+      margin-bottom: 4px;
+    }
+    .track-status-desc {
+      font-size: 12px;
+      color: rgba(245,241,235,0.4);
+    }
+    .track-placed-date {
+      font-size: 11px;
+      color: rgba(245,241,235,0.3);
+      margin-top: 4px;
+    }
+
+    /* ── Progress bar ────────────────────────────────── */
+    .track-progress-card {
+      background: rgba(26,23,20,0.85);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 20px;
+      padding: 28px 32px;
+    }
+    .track-progress-card h3 {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(245,241,235,0.35);
+      margin-bottom: 24px;
+    }
+    .track-steps {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      position: relative;
+      gap: 0;
+    }
+    .track-steps::before {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      height: 2px;
+      background: rgba(201,168,76,0.1);
+      z-index: 0;
+    }
+    .track-step-fill {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold-500), var(--gold-300));
+      z-index: 1;
+      transition: width 1s cubic-bezier(0.16,1,0.3,1);
+      width: 0%;
+    }
+    .track-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      position: relative;
+      z-index: 2;
+    }
+    .track-step-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(201,168,76,0.2);
+      background: var(--charcoal);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.4s;
+      color: rgba(245,241,235,0.2);
+    }
+    .track-step-dot .material-symbols-outlined {
+      font-size: 16px;
+      font-variation-settings: 'wght' 300;
+    }
+    .track-step.done .track-step-dot {
+      background: var(--gold-500);
+      border-color: var(--gold-500);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(117,91,0,0.4);
+    }
+    .track-step.current .track-step-dot {
+      border-color: var(--gold-300);
+      color: var(--gold-300);
+      background: rgba(201,168,76,0.1);
+      animation: pulseStep 2s ease-in-out infinite;
+    }
+    @keyframes pulseStep {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.3); }
+      50%       { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
+    }
+    .track-step-label {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(245,241,235,0.3);
+      text-align: center;
+      letter-spacing: 0.06em;
+      line-height: 1.3;
+    }
+    .track-step.done .track-step-label,
+    .track-step.current .track-step-label {
+      color: rgba(245,241,235,0.7);
+    }
+
+    /* ── Courier info ─────────────────────────────────── */
+    .track-courier-card {
+      background: rgba(167,139,250,0.05);
+      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .track-courier-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: rgba(167,139,250,0.12);
+      border: 1px solid rgba(167,139,250,0.2);
+      display: flex; align-items: center; justify-content: center;
+      color: #a78bfa;
+      flex-shrink: 0;
+    }
+    .track-courier-icon .material-symbols-outlined { font-size: 20px; }
+    .track-courier-info { flex: 1; }
+    .track-courier-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245,241,235,0.3);
+      margin-bottom: 3px;
+    }
+    .track-courier-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(245,241,235,0.8);
+    }
+    .track-tracking-num {
+      font-family: monospace;
+      font-size: 13px;
+      color: #a78bfa;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Order details card ───────────────────────────── */
+    .track-details-card {
+      background: rgba(26,23,20,0.85);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .track-details-header {
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .track-details-header h3 {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 400;
+      color: rgba(245,241,235,0.7);
+    }
+    .track-details-body { padding: 20px 28px; display: flex; flex-direction: column; gap: 0; }
+    .track-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(245,241,235,0.04);
+      gap: 12px;
+    }
+    .track-item-row:last-child { border-bottom: none; }
+    .track-item-name {
+      font-size: 13px;
+      color: rgba(245,241,235,0.75);
+      flex: 1;
+    }
+    .track-item-qty {
+      font-size: 11px;
+      color: rgba(245,241,235,0.3);
+      margin-left: 6px;
+    }
+    .track-item-price {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gold-300);
+      white-space: nowrap;
+    }
+    .track-totals {
+      padding: 16px 28px;
+      border-top: 1px solid rgba(201,168,76,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .track-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(245,241,235,0.45);
+    }
+    .track-total-row--grand {
+      font-size: 15px;
+      font-weight: 700;
+      color: rgba(245,241,235,0.92);
+      padding-top: 8px;
+      border-top: 1px solid rgba(201,168,76,0.1);
+      margin-top: 4px;
+    }
+
+    /* ── Delivery info ────────────────────────────────── */
+    .track-address-card {
+      background: rgba(26,23,20,0.85);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 20px;
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .track-address-card h3 {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(245,241,235,0.3);
+      margin-bottom: 4px;
+    }
+    .track-addr-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: rgba(245,241,235,0.6);
+    }
+    .track-addr-row .material-symbols-outlined {
+      font-size: 16px;
+      color: rgba(201,168,76,0.4);
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    /* ── Actions ─────────────────────────────────────── */
+    .track-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .track-again-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(201,168,76,0.2);
+      color: rgba(245,241,235,0.5);
+      border-radius: 10px;
+      padding: 13px 20px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      transition: all 0.2s;
+      background: none;
+      cursor: pointer;
+    }
+    .track-again-btn:hover {
+      border-color: rgba(201,168,76,0.4);
+      color: rgba(245,241,235,0.8);
+    }
+
+    /* ── Support strip ───────────────────────────────── */
+    .track-support-strip {
+      background: rgba(201,168,76,0.04);
+      border: 1px solid rgba(201,168,76,0.1);
+      border-radius: 14px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .track-support-strip .material-symbols-outlined {
+      font-size: 22px;
+      color: var(--gold-500);
+      flex-shrink: 0;
+    }
+    .track-support-text {
+      flex: 1;
+      font-size: 12px;
+      color: rgba(245,241,235,0.45);
+      line-height: 1.5;
+    }
+    .track-support-text a {
+      color: var(--gold-300);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .track-support-text a:hover { color: var(--gold-200); }
+
+    /* ── Cancelled state ─────────────────────────────── */
+    .track-cancelled-card {
+      background: rgba(232,112,90,0.05);
+      border: 1px solid rgba(232,112,90,0.2);
+      border-radius: 14px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .track-cancelled-card .material-symbols-outlined {
+      font-size: 24px;
+      color: var(--coral-light);
+      flex-shrink: 0;
+    }
+    .track-cancelled-text { font-size: 13px; color: rgba(245,241,235,0.55); line-height: 1.55; }
+    .track-cancelled-text strong { color: var(--coral-light); display: block; margin-bottom: 3px; }
+
+    @media (max-width: 600px) {
+      .track-status-card { flex-direction: column; text-align: center; align-items: center; }
+      .track-form-card, .track-progress-card, .track-details-card,
+      .track-address-card { border-radius: 16px; }
+      .track-form-card { padding: 24px 20px; }
+      .track-progress-card { padding: 24px 20px; }
+      .track-steps::before { left: 16px; right: 16px; }
+    }
+  </style>
 </head>
-<body class="confirm-page">
+<body class="track-page">
 
   <nav class="checkout-nav">
-    <a href="/home.html" class="checkout-nav-logo">NGL Accessories</a>
+    <a href="/index.html" class="checkout-nav-logo">NGL Accessories</a>
+    <a href="/support.html" class="checkout-secure" style="text-decoration:none;font-size:11px;gap:6px;">
+      <span class="material-symbols-outlined" style="font-size:16px">help_outline</span>
+      Need Help?
+    </a>
   </nav>
 
-  <div class="confirm-layout">
-    <div class="confirm-card">
-      <div class="confirm-icon-wrap">
-        <div class="confirm-icon" style="background:rgba(201,168,76,0.12)">
-          <span class="material-symbols-outlined">local_shipping</span>
+  <div class="track-layout">
+    <div class="track-container">
+
+      <!-- Page heading -->
+      <div class="track-header">
+        <span class="track-eyebrow">✦ Order Tracking</span>
+        <h1 class="track-title">Track Your Order</h1>
+        <p class="track-subtitle">Enter your order number and the email you used at checkout.</p>
+      </div>
+
+      <!-- ── Lookup form ── -->
+      <div class="track-form-card" id="track-form-card">
+        <h2>
+          <span class="material-symbols-outlined">receipt_long</span>
+          Order Lookup
+        </h2>
+        <form class="track-form" id="track-form" novalidate>
+          <div class="form-field">
+            <label class="form-label" for="track-number">Order Number</label>
+            <input
+              type="text"
+              id="track-number"
+              class="form-input"
+              placeholder="NGL-20260609-1234"
+              autocomplete="off"
+              required
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="track-email">Email Address</label>
+            <input
+              type="email"
+              id="track-email"
+              class="form-input"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <div class="track-error-msg" id="track-error" role="alert">
+            <span class="material-symbols-outlined">error</span>
+            <span id="track-error-text"></span>
+          </div>
+          <button type="submit" class="track-submit-btn" id="track-submit">
+            <span class="material-symbols-outlined">search</span>
+            Track Order
+          </button>
+        </form>
+        <!-- Support hint -->
+        <div class="track-support-strip" style="margin-top:20px;">
+          <span class="material-symbols-outlined">info</span>
+          <p class="track-support-text">
+            Your order number is in your confirmation email.
+            Can't find it? <a href="/support.html#contact">Contact us</a> and we'll look it up for you.
+          </p>
         </div>
       </div>
-      <span class="confirm-eyebrow">Order Tracking</span>
-      <h1 class="confirm-title">Track your order</h1>
-      <p class="confirm-subtitle">Enter your order number and the email you used at checkout.</p>
 
-      <!-- Lookup form -->
-      <form id="track-form" class="modal-form" style="text-align:left;max-width:420px;margin:24px auto 0;">
-        <div class="form-field">
-          <label class="form-label" for="track-number">Order Number</label>
-          <input type="text" id="track-number" class="form-input" placeholder="NGL-20260609-1234" required />
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="track-email">Email Address</label>
-          <input type="email" id="track-email" class="form-input" placeholder="you@example.com" required />
-        </div>
-        <div class="form-error" id="track-error" role="alert" style="display:none;"></div>
-        <button type="submit" class="btn-checkout-primary" id="track-submit" style="width:100%;justify-content:center;margin-top:8px;">
-          <span class="material-symbols-outlined">search</span>
-          Track Order
-        </button>
-      </form>
+      <!-- ── Result (hidden until lookup) ── -->
+      <div id="track-result" style="display:none;" class="track-result">
 
-      <!-- Result -->
-      <div id="track-result" class="hidden">
-        <div class="confirm-order-box">
-          <div class="confirm-order-num">
-            <span class="material-symbols-outlined">receipt_long</span>
-            <span id="track-order-number">—</span>
+        <!-- Status hero -->
+        <div class="track-status-card" id="track-status-card">
+          <div class="track-status-icon" id="track-status-icon">
+            <span class="material-symbols-outlined" id="track-status-icon-sym">hourglass_empty</span>
           </div>
-          <div id="track-order-details"></div>
+          <div class="track-status-text">
+            <div class="track-order-num-label" id="track-order-num-label">—</div>
+            <div class="track-status-label" id="track-status-label">Loading…</div>
+            <div class="track-status-desc" id="track-status-desc"></div>
+            <div class="track-placed-date" id="track-placed-date"></div>
+          </div>
         </div>
 
-        <div class="confirm-timeline" id="track-timeline"></div>
+        <!-- Cancelled notice (shown only if cancelled) -->
+        <div class="track-cancelled-card" id="track-cancelled-card" style="display:none;">
+          <span class="material-symbols-outlined">cancel</span>
+          <div class="track-cancelled-text">
+            <strong>Order Cancelled</strong>
+            This order has been cancelled. If you believe this is a mistake or would like to re-order,
+            please <a href="/support.html#contact" style="color:var(--coral-light);text-decoration:underline;">contact us</a>.
+          </div>
+        </div>
 
-        <div class="confirm-actions">
+        <!-- Progress steps (shown for non-cancelled orders) -->
+        <div class="track-progress-card" id="track-progress-card">
+          <h3>Order Progress</h3>
+          <div class="track-steps" id="track-steps">
+            <div class="track-step-fill" id="track-step-fill"></div>
+            <div class="track-step" id="step-pending">
+              <div class="track-step-dot">
+                <span class="material-symbols-outlined">receipt_long</span>
+              </div>
+              <span class="track-step-label">Order<br>Received</span>
+            </div>
+            <div class="track-step" id="step-processing">
+              <div class="track-step-dot">
+                <span class="material-symbols-outlined">inventory_2</span>
+              </div>
+              <span class="track-step-label">Being<br>Prepared</span>
+            </div>
+            <div class="track-step" id="step-shipped">
+              <div class="track-step-dot">
+                <span class="material-symbols-outlined">local_shipping</span>
+              </div>
+              <span class="track-step-label">Out for<br>Delivery</span>
+            </div>
+            <div class="track-step" id="step-delivered">
+              <div class="track-step-dot">
+                <span class="material-symbols-outlined">check_circle</span>
+              </div>
+              <span class="track-step-label">Delivered</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Courier info (shown only when shipped) -->
+        <div class="track-courier-card" id="track-courier-card" style="display:none;">
+          <div class="track-courier-icon">
+            <span class="material-symbols-outlined">local_shipping</span>
+          </div>
+          <div class="track-courier-info">
+            <div class="track-courier-label">Shipped via</div>
+            <div class="track-courier-name" id="track-courier-name">—</div>
+          </div>
+          <div>
+            <div class="track-courier-label" style="text-align:right;">Tracking #</div>
+            <div class="track-tracking-num" id="track-tracking-num">—</div>
+          </div>
+        </div>
+
+        <!-- Order items + totals -->
+        <div class="track-details-card">
+          <div class="track-details-header">
+            <h3>Order Details</h3>
+          </div>
+          <div class="track-details-body" id="track-items"></div>
+          <div class="track-totals" id="track-totals"></div>
+        </div>
+
+        <!-- Delivery address -->
+        <div class="track-address-card" id="track-address-card">
+          <h3>Delivery Info</h3>
+          <div id="track-address-rows"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="track-actions">
           <a href="/shop.html" class="btn-checkout-primary">
             <span class="material-symbols-outlined">storefront</span>
             Continue Shopping
           </a>
-          <button type="button" class="btn-checkout-ghost" id="track-again">Track another order</button>
+          <button type="button" class="track-again-btn" id="track-again">
+            <span class="material-symbols-outlined">search</span>
+            Track Another Order
+          </button>
         </div>
+
+        <!-- Support -->
+        <div class="track-support-strip">
+          <span class="material-symbols-outlined">support_agent</span>
+          <p class="track-support-text">
+            Have a question about your order? Our team is ready to help.
+            <a href="/support.html#contact">Contact Support →</a>
+          </p>
+        </div>
+
       </div>
+      <!-- /track-result -->
+
     </div>
   </div>
 

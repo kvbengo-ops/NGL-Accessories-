@@ -119,6 +119,13 @@ function showOrderDetail(id) {
     </div>
   `).join('');
 
+  // Local delivery: shipping is ₱0 (meetup free / Maxim·Movit fare paid to rider).
+  const shippingVal = o.shipping != null
+    ? Number(o.shipping)
+    : Math.max(0, Number(o.total) - Math.max(0, Number(o.subtotal) - Number(o.discount || 0)));
+  const isCourier   = /maxim|movit/i.test(o.delivery_method || '');
+  const deliveryVal = shippingVal > 0 ? formatPrice(shippingVal) : (isCourier ? 'Paid to rider' : 'Free');
+
   document.getElementById('order-detail-number').textContent = o.order_number;
   document.getElementById('order-detail-content').innerHTML = `
     <div class="order-detail-grid">
@@ -128,7 +135,8 @@ function showOrderDetail(id) {
         <p>${escapeHtml(o.customer_email) || '—'}</p>
         <p>${escapeHtml(o.customer_phone) || '—'}</p>
         ${o.delivery_address ? `<p class="addr">${escapeHtml(o.delivery_address)}</p>` : ''}
-        ${o.province ? `<p class="addr"><strong>Province:</strong> ${escapeHtml(o.province)}</p>` : ''}
+        ${o.province ? `<p class="addr"><strong>Area:</strong> ${escapeHtml(o.province)}</p>` : ''}
+        ${o.delivery_method ? `<p class="addr"><strong>Delivery:</strong> ${escapeHtml(o.delivery_method)}</p>` : ''}
         ${o.order_notes ? `<p class="notes">Notes: ${escapeHtml(o.order_notes)}</p>` : ''}
       </div>
       <div class="order-detail-section">
@@ -137,6 +145,20 @@ function showOrderDetail(id) {
         <p>Type: <span class="type-badge type-badge--${o.type}">${o.type}</span></p>
         <p>Status: ${statusBadge(o.status)}</p>
         <p>Date: ${formatDate(o.created_at)}</p>
+        ${o.payment_proof_url ? `
+          <a href="${o.payment_proof_url}" target="_blank" rel="noopener" class="payment-proof-link" title="Open full receipt">
+            <img src="${o.payment_proof_url}" alt="Payment receipt" class="payment-proof-thumb" />
+            <span>View payment receipt <span class="material-symbols-outlined">open_in_new</span></span>
+          </a>` : (o.type === 'online' ? '<p class="payment-proof-missing"><span class="material-symbols-outlined">image_not_supported</span> No receipt uploaded</p>' : '')}
+        ${o.type === 'online' && o.status === 'pending' ? `
+          <div class="payment-verify-actions">
+            <button class="btn-verify btn-verify--approve" id="verify-approve" type="button">
+              <span class="material-symbols-outlined">check_circle</span> Approve payment
+            </button>
+            <button class="btn-verify btn-verify--reject" id="verify-reject" type="button">
+              <span class="material-symbols-outlined">cancel</span> Reject
+            </button>
+          </div>` : ''}
       </div>
     </div>
     ${o.type === 'online' ? `
@@ -145,7 +167,7 @@ function showOrderDetail(id) {
       <div class="form-grid-2">
         <div class="form-field">
           <label class="form-label" for="fulfil-courier">Courier</label>
-          <input type="text" id="fulfil-courier" class="form-input" placeholder="e.g. J&amp;T, LBC, Flash"
+          <input type="text" id="fulfil-courier" class="form-input" placeholder="e.g. Maxim, Movit, Meetup"
             value="${escapeHtml(o.courier || '')}" />
         </div>
         <div class="form-field">
@@ -165,7 +187,7 @@ function showOrderDetail(id) {
       <div class="order-detail-totals">
         <div class="total-row"><span>Subtotal</span><span>${formatPrice(o.subtotal)}</span></div>
         ${o.discount > 0 ? `<div class="total-row total-row--discount"><span>Discount</span><span>-${formatPrice(o.discount)}</span></div>` : ''}
-        ${o.type === 'online' ? `<div class="total-row"><span>Shipping${o.province ? ` · ${escapeHtml(o.province)}` : ''}</span><span>${formatPrice(o.shipping != null ? o.shipping : (o.total - Math.max(0, o.subtotal - o.discount)))}</span></div>` : ''}
+        ${o.type === 'online' ? `<div class="total-row"><span>Delivery${o.delivery_method ? ` · ${escapeHtml(o.delivery_method)}` : ''}</span><span>${deliveryVal}</span></div>` : ''}
         <div class="total-row total-row--grand"><span>Total</span><span>${formatPrice(o.total)}</span></div>
       </div>
     </div>
@@ -188,19 +210,41 @@ function showOrderDetail(id) {
     }
   });
 
+  // One-click payment verification (maps onto the existing status flow):
+  // approve → processing, reject → cancelled (stock auto-restores on cancel).
+  async function verifyOrder(newStatus, btn) {
+    const confirmMsg = newStatus === 'processing'
+      ? 'Approve this payment and move the order to Processing?'
+      : 'Reject and cancel this order? Any reserved stock will be restored.';
+    if (!confirm(confirmMsg)) return;
+    btn.disabled = true;
+    try {
+      await updateOrderStatus(o.id, newStatus);
+      showToast(newStatus === 'processing' ? 'Payment approved — order is now Processing' : 'Order rejected & cancelled');
+      closeModal('order-detail-modal');
+      await loadOrders();
+    } catch (err) {
+      showToast('Failed: ' + err.message, 'error');
+      btn.disabled = false;
+    }
+  }
+  document.getElementById('verify-approve')?.addEventListener('click', (e) => verifyOrder('processing', e.currentTarget));
+  document.getElementById('verify-reject')?.addEventListener('click', (e) => verifyOrder('cancelled', e.currentTarget));
+
   openModal('order-detail-modal');
 }
 
 /* ── CSV Export ──────────────────────────────────────────── */
 function setupExport() {
   document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-    const headers = ['Order #','Type','Status','Customer','Email','Phone','Province','Total','Payment','Courier','Tracking #','Date'];
+    const headers = ['Order #','Type','Status','Customer','Email','Phone','Area','Delivery','Total','Payment','Courier','Tracking #','Date'];
     const rows = allOrders.map(o => [
       o.order_number, o.type, o.status,
       o.customer_name || '',
       o.customer_email || '',
       o.customer_phone || '',
       o.province || '',
+      o.delivery_method || '',
       o.total,
       o.payment_method || '',
       o.courier || '',

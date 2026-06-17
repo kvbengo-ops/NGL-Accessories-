@@ -30,6 +30,14 @@ function formatPrice(n) {
     ? Number(order.shipping)
     : Math.max(0, Number(order.total) - Number(order.subtotal));
 
+  const deliveryMethod = order.delivery_method || '';
+  const deliveryArea   = order.province || '';
+  const isCourier      = /maxim|movit/i.test(deliveryMethod);
+  // Local model: meetup is free, Maxim/Movit fare is paid to the rider.
+  const deliveryValue  = shippingVal > 0
+    ? formatPrice(shippingVal)
+    : (isCourier ? 'Paid to rider' : 'Free');
+
   document.getElementById('confirm-order-number').textContent = order.order_number;
   document.getElementById('confirm-order-details').innerHTML = `
     <div class="confirm-detail-grid">
@@ -44,6 +52,10 @@ function formatPrice(n) {
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">home</span>
         <span>${order.delivery_address || '—'}</span>
+      </div>
+      <div class="confirm-detail-row">
+        <span class="material-symbols-outlined">local_shipping</span>
+        <span>${[deliveryMethod, deliveryArea].filter(Boolean).join(' · ') || '—'}</span>
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">payments</span>
@@ -63,8 +75,8 @@ function formatPrice(n) {
       <span>${formatPrice(order.subtotal)}</span>
     </div>
     <div class="confirm-item-row">
-      <span>Shipping${order.province ? ` · ${order.province}` : ''}</span>
-      <span>${shippingVal > 0 ? formatPrice(shippingVal) : 'Free'}</span>
+      <span>Delivery${deliveryMethod ? ` · ${deliveryMethod}` : ''}</span>
+      <span>${deliveryValue}</span>
     </div>
     <div class="confirm-total-row">
       <span>Total Paid</span>

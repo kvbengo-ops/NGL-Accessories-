@@ -69,11 +69,13 @@ function itemRows(items: OrderItem[]): string {
 
 function totalsBlock(order: any): string {
   const shipping = Number(order.total) - Number(order.subtotal) + Number(order.discount ?? 0);
+  const isCourier = /maxim|movit/i.test(order.delivery_method ?? "");
+  const deliveryValue = shipping > 0 ? peso(shipping) : (isCourier ? "Paid to rider" : "Free");
   return `
     <tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Subtotal</td>
         <td style="padding:6px 0;color:${C.ink};font-size:14px;text-align:right;">${peso(order.subtotal)}</td></tr>
-    <tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Shipping</td>
-        <td style="padding:6px 0;color:${C.ink};font-size:14px;text-align:right;">${shipping <= 0 ? "Free" : peso(shipping)}</td></tr>
+    <tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Delivery${order.delivery_method ? ` &middot; ${order.delivery_method}` : ""}</td>
+        <td style="padding:6px 0;color:${C.ink};font-size:14px;text-align:right;">${deliveryValue}</td></tr>
     ${
       Number(order.discount) > 0
         ? `<tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Discount</td>
@@ -124,7 +126,7 @@ function customerEmail(order: any, items: OrderItem[]): string {
     <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">${itemRows(items)}</table>
     <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">${totalsBlock(order)}</table>
     <div style="font-size:13px;color:${C.muted};line-height:1.7;">
-      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/>${order.province}` : ""}<br/><br/>
+      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/>${order.province}` : ""}${order.delivery_method ? `<br/><strong style="color:${C.ink};">Method:</strong> ${order.delivery_method}` : ""}<br/><br/>
       <strong style="color:${C.ink};">Payment</strong><br/>${order.payment_method ?? "—"}
     </div>
     ${
@@ -156,7 +158,7 @@ function adminEmail(order: any, items: OrderItem[]): string {
       ${order.customer_name ?? "—"}<br/>
       ${order.customer_email ?? "—"}<br/>
       ${order.customer_phone ?? "—"}<br/><br/>
-      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/><strong style="color:${C.ink};">Province:</strong> ${order.province}` : ""}<br/><br/>
+      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/><strong style="color:${C.ink};">Area:</strong> ${order.province}` : ""}${order.delivery_method ? `<br/><strong style="color:${C.ink};">Method:</strong> ${order.delivery_method}` : ""}<br/><br/>
       <strong style="color:${C.ink};">Payment</strong><br/>${order.payment_method ?? "—"}
       ${order.order_notes ? `<br/><br/><strong style="color:${C.ink};">Notes</strong><br/>${order.order_notes}` : ""}
     </div>

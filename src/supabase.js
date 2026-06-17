@@ -176,6 +176,28 @@ export async function uploadProductImage(file) {
   return data.publicUrl;
 }
 
+// Upload a customer's proof-of-payment screenshot (anonymous checkout).
+// Random filename → the public URL is unguessable.
+export async function uploadPaymentProof(file) {
+  const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `proofs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage
+    .from('payment-proofs')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from('payment-proofs').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// Attach the uploaded proof to a just-created pending order (anon-safe RPC).
+export async function attachPaymentProof(orderId, proofUrl) {
+  const { error } = await supabase.rpc('attach_payment_proof', {
+    p_order_id:  orderId,
+    p_proof_url: proofUrl,
+  });
+  if (error) throw error;
+}
+
 /* ── Admin helpers ───────────────────────────────────────── */
 export async function getAdmins() {
   const { data, error } = await supabase.rpc('get_admin_users');

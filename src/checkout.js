@@ -1,7 +1,7 @@
 /* ============================================================
    NGL — Checkout Flow Logic
    ============================================================ */
-import { supabase, createOrder, generateOrderNumber, getProducts, getStoreSettings, DEFAULT_SETTINGS, getShippingConfig } from './supabase.js';
+import { supabase, createOrder, generateOrderNumber, getProducts, getStoreSettings, DEFAULT_SETTINGS, uploadPaymentProof, attachPaymentProof } from './supabase.js';
 
 let settings = { ...DEFAULT_SETTINGS };
 
@@ -9,16 +9,34 @@ let cart     = [];
 let step     = 1;
 let details  = {};
 
-// Zone-based shipping (Cebu origin → nationwide). Populated from the DB.
-let zoneById     = {};   // zone_id → { id, label, fee, free_shipping_threshold }
-let provinceZone = {};   // province name → zone_id
+// Local delivery — we only serve the Metro Cebu corridor (Cebu City → Consolacion).
+// The customer picks an AREA (stored in orders.province) and a DELIVERY METHOD.
+// Both methods are ₱0 at checkout: meetup is free and any Maxim/Movit fare is
+// paid directly to the rider on arrival.
+const DELIVERY_AREAS = ['Cebu City', 'Mandaue City', 'Consolacion', 'Liloan', 'Compostela'];
+const DELIVERY_METHODS = {
+  meetup: {
+    label:   'Meetup',
+    summary: '🎉 Free',
+    note:    "Free meetup — we'll message you to agree on a spot & time.",
+    addrLabel: 'Preferred meetup point *',
+    addrPlaceholder: 'Area, landmark, and a time that works for you',
+  },
+  courier: {
+    label:   'Maxim / Movit',
+    summary: 'Paid to rider',
+    note:    'Maxim/Movit fare is paid directly to the rider on arrival.',
+    addrLabel: 'Delivery Address *',
+    addrPlaceholder: 'House/Unit, Street, Barangay, landmark',
+  },
+};
 
 function selectedProvince() {
   return document.getElementById('c-province')?.value || details.province || '';
 }
-function zoneForProvince(prov) {
-  const zid = provinceZone[prov];
-  return zid ? zoneById[zid] : null;
+function selectedMethod() {
+  const v = document.querySelector('.delivery-radio:checked')?.value || details.delivery_method_key || 'meetup';
+  return DELIVERY_METHODS[v] ? v : 'meetup';
 }
 
 function escapeHtml(str) {
@@ -41,7 +59,7 @@ function renderSettings() {
       .split('\n').filter(Boolean)
       .map(line => `<p>${escapeHtml(line)}</p>`).join('');
   }
-  if (trustShip) trustShip.textContent = 'Nationwide delivery — free shipping on qualifying orders';
+  if (trustShip) trustShip.textContent = 'Free meetup or Maxim/Movit delivery — Metro Cebu';
 }
 
 async function loadSettings() {
@@ -54,30 +72,38 @@ async function loadSettings() {
   updateSummary();
 }
 
-// Load the zone rate card + province map and fill the province dropdown.
-async function loadShipping() {
+// Fill the delivery-area dropdown with our covered Metro Cebu areas.
+function loadAreas() {
   const select = document.getElementById('c-province');
-  try {
-    const { zones, provinces } = await getShippingConfig();
-    zoneById     = Object.fromEntries(zones.map(z => [z.id, z]));
-    provinceZone = Object.fromEntries(provinces.map(p => [p.province, p.zone_id]));
-
-    if (select) {
-      // Keep the disabled placeholder, append every province alphabetically.
-      const opts = provinces
-        .map(p => `<option value="${escapeHtml(p.province)}">${escapeHtml(p.province)}</option>`)
-        .join('');
-      select.insertAdjacentHTML('beforeend', opts);
-    }
-  } catch (err) {
-    console.error('Could not load shipping zones:', err);
+  if (select) {
+    const opts = DELIVERY_AREAS
+      .map(area => `<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`)
+      .join('');
+    select.insertAdjacentHTML('beforeend', opts);
   }
+  syncDeliveryMethod();
   updateSummary();
+}
+
+// Reflect the chosen delivery method in the address field's label/placeholder.
+function syncDeliveryMethod() {
+  const m   = DELIVERY_METHODS[selectedMethod()];
+  const lbl = document.getElementById('c-address-label');
+  const ta  = document.getElementById('c-address');
+  if (lbl) lbl.textContent = m.addrLabel;
+  if (ta)  ta.placeholder  = m.addrPlaceholder;
 }
 
 document.getElementById('c-province')?.addEventListener('change', () => {
   clearFieldError('c-province');
   updateSummary();
+});
+
+document.querySelectorAll('.delivery-radio').forEach(radio => {
+  radio.addEventListener('change', () => {
+    syncDeliveryMethod();
+    updateSummary();
+  });
 });
 
 // Load cart from localStorage
@@ -124,14 +150,10 @@ function getSubtotal() {
   return cart.reduce((s, c) => s + (c.price * c.quantity), 0);
 }
 
-// Shipping for the chosen province's zone. Returns null when no province
-// is selected yet (so the summary can show "select province" instead of ₱0).
-function getShipping(subtotal) {
-  const zone = zoneForProvince(selectedProvince());
-  if (!zone) return null;
-  const freeAt = Number(zone.free_shipping_threshold) || 0;
-  if (freeAt > 0 && subtotal >= freeAt) return 0;
-  return Number(zone.fee) || 0;
+// Local delivery never adds a charge at checkout: meetup is free and any
+// Maxim/Movit fare is settled directly with the rider. Always ₱0.
+function getShipping() {
+  return 0;
 }
 
 /* ── Step Navigation ─────────────────────────────────────── */
@@ -222,47 +244,30 @@ function renderCartReview() {
 
 function updateSummary() {
   const subtotal = getSubtotal();
-  const zone     = zoneForProvince(selectedProvince());
-  const shipping = getShipping(subtotal);          // number, or null if no province yet
-  const total    = subtotal + (shipping || 0);
+  const method   = DELIVERY_METHODS[selectedMethod()];
+  const total    = subtotal + getShipping();       // shipping is always 0
 
   document.getElementById('summary-subtotal').textContent = formatPrice(subtotal);
 
   const shipEl = document.getElementById('summary-shipping');
-  if (shipEl) {
-    if (shipping === null)      shipEl.textContent = 'Select province';
-    else if (shipping === 0)    shipEl.textContent = '🎉 Free!';
-    else                        shipEl.textContent = formatPrice(shipping);
-  }
+  if (shipEl) shipEl.textContent = method.summary;   // "🎉 Free" or "Paid to rider"
+
   document.getElementById('summary-total').textContent = formatPrice(total);
 
-  // Shipping note — reflects the selected zone's own free-shipping threshold.
+  // Mirror the total into the "amount to send" callout on the payment step.
+  const payAmt = document.getElementById('pay-amount-value');
+  if (payAmt) payAmt.textContent = formatPrice(total);
+
+  // Shipping note — reflects the chosen delivery method.
   const noteEl = document.getElementById('checkout-shipping-note');
   if (noteEl) {
-    const freeAt = zone ? (Number(zone.free_shipping_threshold) || 0) : 0;
-    if (!zone) {
-      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Select your province at checkout to see shipping.`;
-      noteEl.style.display = subtotal > 0 ? '' : 'none';
-    } else if (freeAt > 0 && subtotal > 0 && subtotal < freeAt) {
-      const remaining = freeAt - subtotal;
-      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Add <strong>${formatPrice(remaining)}</strong> more for free shipping to ${escapeHtml(zone.label)}!`;
-      noteEl.style.display = '';
-    } else if (freeAt > 0 && subtotal >= freeAt) {
-      noteEl.innerHTML = `<span class="material-symbols-outlined">check_circle</span>You qualify for <strong>free shipping</strong> to ${escapeHtml(zone.label)}!`;
-      noteEl.style.display = '';
-    } else {
-      noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>Shipping to <strong>${escapeHtml(zone.label)}</strong>: ${formatPrice(Number(zone.fee) || 0)}`;
-      noteEl.style.display = '';
-    }
+    noteEl.innerHTML = `<span class="material-symbols-outlined">local_shipping</span>${escapeHtml(method.note)}`;
+    noteEl.style.display = subtotal > 0 ? '' : 'none';
   }
 
-  // Inline hint under the province dropdown
+  // Inline hint under the area dropdown — keep the coverage reminder.
   const hintEl = document.getElementById('province-ship-hint');
-  if (hintEl) {
-    if (!zone) hintEl.textContent = '';
-    else if (shipping === 0) hintEl.textContent = `Free shipping to ${zone.label}.`;
-    else hintEl.textContent = `Shipping to ${zone.label}: ${formatPrice(shipping)}.`;
-  }
+  if (hintEl) hintEl.textContent = 'We cover Metro Cebu — Cebu City up to Consolacion.';
 
   // Sidebar items
   const sumItems = document.getElementById('checkout-summary-items');
@@ -309,6 +314,7 @@ function clearFieldError(id) {
 document.getElementById('details-form')?.addEventListener('submit', (e) => {
   e.preventDefault();
 
+  const methodKey = selectedMethod();
   const values = {
     name:     document.getElementById('c-name').value.trim(),
     email:    document.getElementById('c-email').value.trim(),
@@ -316,6 +322,8 @@ document.getElementById('details-form')?.addEventListener('submit', (e) => {
     province: document.getElementById('c-province').value,
     address:  document.getElementById('c-address').value.trim(),
     notes:    document.getElementById('c-notes').value.trim(),
+    delivery_method_key: methodKey,
+    delivery_method:     DELIVERY_METHODS[methodKey].label,
   };
 
   // Validate
@@ -334,9 +342,13 @@ document.getElementById('details-form')?.addEventListener('submit', (e) => {
   if (!values.phone)                       fail('c-phone', 'Please enter your phone number.');
   else if (!PH_PHONE_RE.test(phoneDigits)) fail('c-phone', 'Enter a valid PH mobile number (e.g. 0917 123 4567).');
 
-  if (!values.province) fail('c-province', 'Please select your province.');
+  if (!values.province) fail('c-province', 'Please select your delivery area.');
 
-  if (!values.address) fail('c-address', 'Please enter your delivery address.');
+  if (!values.address) {
+    fail('c-address', methodKey === 'meetup'
+      ? 'Please enter your preferred meetup point.'
+      : 'Please enter your delivery address.');
+  }
 
   if (firstInvalid) {
     document.getElementById(firstInvalid)?.focus();
@@ -348,42 +360,125 @@ document.getElementById('details-form')?.addEventListener('submit', (e) => {
 });
 
 /* ── Step 3: Payment ─────────────────────────────────────── */
+const proofSection = document.getElementById('payment-proof-section');
+
+// The "amount to send" + receipt upload only make sense for GCash/bank.
+function syncProofVisibility() {
+  const method = document.querySelector('.payment-radio:checked')?.value || 'gcash';
+  if (proofSection) proofSection.style.display = method === 'cod' ? 'none' : '';
+}
+
 document.querySelectorAll('.payment-radio').forEach(radio => {
   radio.addEventListener('change', () => {
     document.querySelectorAll('.payment-detail-panel').forEach(p => p.classList.add('hidden'));
     const panel = document.getElementById(`${radio.value.replace('_transfer','')}-detail`);
     panel?.classList.remove('hidden');
+    syncProofVisibility();
+    clearPayError();
   });
 });
+syncProofVisibility();
+
+/* Proof-of-payment upload (screenshot of the GCash/bank receipt) */
+const proofZone    = document.getElementById('proof-upload-zone');
+const proofInput   = document.getElementById('proof-file');
+const proofPreview = document.getElementById('proof-preview');
+const proofCta     = document.getElementById('proof-upload-cta');
+const proofClear   = document.getElementById('proof-clear');
+
+proofZone?.addEventListener('click', (e) => {
+  if (e.target.closest('.proof-clear')) return;
+  proofInput.click();
+});
+proofZone?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); proofInput.click(); }
+});
+proofInput?.addEventListener('change', () => {
+  const file = proofInput.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showPayError('Receipt image must be under 5 MB.');
+    proofInput.value = '';
+    return;
+  }
+  clearPayError();
+  proofPreview.src = URL.createObjectURL(file);
+  proofZone.classList.add('has-image');
+  proofCta.style.display = 'none';
+  proofClear.hidden = false;
+});
+proofClear?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  proofInput.value = '';
+  proofPreview.src = '';
+  proofZone.classList.remove('has-image');
+  proofCta.style.display = '';
+  proofClear.hidden = true;
+});
+
+/* Copy the GCash number to the clipboard */
+document.getElementById('copy-gcash')?.addEventListener('click', async () => {
+  const num = document.getElementById('gcash-number-display')?.textContent?.trim();
+  if (!num) return;
+  try {
+    await navigator.clipboard.writeText(num);
+    const btn  = document.getElementById('copy-gcash');
+    const icon = btn.querySelector('.material-symbols-outlined');
+    const prev = icon.textContent;
+    icon.textContent = 'check';
+    btn.classList.add('copied');
+    setTimeout(() => { icon.textContent = prev; btn.classList.remove('copied'); }, 1500);
+  } catch { /* clipboard unavailable — ignore */ }
+});
+
+/* Inline payment error (replaces the old alert()) */
+function showPayError(msg) {
+  const el = document.getElementById('pay-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+function clearPayError() {
+  const el = document.getElementById('pay-error');
+  if (el) { el.style.display = 'none'; el.textContent = ''; }
+}
 
 document.getElementById('place-order-btn')?.addEventListener('click', placeOrder);
 
 async function placeOrder() {
-  const btn          = document.getElementById('place-order-btn');
-  const payMethod    = document.querySelector('.payment-radio:checked')?.value || 'gcash';
-  let   paymentRef   = '';
+  const btn        = document.getElementById('place-order-btn');
+  const payMethod  = document.querySelector('.payment-radio:checked')?.value || 'gcash';
+  let   paymentRef = '';
 
   if (payMethod === 'gcash')         paymentRef = document.getElementById('gcash-ref')?.value.trim();
   if (payMethod === 'bank_transfer') paymentRef = document.getElementById('bank-ref')?.value.trim();
 
-  if (['gcash','bank_transfer'].includes(payMethod) && !paymentRef) {
-    alert('Please enter the reference number for your payment.');
+  const proofFile = document.getElementById('proof-file')?.files[0] || null;
+
+  // GCash / bank: require EITHER a receipt screenshot OR a reference number.
+  if (['gcash','bank_transfer'].includes(payMethod) && !proofFile && !paymentRef) {
+    showPayError('Please upload your payment receipt or enter the reference number.');
     return;
   }
+  clearPayError();
 
-  btn.disabled   = true;
-  btn.innerHTML  = '<span class="material-symbols-outlined">hourglass_empty</span>Placing Order…';
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span>Placing Order…';
 
   try {
     const subtotal = getSubtotal();
-    const shipping = getShipping(subtotal) || 0;   // server re-computes authoritatively
+    const shipping = getShipping();                // 0 — server re-computes authoritatively
     const total    = subtotal + shipping;
 
-    // Payment is confirmed manually via the reference number the customer
-    // enters (GCash / bank transfer). The order is created as `pending` and an
-    // admin verifies the payment before fulfilment. There is no automated
-    // gateway yet — see README ("Going further") to wire up PayMongo.
+    // Upload the receipt first — a failed upload shouldn't create an order.
+    let proofUrl = null;
+    if (proofFile) {
+      btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span>Uploading receipt…';
+      proofUrl = await uploadPaymentProof(proofFile);
+      btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span>Placing Order…';
+    }
 
+    // Payment is verified manually by an admin (receipt screenshot + reference).
+    // The order is created `pending`; the admin approves (→ processing) or
+    // rejects (→ cancelled) it from the Orders dashboard.
     const order = await createOrder({
       order_number:     generateOrderNumber(),
       type:             'online',
@@ -393,6 +488,7 @@ async function placeOrder() {
       customer_phone:   details.phone,
       delivery_address: details.address,
       province:         details.province || null,
+      delivery_method:  details.delivery_method || null,
       order_notes:      details.notes || null,
       payment_method:   payMethod + (paymentRef ? ` (${paymentRef})` : ''),
       subtotal,
@@ -405,17 +501,19 @@ async function placeOrder() {
       quantity:     item.quantity,
     })));
 
-    // Clear cart
+    // Attach the receipt to the new order (best-effort: the order is already
+    // placed and the reference number is on file as a fallback).
+    if (proofUrl) {
+      try { await attachPaymentProof(order.id, proofUrl); }
+      catch (e) { console.error('Could not attach payment proof:', e); }
+    }
+
     localStorage.removeItem('ngl_cart');
 
-    // Confirmation + admin-alert emails are sent server-side: a Postgres trigger
-    // on `orders` INSERT calls the `order-notification` Edge Function (Resend).
-    // See setup/order-emails.sql — nothing to send from the client.
-
-    // Redirect to confirmation
+    // Confirmation + admin-alert emails are sent server-side (Resend Edge Function).
     window.location.href = `/order-confirm.html?id=${order.id}`;
   } catch (err) {
-    alert('Error placing order: ' + err.message);
+    showPayError('Something went wrong placing your order: ' + err.message);
     btn.disabled = false;
     btn.innerHTML = '<span class="material-symbols-outlined">shopping_bag</span>Place Order';
   }
@@ -432,4 +530,4 @@ renderCartReview();
 updateSummary();
 goToStep(1);
 loadSettings();
-loadShipping();
+loadAreas();

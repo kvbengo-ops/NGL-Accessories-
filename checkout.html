@@ -81,16 +81,43 @@
             <input type="email" id="c-email" class="form-input" required placeholder="maria@example.com" />
           </div>
           <div class="form-field">
-            <label class="form-label" for="c-province">Province *</label>
-            <select id="c-province" class="form-input" required>
-              <option value="" disabled selected>Select your province…</option>
-            </select>
-            <span class="form-hint" id="province-ship-hint"></span>
+            <span class="form-label">Delivery Method *</span>
+            <div class="delivery-options" id="delivery-options">
+              <label class="delivery-option" for="deliver-meetup">
+                <input type="radio" id="deliver-meetup" name="delivery" value="meetup" class="delivery-radio" checked />
+                <div class="delivery-option-inner">
+                  <span class="material-symbols-outlined delivery-option-icon">handshake</span>
+                  <div>
+                    <span class="delivery-option-name">Meetup</span>
+                    <span class="delivery-option-desc">Free — we agree on a spot &amp; time</span>
+                  </div>
+                  <span class="delivery-check material-symbols-outlined">check_circle</span>
+                </div>
+              </label>
+              <label class="delivery-option" for="deliver-courier">
+                <input type="radio" id="deliver-courier" name="delivery" value="courier" class="delivery-radio" />
+                <div class="delivery-option-inner">
+                  <span class="material-symbols-outlined delivery-option-icon">sports_motorsports</span>
+                  <div>
+                    <span class="delivery-option-name">Maxim / Movit delivery</span>
+                    <span class="delivery-option-desc">Fare paid to the rider on arrival</span>
+                  </div>
+                  <span class="delivery-check material-symbols-outlined">check_circle</span>
+                </div>
+              </label>
+            </div>
           </div>
           <div class="form-field">
-            <label class="form-label" for="c-address">Delivery Address *</label>
+            <label class="form-label" for="c-province">Delivery Area *</label>
+            <select id="c-province" class="form-input" required>
+              <option value="" disabled selected>Select your area…</option>
+            </select>
+            <span class="form-hint" id="province-ship-hint">We cover Metro Cebu — Cebu City up to Consolacion.</span>
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="c-address" id="c-address-label">Delivery Address *</label>
             <textarea id="c-address" class="form-input form-textarea" rows="3" required
-              placeholder="Street, Barangay, City / Municipality, ZIP"></textarea>
+              placeholder="House/Unit, Street, Barangay, landmark"></textarea>
           </div>
           <div class="form-field">
             <label class="form-label" for="c-notes">Order Notes (optional)</label>
@@ -132,11 +159,14 @@
               <div class="gcash-number">
                 <span class="material-symbols-outlined">phone_iphone</span>
                 <span>GCash Number: <strong id="gcash-number-display">09XX-XXX-XXXX</strong></span>
+                <button type="button" class="copy-btn" id="copy-gcash" aria-label="Copy GCash number">
+                  <span class="material-symbols-outlined">content_copy</span>
+                </button>
               </div>
               <p class="gcash-name">Account Name: <strong id="gcash-name-display">NGL Accessories</strong></p>
             </div>
             <div class="form-field">
-              <label class="form-label" for="gcash-ref">GCash Reference Number *</label>
+              <label class="form-label" for="gcash-ref">GCash Reference Number <span class="label-optional">(optional if you upload a receipt)</span></label>
               <input type="text" id="gcash-ref" class="form-input" placeholder="e.g. 123456789012" />
             </div>
           </div>
@@ -159,19 +189,19 @@
               <p>BPI: Account # 1234-5678-90 · NGL Accessories</p>
             </div>
             <div class="form-field">
-              <label class="form-label" for="bank-ref">Bank Reference Number *</label>
+              <label class="form-label" for="bank-ref">Bank Reference Number <span class="label-optional">(optional if you upload a receipt)</span></label>
               <input type="text" id="bank-ref" class="form-input" placeholder="Transaction reference #" />
             </div>
           </div>
 
-          <!-- COD -->
+          <!-- Cash (Meetup / Delivery) -->
           <label class="payment-option" for="pay-cod">
             <input type="radio" id="pay-cod" name="payment" value="cod" class="payment-radio" />
             <div class="payment-option-inner">
-              <span class="material-symbols-outlined payment-option-icon">local_shipping</span>
+              <span class="material-symbols-outlined payment-option-icon">payments</span>
               <div>
-                <span class="payment-option-name">Cash on Delivery</span>
-                <span class="payment-option-desc">Pay when your order arrives</span>
+                <span class="payment-option-name">Cash (Meetup / Delivery)</span>
+                <span class="payment-option-desc">Pay in person at meetup or on delivery</span>
               </div>
               <span class="payment-check material-symbols-outlined">check_circle</span>
             </div>
@@ -179,10 +209,33 @@
           <div class="payment-detail-panel hidden" id="cod-detail">
             <p class="cod-note">
               <span class="material-symbols-outlined">info</span>
-              Please have the exact amount ready. Cash on Delivery is available nationwide via our courier partners.
+              Please prepare the exact amount. Pay in cash when we meet up, or when your Maxim/Movit delivery arrives. Any rider fare is settled separately with the rider.
             </p>
           </div>
         </div>
+
+        <!-- Amount to send + proof of payment (GCash / Bank only) -->
+        <div class="payment-proof-section" id="payment-proof-section">
+          <div class="payment-amount-callout">
+            <span class="pac-label">Amount to send</span>
+            <strong class="pac-value" id="pay-amount-value">₱0.00</strong>
+          </div>
+          <span class="form-label" style="display:block;margin-bottom:8px;">Proof of payment</span>
+          <div class="proof-upload-zone" id="proof-upload-zone" role="button" tabindex="0" aria-label="Upload your payment receipt">
+            <input type="file" id="proof-file" accept="image/*" hidden />
+            <img id="proof-preview" class="proof-preview" alt="Payment receipt preview" />
+            <div class="proof-upload-cta" id="proof-upload-cta">
+              <span class="material-symbols-outlined">add_photo_alternate</span>
+              <span class="proof-cta-text">Tap to upload your receipt screenshot</span>
+            </div>
+            <button type="button" class="proof-clear" id="proof-clear" aria-label="Remove receipt" hidden>
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <p class="proof-hint">Upload a screenshot of your GCash/bank payment, <strong>or</strong> enter the reference number above — either one lets us verify and ship faster.</p>
+        </div>
+
+        <p class="checkout-pay-error" id="pay-error" role="alert"></p>
 
         <div class="checkout-step-actions">
           <button type="button" class="btn-checkout-ghost" id="back-step-2">
@@ -207,7 +260,7 @@
             <span id="summary-subtotal">₱0.00</span>
           </div>
           <div class="checkout-total-row">
-            <span>Shipping</span>
+            <span>Delivery</span>
             <span id="summary-shipping">—</span>
           </div>
           <div class="checkout-total-row checkout-total-row--grand">
@@ -222,7 +275,7 @@
           </div>
           <div class="checkout-trust-item">
             <span class="material-symbols-outlined">local_shipping</span>
-            <span id="trust-free-shipping">Free shipping over ₱1,500</span>
+            <span id="trust-free-shipping">Free meetup or Maxim/Movit delivery</span>
           </div>
         </div>
       </div>

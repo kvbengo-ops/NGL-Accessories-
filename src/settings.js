@@ -5,8 +5,6 @@ import { getStoreSettings, updateStoreSettings } from './supabase.js';
 import { requireSuperadmin, renderSidebar, showToast } from './admin.js';
 
 const fields = {
-  shipping_fee:            'set-shipping-fee',
-  free_shipping_threshold: 'set-free-threshold',
   gcash_number:            'set-gcash-number',
   gcash_name:              'set-gcash-name',
   bank_accounts:           'set-bank-accounts',
@@ -39,11 +37,6 @@ async function saveSettings(e) {
   const values = {};
   for (const [key, id] of Object.entries(fields)) {
     values[key] = document.getElementById(id)?.value.trim() ?? '';
-  }
-
-  if (Number(values.shipping_fee) < 0 || Number(values.free_shipping_threshold) < 0) {
-    showToast('Shipping values must be 0 or more', 'error');
-    return;
   }
 
   btn.disabled = true;
