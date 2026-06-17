@@ -6,6 +6,38 @@ import { supabase } from './supabase.js';
 function formatPrice(n) {
   return `₱${Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
 }
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+// The confirmation is reached right after checkout, in the same tab. checkout.js
+// stashes the order's email there so we can prove ownership to get_order_public()
+// without putting the email (or full PII) in a shareable URL.
+function readStashedOrder(id) {
+  try {
+    const s = JSON.parse(sessionStorage.getItem('ngl_confirm') || '{}');
+    return s.id === id ? s : {};
+  } catch {
+    return {};
+  }
+}
+
+// Fallback when we can't prove ownership (e.g. link opened in a new tab/device,
+// so the email isn't available). The order is placed — just point to the tracker.
+function renderFallback(orderNumber) {
+  document.getElementById('confirm-order-number').textContent = orderNumber || 'Order placed';
+  const details = document.getElementById('confirm-order-details');
+  if (details) {
+    details.innerHTML = `
+      <p style="color:rgba(0,0,0,0.6);line-height:1.7;">
+        Your order is confirmed. For the full details and live status, open
+        <a href="/track-order.html">Track Order</a> and enter your order number and email.
+      </p>`;
+  }
+  document.querySelector('.confirm-icon')?.classList.add('animated');
+}
 
 (async () => {
   const params = new URLSearchParams(window.location.search);
@@ -16,11 +48,15 @@ function formatPrice(n) {
     return;
   }
 
+  const stashed = readStashedOrder(id);
+
+  // Ownership-gated lookup: the order UUID alone is no longer enough — the
+  // caller must also present the matching email (server-side check).
   const { data: order, error } = await supabase
-    .rpc('get_order_public', { p_order_id: id });
+    .rpc('get_order_public', { p_order_id: id, p_email: stashed.email || '' });
 
   if (error || !order) {
-    document.getElementById('confirm-order-number').textContent = 'Could not load order';
+    renderFallback(stashed.order_number);
     return;
   }
 
@@ -43,29 +79,29 @@ function formatPrice(n) {
     <div class="confirm-detail-grid">
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">person</span>
-        <span>${order.customer_name}</span>
+        <span>${escapeHtml(order.customer_name)}</span>
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">mail</span>
-        <span>${order.customer_email}</span>
+        <span>${escapeHtml(order.customer_email)}</span>
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">home</span>
-        <span>${order.delivery_address || '—'}</span>
+        <span>${escapeHtml(order.delivery_address || '—')}</span>
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">local_shipping</span>
-        <span>${[deliveryMethod, deliveryArea].filter(Boolean).join(' · ') || '—'}</span>
+        <span>${escapeHtml([deliveryMethod, deliveryArea].filter(Boolean).join(' · ') || '—')}</span>
       </div>
       <div class="confirm-detail-row">
         <span class="material-symbols-outlined">payments</span>
-        <span>${order.payment_method || '—'}</span>
+        <span>${escapeHtml(order.payment_method || '—')}</span>
       </div>
     </div>
     <div class="confirm-items">
       ${(order.items || []).map(item => `
         <div class="confirm-item-row">
-          <span>${item.product_name} ×${item.quantity}</span>
+          <span>${escapeHtml(item.product_name)} ×${Number(item.quantity)}</span>
           <span>${formatPrice(item.subtotal)}</span>
         </div>
       `).join('')}
@@ -75,7 +111,7 @@ function formatPrice(n) {
       <span>${formatPrice(order.subtotal)}</span>
     </div>
     <div class="confirm-item-row">
-      <span>Delivery${deliveryMethod ? ` · ${deliveryMethod}` : ''}</span>
+      <span>Delivery${deliveryMethod ? ` · ${escapeHtml(deliveryMethod)}` : ''}</span>
       <span>${deliveryValue}</span>
     </div>
     <div class="confirm-total-row">
@@ -94,6 +130,9 @@ function formatPrice(n) {
     });
     trackLink.href = `/track-order.html?${q.toString()}`;
   }
+
+  // One-time stash — clear it so the PII isn't left lying around.
+  try { sessionStorage.removeItem('ngl_confirm'); } catch { /* ignore */ }
 
   // Animate check icon
   document.querySelector('.confirm-icon')?.classList.add('animated');

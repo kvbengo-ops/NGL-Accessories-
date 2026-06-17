@@ -9,10 +9,17 @@ const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 /* ── Product helpers ─────────────────────────────────────── */
+// Public storefront read. Explicit column list ON PURPOSE: cost_price /
+// profit are business-sensitive and the anon role is column-revoked from
+// reading them at the DB level (see setup/security-hardening.sql), so a
+// `select('*')` here would fail for anonymous visitors anyway.
+const PUBLIC_PRODUCT_COLS =
+  'id, name, collection, category, price, description, image_url, tags, is_active, created_at, likes_count';
+
 export async function getProducts() {
   const { data, error } = await supabase
     .from('products')
-    .select('*, inventory(*)')
+    .select(`${PUBLIC_PRODUCT_COLS}, inventory(*)`)
     .eq('is_active', true)
     .order('created_at');
   if (error) throw error;

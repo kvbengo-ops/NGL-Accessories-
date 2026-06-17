@@ -2,7 +2,7 @@
    NGL Admin — Admin User Management (Superadmin only)
    ============================================================ */
 import { supabase, getAdmins } from '../src/supabase.js';
-import { requireSuperadmin, renderSidebar, showToast, formatDate, openModal, closeModal } from '../src/admin.js';
+import { requireSuperadmin, renderSidebar, showToast, formatDate, openModal, closeModal, escapeHtml } from '../src/admin.js';
 
 let currentAdmin = null;
 
@@ -27,11 +27,11 @@ async function loadAdmins() {
     <tr>
       <td>
         <div class="admin-user-cell">
-          <div class="sidebar-avatar" style="width:32px;height:32px;font-size:13px">${a.name[0].toUpperCase()}</div>
-          <span>${a.name}</span>
+          <div class="sidebar-avatar" style="width:32px;height:32px;font-size:13px">${escapeHtml((a.name || 'A')[0].toUpperCase())}</div>
+          <span>${escapeHtml(a.name)}</span>
         </div>
       </td>
-      <td class="date-cell">${a.email || '—'}</td>
+      <td class="date-cell">${escapeHtml(a.email || '—')}</td>
       <td>
         <span class="role-badge role-badge--${a.role}">${a.role}</span>
       </td>
@@ -44,7 +44,7 @@ async function loadAdmins() {
       <td>
         <div class="action-btns">
           ${a.id !== currentAdmin.id ? `
-            <button class="action-btn action-btn--edit" data-role-id="${a.id}" data-role-name="${a.name}" data-current-role="${a.role}" title="Change Role">
+            <button class="action-btn action-btn--edit" data-role-id="${a.id}" data-role-name="${escapeHtml(a.name)}" data-current-role="${a.role}" title="Change Role">
               <span class="material-symbols-outlined">manage_accounts</span>
             </button>
             <button class="action-btn action-btn--edit" data-pwd-id="${a.id}" title="Change Password">
@@ -55,7 +55,7 @@ async function loadAdmins() {
               title="${a.is_active ? 'Deactivate' : 'Reactivate'}">
               <span class="material-symbols-outlined">${a.is_active ? 'person_off' : 'person'}</span>
             </button>
-            <button class="action-btn action-btn--delete" data-delete-id="${a.id}" data-delete-name="${a.name}" title="Delete Admin">
+            <button class="action-btn action-btn--delete" data-delete-id="${a.id}" data-delete-name="${escapeHtml(a.name)}" title="Delete Admin">
               <span class="material-symbols-outlined" style="color:#ef4444;">delete</span>
             </button>
           ` : '<span class="date-cell">(you)</span>'}

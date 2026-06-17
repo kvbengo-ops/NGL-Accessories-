@@ -510,6 +510,14 @@ async function placeOrder() {
 
     localStorage.removeItem('ngl_cart');
 
+    // Stash the email (same tab) so the confirmation page can prove ownership to
+    // get_order_public() without exposing the email/PII in a shareable URL.
+    try {
+      sessionStorage.setItem('ngl_confirm', JSON.stringify({
+        id: order.id, order_number: order.order_number, email: details.email,
+      }));
+    } catch { /* sessionStorage unavailable — confirm page falls back to the tracker */ }
+
     // Confirmation + admin-alert emails are sent server-side (Resend Edge Function).
     window.location.href = `/order-confirm.html?id=${order.id}`;
   } catch (err) {

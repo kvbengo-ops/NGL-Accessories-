@@ -185,7 +185,10 @@ END;
 $$;
 
 -- 3. PUBLIC ORDER LOOKUP — include the delivery method -------------
-CREATE OR REPLACE FUNCTION public.get_order_public(p_order_id uuid)
+-- Email-gated (see setup/security-hardening.sql): the order UUID alone
+-- isn't enough; the caller must present the matching email.
+DROP FUNCTION IF EXISTS public.get_order_public(uuid);
+CREATE OR REPLACE FUNCTION public.get_order_public(p_order_id uuid, p_email text)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -194,7 +197,11 @@ DECLARE
   v_order record;
   v_items jsonb;
 BEGIN
-  SELECT * INTO v_order FROM public.orders WHERE id = p_order_id;
+  SELECT * INTO v_order
+  FROM public.orders
+  WHERE id = p_order_id
+    AND lower(customer_email) = lower(trim(coalesce(p_email, '')))
+    AND coalesce(p_email, '') <> '';
   IF NOT FOUND THEN
     RETURN NULL;
   END IF;

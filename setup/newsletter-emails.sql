@@ -29,7 +29,7 @@ begin
     url     := 'https://vevzlrnwhckuekkvujhq.supabase.co/functions/v1/newsletter-welcome',
     headers := jsonb_build_object(
       'Content-Type',    'application/json',
-      'x-webhook-secret', '@Bebong123'
+      'x-webhook-secret', '<WEBHOOK_SECRET>'   -- set to the SAME value as the function's WEBHOOK_SECRET secret
     ),
     body    := jsonb_build_object(
       'type',   'INSERT',

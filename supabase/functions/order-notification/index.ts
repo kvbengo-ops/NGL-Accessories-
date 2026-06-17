@@ -44,6 +44,13 @@ const C = {
 const peso = (n: number) =>
   "₱" + Number(n).toLocaleString("en-PH", { minimumFractionDigits: 2 });
 
+// HTML-escape any customer-supplied value before it goes into the email body,
+// so a name/address/note can't inject markup into the admin's inbox.
+const esc = (s: unknown): string =>
+  String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+  );
+
 interface OrderItem {
   product_name: string;
   quantity: number;
@@ -57,7 +64,7 @@ function itemRows(items: OrderItem[]): string {
       (it) => `
       <tr>
         <td style="padding:10px 0;border-bottom:1px solid ${C.line};color:${C.ink};font-size:14px;">
-          ${it.product_name} <span style="color:${C.muted};">&times;${it.quantity}</span>
+          ${esc(it.product_name)} <span style="color:${C.muted};">&times;${Number(it.quantity)}</span>
         </td>
         <td style="padding:10px 0;border-bottom:1px solid ${C.line};color:${C.ink};font-size:14px;text-align:right;white-space:nowrap;">
           ${peso(it.subtotal)}
@@ -74,7 +81,7 @@ function totalsBlock(order: any): string {
   return `
     <tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Subtotal</td>
         <td style="padding:6px 0;color:${C.ink};font-size:14px;text-align:right;">${peso(order.subtotal)}</td></tr>
-    <tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Delivery${order.delivery_method ? ` &middot; ${order.delivery_method}` : ""}</td>
+    <tr><td style="padding:6px 0;color:${C.muted};font-size:14px;">Delivery${order.delivery_method ? ` &middot; ${esc(order.delivery_method)}` : ""}</td>
         <td style="padding:6px 0;color:${C.ink};font-size:14px;text-align:right;">${deliveryValue}</td></tr>
     ${
       Number(order.discount) > 0
@@ -116,7 +123,7 @@ function customerEmail(order: any, items: OrderItem[]): string {
     "Thank you for your order!",
     `
     <p style="color:${C.muted};font-size:14px;line-height:1.7;margin:0 0 20px;">
-      Hi ${order.customer_name ?? "there"}, we've received your order and will process it shortly.
+      Hi ${esc(order.customer_name ?? "there")}, we've received your order and will process it shortly.
       You'll hear from us once it's on the way.
     </p>
     <div style="background:${C.bg};border-radius:10px;padding:14px 16px;margin-bottom:22px;">
@@ -126,8 +133,8 @@ function customerEmail(order: any, items: OrderItem[]): string {
     <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">${itemRows(items)}</table>
     <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">${totalsBlock(order)}</table>
     <div style="font-size:13px;color:${C.muted};line-height:1.7;">
-      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/>${order.province}` : ""}${order.delivery_method ? `<br/><strong style="color:${C.ink};">Method:</strong> ${order.delivery_method}` : ""}<br/><br/>
-      <strong style="color:${C.ink};">Payment</strong><br/>${order.payment_method ?? "—"}
+      <strong style="color:${C.ink};">Deliver to</strong><br/>${esc(order.delivery_address ?? "—")}${order.province ? `<br/>${esc(order.province)}` : ""}${order.delivery_method ? `<br/><strong style="color:${C.ink};">Method:</strong> ${esc(order.delivery_method)}` : ""}<br/><br/>
+      <strong style="color:${C.ink};">Payment</strong><br/>${esc(order.payment_method ?? "—")}
     </div>
     ${
       STORE_URL
@@ -155,12 +162,12 @@ function adminEmail(order: any, items: OrderItem[]): string {
     <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">${totalsBlock(order)}</table>
     <div style="font-size:13px;color:${C.muted};line-height:1.8;">
       <strong style="color:${C.ink};">Customer</strong><br/>
-      ${order.customer_name ?? "—"}<br/>
-      ${order.customer_email ?? "—"}<br/>
-      ${order.customer_phone ?? "—"}<br/><br/>
-      <strong style="color:${C.ink};">Deliver to</strong><br/>${order.delivery_address ?? "—"}${order.province ? `<br/><strong style="color:${C.ink};">Area:</strong> ${order.province}` : ""}${order.delivery_method ? `<br/><strong style="color:${C.ink};">Method:</strong> ${order.delivery_method}` : ""}<br/><br/>
-      <strong style="color:${C.ink};">Payment</strong><br/>${order.payment_method ?? "—"}
-      ${order.order_notes ? `<br/><br/><strong style="color:${C.ink};">Notes</strong><br/>${order.order_notes}` : ""}
+      ${esc(order.customer_name ?? "—")}<br/>
+      ${esc(order.customer_email ?? "—")}<br/>
+      ${esc(order.customer_phone ?? "—")}<br/><br/>
+      <strong style="color:${C.ink};">Deliver to</strong><br/>${esc(order.delivery_address ?? "—")}${order.province ? `<br/><strong style="color:${C.ink};">Area:</strong> ${esc(order.province)}` : ""}${order.delivery_method ? `<br/><strong style="color:${C.ink};">Method:</strong> ${esc(order.delivery_method)}` : ""}<br/><br/>
+      <strong style="color:${C.ink};">Payment</strong><br/>${esc(order.payment_method ?? "—")}
+      ${order.order_notes ? `<br/><br/><strong style="color:${C.ink};">Notes</strong><br/>${esc(order.order_notes)}` : ""}
     </div>
     ${
       STORE_URL
