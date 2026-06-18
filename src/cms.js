@@ -10,6 +10,9 @@ const fields = {
   social_facebook:  'set-social-facebook',
   contact_email:    'set-contact-email',
   contact_phone:    'set-contact-phone',
+  support_enabled:  'set-support-enabled',
+  support_greeting: 'set-support-greeting',
+  support_kb:       'set-support-kb',
 };
 
 (async () => {

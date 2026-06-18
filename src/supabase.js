@@ -136,6 +136,9 @@ export const DEFAULT_SETTINGS = {
   social_facebook:         'https://facebook.com/nglaccessories',
   contact_email:           'support@nglaccessories.com',
   contact_phone:           '',
+  support_enabled:         'false',
+  support_greeting:        "Hi! 👋 I'm the NGL Accessories assistant. Ask me about your order, shipping, returns, or our jewelry — and I'll connect you with a teammate whenever you need a human.",
+  support_kb:              '',
 };
 
 export async function getStoreSettings() {
@@ -147,6 +150,44 @@ export async function getStoreSettings() {
 export async function updateStoreSettings(settings) {
   const rows = Object.entries(settings).map(([key, value]) => ({ key, value: String(value) }));
   const { error } = await supabase.from('store_settings').upsert(rows);
+  if (error) throw error;
+}
+
+/* ── Support chat (AI customer support) ──────────────────────
+   Anonymous customers reach the chat only through these token-gated
+   RPCs (defined in setup/support-chat.sql). See SUPPORT_BOT_PLAN.md. */
+export async function startSupportChat(pageUrl) {
+  const { data, error } = await supabase.rpc('support_start', { p_page_url: pageUrl || null });
+  if (error) throw error;
+  return data; // { conversation_id, access_token, greeting }
+}
+
+export async function fetchSupportThread(conversationId, accessToken) {
+  const { data, error } = await supabase.rpc('support_fetch', {
+    p_conversation_id: conversationId,
+    p_access_token: accessToken,
+  });
+  if (error) throw error;
+  return data || []; // [{ id, role, body, created_at }]
+}
+
+export async function postSupportMessage(conversationId, accessToken, body) {
+  const { data, error } = await supabase.rpc('support_post', {
+    p_conversation_id: conversationId,
+    p_access_token: accessToken,
+    p_body: body,
+  });
+  if (error) throw error;
+  return data; // { id, status }
+}
+
+export async function setSupportContact(conversationId, accessToken, name, email) {
+  const { error } = await supabase.rpc('support_set_contact', {
+    p_conversation_id: conversationId,
+    p_access_token: accessToken,
+    p_name: name || null,
+    p_email: email || null,
+  });
   if (error) throw error;
 }
 

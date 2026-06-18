@@ -61,6 +61,29 @@
           </div>
         </div>
 
+        <h3 class="order-detail-heading" style="margin-top:24px;">Customer Support Chat (AI)</h3>
+        <p class="form-hint" style="margin:-4px 0 16px;line-height:1.6;">
+          Controls the live chat widget. The assistant answers customers first using the knowledge below, then hands off to your team for anything complex.
+        </p>
+
+        <div class="form-field">
+          <label class="form-label" for="set-support-enabled">Chat Widget</label>
+          <select id="set-support-enabled" class="form-input">
+            <option value="false">Disabled (hidden)</option>
+            <option value="true">Enabled (visible on the site)</option>
+          </select>
+        </div>
+
+        <div class="form-field" style="margin-top:16px;">
+          <label class="form-label" for="set-support-greeting">Greeting Message</label>
+          <input type="text" id="set-support-greeting" class="form-input" placeholder="Hi! How can we help today?" />
+        </div>
+
+        <div class="form-field" style="margin-top:16px;">
+          <label class="form-label" for="set-support-kb">Assistant Knowledge (facts the AI may use)</label>
+          <textarea id="set-support-kb" class="form-input" rows="8" placeholder="Shipping, payment, returns, product care, escalation rules…"></textarea>
+        </div>
+
         <div class="modal-actions" style="margin-top:32px;">
           <button type="submit" class="btn-admin-primary" id="btn-save-cms">
             <span class="material-symbols-outlined">save</span>

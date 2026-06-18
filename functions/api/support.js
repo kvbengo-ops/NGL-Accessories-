@@ -1,0 +1,20 @@
+/**
+ * Cloudflare Pages Function — POST /api/support.
+ * Thin transport wrapper around the shared core (also used by the Vite dev
+ * middleware so the chat works locally on `npm run dev`). See _support-core.js.
+ *
+ * Pages env (dashboard → Settings → Environment variables & secrets):
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Secret), GEMINI_API_KEY (Secret),
+ *   and optionally RESEND_API_KEY (Secret), ADMIN_EMAIL, FROM_EMAIL.
+ */
+import { processSupport } from './_support-core.js';
+
+export async function onRequestPost({ request, env }) {
+  let input = {};
+  try { input = await request.json(); } catch { /* invalid JSON → handled below */ }
+  const { status, body } = await processSupport(input, env);
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}

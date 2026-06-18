@@ -22,6 +22,9 @@ export async function requireAuth() {
   return admin;
 }
 
+// Any active admin may use the support console (see SUPPORT_BOT_PLAN.md).
+export const requireAdmin = requireAuth;
+
 export async function requireSuperadmin() {
   const admin = await requireAuth();
   if (admin.role !== 'superadmin') {
@@ -49,6 +52,7 @@ export function renderSidebar(activePage, admin) {
     { href: '/admin/orders.html',    icon: 'receipt_long',    label: 'Orders'    },
     { href: '/admin/pos.html',       icon: 'point_of_sale',   label: 'POS'       },
     { href: '/admin/expenses.html',  icon: 'receipt',         label: 'Expenses'  },
+    { href: '/admin/support.html',   icon: 'forum',           label: 'Live Chat' },
     { section: 'Settings', superadminOnly: true },
     { href: '/admin/admins.html',    icon: 'manage_accounts', label: 'Admins', superadminOnly: true },
     { href: '/admin/settings.html',  icon: 'settings',        label: 'Store Settings', superadminOnly: true },
