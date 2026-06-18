@@ -118,7 +118,7 @@ export async function processSupport(input, env) {
     return { status: 400, body: { error: 'conversation_id, access_token and message are required' } };
   }
   if (!sbBase(env) || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    return { status: 500, body: { error: 'server missing Supabase config (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)' } };
+    return { status: 500, body: { error: 'server missing Supabase config (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)', envKeys: Object.keys(env) } };
   }
   if (!env.GEMINI_API_KEY) {
     return { status: 500, body: { error: 'server missing GEMINI_API_KEY' } };
