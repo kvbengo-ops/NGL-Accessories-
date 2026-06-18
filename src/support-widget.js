@@ -16,7 +16,12 @@ async function postSupportMessage(conversationId, accessToken, message) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ conversation_id: conversationId, access_token: accessToken, message }),
   });
-  if (!res.ok) throw new Error(`support backend returned ${res.status}`);
+  if (!res.ok) {
+    // Log the backend's real error (e.g. missing env / bad Supabase key) for diagnosis.
+    const detail = await res.text().catch(() => '');
+    console.error(`support backend ${res.status}:`, detail);
+    throw new Error(`support backend returned ${res.status}`);
+  }
   return res.json();
 }
 

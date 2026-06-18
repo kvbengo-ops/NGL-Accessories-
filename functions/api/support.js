@@ -12,9 +12,19 @@ import { processSupport } from './_support-core.js';
 export async function onRequestPost({ request, env }) {
   let input = {};
   try { input = await request.json(); } catch { /* invalid JSON → handled below */ }
-  const { status, body } = await processSupport(input, env);
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  try {
+    const { status, body } = await processSupport(input, env);
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    // Surface the real reason instead of an opaque Cloudflare 500 so the cause
+    // (missing env, bad Supabase key, etc.) is visible in the Network response.
+    console.error('support function error', err);
+    return new Response(JSON.stringify({ error: String(err?.message || err) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
