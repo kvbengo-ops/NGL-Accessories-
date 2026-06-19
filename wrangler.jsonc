@@ -6,6 +6,15 @@
   "observability": {
     "enabled": true
   },
+  // Non-secret config (the Supabase URL is already public in the client bundle).
+  // The service-role key and Gemini key are SECRETS — set them on the Worker:
+  // dashboard → Workers & Pages → ngl → Settings → Variables and Secrets.
+  "vars": {
+    "SUPABASE_URL": "https://vevzlrnwhckuekkvujhq.supabase.co",
+    // gemini-2.0-flash has 0 free-tier quota on this Google account (→ 429);
+    // 2.5-flash works. Pinned here so a stray dashboard var can't break it.
+    "GEMINI_MODEL": "gemini-2.5-flash"
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
