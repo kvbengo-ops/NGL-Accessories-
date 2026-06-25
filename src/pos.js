@@ -140,6 +140,8 @@ function renderCart() {
     document.getElementById('pos-discount-row').style.display = 'none';
     // Clear previous items
     container.querySelectorAll('.pos-cart-item').forEach(el => el.remove());
+    updateCartSummary();
+    document.querySelector('.pos-cart')?.classList.remove('expanded'); // collapse sheet when empty
     return;
   }
 
@@ -206,6 +208,15 @@ function updateTotalsDisplay() {
   } else {
     discRow.style.display = 'none';
   }
+  updateCartSummary();
+}
+
+// Collapsed mobile bottom-sheet bar: shows item count + running total at a glance.
+function updateCartSummary() {
+  const el = document.getElementById('pos-cart-summary');
+  if (!el) return;
+  const count = cart.reduce((n, c) => n + c.quantity, 0);
+  el.textContent = count === 0 ? 'Empty' : `${count} item${count > 1 ? 's' : ''} · ${formatPrice(getTotal())}`;
 }
 
 function setupCart() {
@@ -216,6 +227,11 @@ function setupCart() {
   document.getElementById('pos-discount')?.addEventListener('input', () => {
     updateTotalsDisplay();
     updateChangeDisplay();
+  });
+  // Mobile: tap the cart header to expand/collapse the bottom sheet (ignore the clear button).
+  document.getElementById('pos-cart-header')?.addEventListener('click', (e) => {
+    if (e.target.closest('#pos-clear-cart')) return;
+    document.querySelector('.pos-cart')?.classList.toggle('expanded');
   });
 }
 
