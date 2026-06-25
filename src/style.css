@@ -3958,28 +3958,28 @@ select.form-input option { color: #1a1812; }
 
 /* ── POS Terminal ────────────────────────────────────────── */
 .pos-layout { display: flex; flex: 1; overflow: hidden; min-width: 0; }
-.pos-products { flex: 1; min-width: 0; display: flex; flex-direction: column; border-right: 1px solid rgba(212,168,83,0.09); overflow: hidden; background: #0a0908; }
+.pos-products { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid rgba(212,168,83,0.09); overflow: hidden; background: #0a0908; }
 .pos-products-header { padding: 14px 16px 12px; background: #0d0c0a; border-bottom: 1px solid rgba(212,168,83,0.08); display: flex; flex-direction: column; gap: 11px; flex-shrink: 0; }
 .pos-filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .pos-tab { padding: 5px 14px; border-radius: 20px; font-family: var(--font-sans); font-size: 11px; font-weight: 500; color: rgba(245,241,235,0.36); border: 1px solid rgba(212,168,83,0.1); transition: all 0.16s; cursor: pointer; background: transparent; }
 .pos-tab.active { background: rgba(212,168,83,0.12); color: #d4a853; border-color: rgba(212,168,83,0.3); }
 .pos-tab:hover:not(.active) { background: rgba(212,168,83,0.06); color: rgba(245,241,235,0.62); border-color: rgba(212,168,83,0.18); }
-.pos-product-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap: 10px; padding: 12px; align-content: start; }
-.pos-product-tile { background: #111009; border: 1px solid rgba(212,168,83,0.1); border-radius: 11px; overflow: hidden; text-align: left; cursor: pointer; transition: all 0.16s; }
+.pos-product-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-auto-rows: min-content; gap: 12px; padding: 14px; align-content: start; }
+.pos-product-tile { background: #111009; border: 1px solid rgba(212,168,83,0.1); border-radius: 11px; overflow: hidden; text-align: left; cursor: pointer; transition: all 0.16s; display: flex; flex-direction: column; }
 .pos-product-tile:hover { border-color: rgba(212,168,83,0.32); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
 .pos-product-tile:active { transform: translateY(0); box-shadow: none; }
-.pos-tile-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
-.pos-tile-placeholder { width: 100%; aspect-ratio: 1; background: rgba(212,168,83,0.04); display: flex; align-items: center; justify-content: center; }
+.pos-tile-img { width: 100%; height: 160px; object-fit: cover; display: block; flex-shrink: 0; }
+.pos-tile-placeholder { width: 100%; height: 160px; background: rgba(212,168,83,0.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .pos-tile-placeholder .material-symbols-outlined { font-size: 28px; color: rgba(212,168,83,0.18); }
-.pos-tile-info { padding: 9px 10px; }
-.pos-tile-name { font-size: 11px; font-weight: 500; color: rgba(245,241,235,0.8); line-height: 1.35; margin-bottom: 3px; }
-.pos-tile-collection { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+.pos-tile-info { padding: 10px 11px; }
+.pos-tile-name { font-size: 12px; font-weight: 500; color: rgba(245,241,235,0.88); line-height: 1.35; margin-bottom: 3px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pos-tile-collection { font-size: 9.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
 .pos-coll--natural { color: var(--sage); }
 .pos-coll--grace   { color: #d4a853; }
 .pos-coll--lush    { color: var(--coral); }
 .pos-tile-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
-.pos-tile-price { font-size: 12px; font-weight: 700; color: #d4a853; font-variant-numeric: tabular-nums; }
-.pos-tile-stock { font-size: 9px; color: rgba(245,241,235,0.22); }
+.pos-tile-price { font-size: 13px; font-weight: 700; color: #d4a853; font-variant-numeric: tabular-nums; }
+.pos-tile-stock { font-size: 10px; color: rgba(245,241,235,0.35); }
 .pos-cart { width: 336px; flex-shrink: 0; background: #0d0c0a; display: flex; flex-direction: column; }
 .pos-cart-header { padding: 16px 16px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(212,168,83,0.08); flex-shrink: 0; }
 .pos-cart-title { display: flex; align-items: center; gap: 8px; font-family: var(--font-serif); font-size: 15px; color: rgba(245,241,235,0.8); }
