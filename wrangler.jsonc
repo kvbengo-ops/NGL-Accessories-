@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ngl",
+  "name": "ngl-v1",
   "main": "worker.js",
   "compatibility_date": "2026-06-13",
   "observability": {
