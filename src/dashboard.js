@@ -133,19 +133,20 @@ function startTour() {
   document.getElementById('kpi-lowstock').textContent = lowStock;
   if (lowStock > 0) document.getElementById('kpi-lowstock').style.color = '#ef4444';
 
-  // ── P&L Widget (This Month) ──────────────────────────────
-  const thisMonthStr = today.substring(0, 7); // YYYY-MM
-  
-  const monthOrders = orders.filter(o => 
-    o.created_at.startsWith(thisMonthStr) && !['cancelled','voided'].includes(o.status)
+  // ── P&L Widget (Last 30 Days) ────────────────────────────
+  // Rolling 30-day window, consistent with the rolling 7-day week above.
+  const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate() - 30);
+
+  const monthOrders = orders.filter(o =>
+    new Date(o.created_at) >= monthAgo && !['cancelled','voided'].includes(o.status)
   );
-  
+
   const monthRevenue = monthOrders.reduce((s, o) => s + Number(o.total), 0);
   const monthCost = monthOrders.reduce((s, o) => s + Number(o.total_cost || 0), 0);
   const monthGross = monthOrders.reduce((s, o) => s + Number(o.profit || 0), 0);
-  
+
   const monthExpenses = expenses
-    .filter(e => e.expense_date && e.expense_date.startsWith(thisMonthStr))
+    .filter(e => e.expense_date && new Date(e.expense_date) >= monthAgo)
     .reduce((s, e) => s + Number(e.amount), 0);
     
   const monthNet = Math.max(0, monthGross - monthExpenses);

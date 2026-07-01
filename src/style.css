@@ -2494,6 +2494,45 @@ strong { font-weight: 600; }
 }
 .product-card:hover .product-card-image img { transform: scale(1.07); }
 
+/* Like count badge — shows how many customers have liked this piece */
+.product-card-likes {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(26,23,20,0.5);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+}
+.product-card-likes .material-symbols-outlined {
+  font-size: 13px;
+  color: var(--coral);
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Discovery/swipe cards: let the badge gently float */
+.swipe-card .product-card-likes {
+  animation: likeFloat 3s ease-in-out infinite;
+}
+@keyframes likeFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swipe-card .product-card-likes { animation: none; }
+}
+
 /* Hover overlay — hidden on touch via @media (hover:none) */
 .product-card-overlay {
   position: absolute;
@@ -4097,7 +4136,10 @@ select.form-input option { color: #1a1812; }
     font-size: 12.5px; font-weight: 600; color: #d4a853; white-space: nowrap; }
   .pos-cart-chevron { display: inline-flex; color: rgba(245,241,235,0.4); transition: transform 0.26s; }
   .pos-cart.expanded .pos-cart-chevron { transform: rotate(180deg); }
-  .pos-cart-items { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; gap: 5px; }
+  .pos-cart-items { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; gap: 6px; }
+  /* lift item tiles off the near-black sheet so added items read clearly on a phone */
+  .pos-cart-item { background: rgba(245,241,235,0.07); border-color: rgba(212,168,83,0.24); }
+  .pos-ci-name { color: rgba(245,241,235,0.92); }
   .pos-cart-footer { padding: 8px 12px 10px; gap: 7px; flex-shrink: 0; }
   .pos-totals { gap: 3px; }
   .pos-total-row { font-size: 12px; }

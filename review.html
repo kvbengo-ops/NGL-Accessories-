@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/jpeg" href="/images/logo.jpg" />
+  <title>Leave a Review — NGL Accessories</title>
+  <meta name="description" content="Loved your NGL Accessories order? Leave a review and read what other customers are saying." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+
+  <style>
+    .rv-page { background: var(--charcoal); min-height: 100vh; }
+    .rv-layout {
+      min-height: calc(100vh - 65px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 48px 24px 80px;
+    }
+    .rv-container { width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 24px; }
+
+    .rv-header { text-align: center; padding-bottom: 8px; }
+    .rv-eyebrow {
+      font-family: var(--font-sans); font-size: 9px; font-weight: 500;
+      letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold-500);
+      display: block; margin-bottom: 10px;
+    }
+    .rv-title {
+      font-family: var(--font-serif); font-size: clamp(28px, 5vw, 40px);
+      font-weight: 300; color: rgba(245,241,235,0.92); margin-bottom: 8px;
+    }
+    .rv-subtitle { font-size: 13px; color: rgba(245,241,235,0.4); line-height: 1.6; }
+
+    .rv-card {
+      background: rgba(26,23,20,0.85); border: 1px solid rgba(201,168,76,0.12);
+      border-radius: 20px; padding: 32px;
+    }
+    .rv-card h2 {
+      font-family: var(--font-serif); font-size: 18px; font-weight: 400;
+      color: rgba(245,241,235,0.8); margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .rv-card h2 .material-symbols-outlined { font-size: 20px; color: var(--gold-500); }
+
+    .rv-form { display: flex; flex-direction: column; gap: 16px; }
+    .rv-label {
+      font-family: var(--font-sans); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,241,235,0.5);
+      margin-bottom: 6px; display: block;
+    }
+    .rv-input, .rv-textarea {
+      width: 100%; background: rgba(245,241,235,0.04);
+      border: 1px solid rgba(201,168,76,0.15); border-radius: 10px;
+      padding: 13px 16px; font-family: var(--font-sans); font-size: 14px;
+      color: rgba(245,241,235,0.85); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .rv-textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+    .rv-input::placeholder, .rv-textarea::placeholder { color: rgba(245,241,235,0.25); }
+    .rv-input:focus, .rv-textarea:focus {
+      border-color: rgba(201,168,76,0.4); box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
+    }
+
+    /* ── Star rating (native radios, no JS state needed) ── */
+    .rv-stars { display: inline-flex; flex-direction: row-reverse; gap: 4px; }
+    .rv-stars input { position: absolute; opacity: 0; pointer-events: none; }
+    .rv-stars label {
+      cursor: pointer; color: rgba(245,241,235,0.18);
+      font-size: 34px; line-height: 1; transition: color 0.15s;
+    }
+    .rv-stars label .material-symbols-outlined { font-size: 34px; }
+    .rv-stars input:checked ~ label,
+    .rv-stars label:hover,
+    .rv-stars label:hover ~ label { color: var(--gold-400); }
+    .rv-stars input:focus-visible + label { outline: 2px solid var(--gold-300); outline-offset: 2px; border-radius: 4px; }
+
+    .rv-msg {
+      display: none; align-items: center; gap: 8px; font-size: 12px;
+      border-radius: 8px; padding: 10px 14px; line-height: 1.45;
+    }
+    .rv-msg .material-symbols-outlined { font-size: 16px; flex-shrink: 0; }
+    .rv-msg--error {
+      color: var(--coral-light); background: rgba(232,112,90,0.08);
+      border: 1px solid rgba(232,112,90,0.2);
+    }
+    .rv-msg--ok {
+      color: #22c55e; background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+
+    .rv-submit {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; background: var(--gold-500); color: #fff; border: none;
+      border-radius: 10px; padding: 14px 24px; font-family: var(--font-sans);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(117,91,0,0.35);
+      margin-top: 4px;
+    }
+    .rv-submit:hover:not(:disabled) {
+      background: var(--gold-400); transform: translateY(-1px);
+      box-shadow: 0 6px 28px rgba(117,91,0,0.45);
+    }
+    .rv-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+    /* ── Public review wall ── */
+    .rv-wall { display: flex; flex-direction: column; gap: 14px; }
+    .rv-wall-title {
+      font-family: var(--font-sans); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.24em; text-transform: uppercase; color: rgba(245,241,235,0.35);
+      margin-bottom: 2px;
+    }
+    .rv-item {
+      background: rgba(26,23,20,0.6); border: 1px solid rgba(201,168,76,0.1);
+      border-radius: 14px; padding: 18px 20px;
+    }
+    .rv-item-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .rv-item-name { font-size: 13px; font-weight: 600; color: rgba(245,241,235,0.85); }
+    .rv-item-date { font-size: 11px; color: rgba(245,241,235,0.3); white-space: nowrap; }
+    .rv-item-stars { color: var(--gold-400); font-size: 14px; letter-spacing: 2px; }
+    .rv-item-body { font-size: 13px; color: rgba(245,241,235,0.6); line-height: 1.6; }
+    .rv-empty { font-size: 13px; color: rgba(245,241,235,0.35); text-align: center; padding: 8px 0; }
+
+    @media (max-width: 600px) {
+      .rv-card { padding: 24px 20px; border-radius: 16px; }
+    }
+  </style>
+</head>
+<body class="rv-page">
+
+  <nav class="checkout-nav">
+    <a href="/index.html" class="checkout-nav-logo">NGL Accessories</a>
+    <a href="/support.html" class="checkout-secure" style="text-decoration:none;font-size:11px;gap:6px;">
+      <span class="material-symbols-outlined" style="font-size:16px">help_outline</span>
+      Need Help?
+    </a>
+  </nav>
+
+  <div class="rv-layout">
+    <div class="rv-container">
+
+      <div class="rv-header">
+        <span class="rv-eyebrow">✦ Customer Reviews</span>
+        <h1 class="rv-title">Leave a Review</h1>
+        <p class="rv-subtitle">Received your order? We'd love to hear how it went.</p>
+      </div>
+
+      <!-- ── Review form ── -->
+      <div class="rv-card" id="rv-form-card">
+        <h2><span class="material-symbols-outlined">rate_review</span> Rate your order</h2>
+        <form class="rv-form" id="rv-form" novalidate>
+          <div>
+            <label class="rv-label">Your rating</label>
+            <div class="rv-stars" id="rv-stars">
+              <!-- reversed order so CSS ~ can fill stars to the left -->
+              <input type="radio" name="rating" id="star5" value="5" /><label for="star5" title="5 stars"><span class="material-symbols-outlined">star</span></label>
+              <input type="radio" name="rating" id="star4" value="4" /><label for="star4" title="4 stars"><span class="material-symbols-outlined">star</span></label>
+              <input type="radio" name="rating" id="star3" value="3" /><label for="star3" title="3 stars"><span class="material-symbols-outlined">star</span></label>
+              <input type="radio" name="rating" id="star2" value="2" /><label for="star2" title="2 stars"><span class="material-symbols-outlined">star</span></label>
+              <input type="radio" name="rating" id="star1" value="1" /><label for="star1" title="1 star"><span class="material-symbols-outlined">star</span></label>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="rv-label" for="rv-body">Your review <span style="text-transform:none;letter-spacing:0;color:rgba(245,241,235,0.3);">(optional)</span></label>
+            <textarea id="rv-body" class="rv-textarea" maxlength="1000" placeholder="Tell us what you loved…"></textarea>
+          </div>
+          <div class="form-field">
+            <label class="rv-label" for="rv-order">Order Number</label>
+            <input type="text" id="rv-order" class="rv-input" placeholder="NGL-20260609-1234" autocomplete="off" required />
+          </div>
+          <div class="form-field">
+            <label class="rv-label" for="rv-email">Email Address</label>
+            <input type="email" id="rv-email" class="rv-input" placeholder="you@example.com" autocomplete="email" required />
+          </div>
+
+          <div class="rv-msg rv-msg--error" id="rv-error" role="alert">
+            <span class="material-symbols-outlined">error</span>
+            <span id="rv-error-text"></span>
+          </div>
+
+          <button type="submit" class="rv-submit" id="rv-submit">
+            <span class="material-symbols-outlined">send</span>
+            Submit Review
+          </button>
+        </form>
+      </div>
+
+      <!-- ── Success (replaces form after submit) ── -->
+      <div class="rv-card" id="rv-thanks" style="display:none; text-align:center;">
+        <div style="font-size:44px; color:var(--gold-400); margin-bottom:8px;">
+          <span class="material-symbols-outlined" style="font-size:44px;">favorite</span>
+        </div>
+        <h2 style="justify-content:center; margin-bottom:8px;">Thank you!</h2>
+        <p class="rv-subtitle">Your review has been submitted. We truly appreciate you taking the time.</p>
+        <div style="margin-top:20px;">
+          <a href="/shop.html" class="btn-checkout-primary">
+            <span class="material-symbols-outlined">storefront</span> Continue Shopping
+          </a>
+        </div>
+      </div>
+
+      <!-- ── Public review wall ── -->
+      <div class="rv-wall">
+        <div class="rv-wall-title">What customers are saying</div>
+        <div id="rv-wall-list" class="rv-wall">
+          <p class="rv-empty">Loading reviews…</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="/src/review.js"></script>
+  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="/src/support-widget.js"></script>
+</body>
+</html>

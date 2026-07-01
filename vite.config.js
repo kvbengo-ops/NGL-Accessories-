@@ -49,6 +49,7 @@ export default defineConfig(({ mode }) => {
           checkout: resolve(__dirname, 'checkout.html'),
           'order-confirm': resolve(__dirname, 'order-confirm.html'),
           'track-order': resolve(__dirname, 'track-order.html'),
+          review: resolve(__dirname, 'review.html'),
           privacy: resolve(__dirname, 'privacy.html'),
           terms: resolve(__dirname, 'terms.html'),
           support: resolve(__dirname, 'support.html'),

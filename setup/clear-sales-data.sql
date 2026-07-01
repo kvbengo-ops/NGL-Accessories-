@@ -10,9 +10,10 @@
 --   2. Deletes all order_items
 --   3. Deletes all orders
 --   4. Deletes all expenses
+--   5. Resets all product heart reactions (likes_count → 0)
 --
 -- What this does NOT touch:
---   • products
+--   • products (name, price, image, etc.)
 --   • inventory (except restoring stock qty back to what it was)
 --   • admins / store settings
 --   • newsletter subscribers
@@ -41,6 +42,10 @@ DELETE FROM public.orders;
 -- Step 4: Delete all test expenses
 DELETE FROM public.expenses;
 
+-- Step 5: Reset all heart reactions (likes) back to zero
+UPDATE public.products
+SET likes_count = 0;
+
 COMMIT;
 
 -- ✅  Done! The following tables are now empty:
@@ -48,5 +53,6 @@ COMMIT;
 --     • orders
 --     • expenses
 --
+--     Heart reactions (likes_count) have been reset to 0 on all products.
 --     Inventory stock has been fully restored.
 --     Products, admins, and settings remain untouched.

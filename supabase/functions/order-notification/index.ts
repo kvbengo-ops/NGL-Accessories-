@@ -180,6 +180,37 @@ function adminEmail(order: any, items: OrderItem[]): string {
   );
 }
 
+function reviewEmail(order: any): string {
+  // order_number + customer_email are stable, so they're safe to build the
+  // deep link from directly. review.html pre-fills + verifies them.
+  const reviewUrl = STORE_URL
+    ? `${STORE_URL}/review.html?order=${encodeURIComponent(order.order_number)}&email=${encodeURIComponent(order.customer_email)}`
+    : "";
+  return shell(
+    "Thank you for your purchase! 💛",
+    `
+    <p style="color:${C.muted};font-size:14px;line-height:1.7;margin:0 0 20px;">
+      Hi ${esc(order.customer_name ?? "there")}, your order <strong style="color:${C.gold};">${order.order_number}</strong>
+      has been delivered — we hope you love it!
+    </p>
+    <p style="color:${C.muted};font-size:14px;line-height:1.7;margin:0 0 8px;">
+      Would you take a moment to tell us how it went? Your review helps other
+      shoppers and means the world to a small business like ours.
+    </p>
+    ${
+      reviewUrl
+        ? `<div style="text-align:center;margin-top:26px;">
+             <a href="${reviewUrl}" style="display:inline-block;background:${C.gold};color:#fff;text-decoration:none;font-size:13px;letter-spacing:0.06em;padding:12px 28px;border-radius:999px;">Leave a review</a>
+             <div style="margin-top:14px;">
+               <a href="${STORE_URL}/shop.html" style="color:${C.muted};text-decoration:underline;font-size:12px;letter-spacing:0.04em;">Shop again</a>
+             </div>
+           </div>`
+        : ""
+    }
+    `
+  );
+}
+
 async function sendEmail(to: string | string[], subject: string, html: string) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -206,6 +237,21 @@ Deno.serve(async (req: Request) => {
     const order = payload.record;
     if (!order?.id) {
       return new Response("No order in payload", { status: 400 });
+    }
+
+    // "delivered" event → single thank-you + review-request email. No line
+    // items or admin alert needed here, so return before the created flow.
+    if (payload.event === "delivered") {
+      if (order.customer_email) {
+        await sendEmail(
+          order.customer_email,
+          `How was your order? — ${order.order_number}`,
+          reviewEmail(order)
+        );
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Fetch the line items with the service role (RLS-exempt)

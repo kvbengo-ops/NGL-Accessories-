@@ -272,6 +272,10 @@ function buildSwipeCard(product) {
     ${product.image ? `<div class="card-image" style="position:relative;">
       <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
+      <div class="product-card-likes" aria-label="${product.likes} likes">
+        <span class="material-symbols-outlined">favorite</span>
+        <span class="pc-like-n">${product.likes}</span>
+      </div>
     </div>` : ''}
     <div class="card-body">
       <span class="card-category-badge">
@@ -297,6 +301,7 @@ function buildSwipeCard(product) {
   });
 
   // Double tap to like
+  const likeNumEl = card.querySelector('.pc-like-n');
   let lastTap = 0;
   card.querySelector('.card-image')?.addEventListener('click', function(e) {
     const now = new Date().getTime();
@@ -304,6 +309,7 @@ function buildSwipeCard(product) {
     if (timesince < 400 && timesince > 0) {
       // Double tap!
       trackEngagement(product.id, 'like');
+      if (likeNumEl) likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
       const heart = this.querySelector('.like-heart-burst');
       heart.classList.remove('animate');
       void heart.offsetWidth; // trigger reflow
@@ -517,6 +523,10 @@ function buildProductCard(product) {
     <div class="product-card-image" style="position:relative;">
       <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
+      <div class="product-card-likes" aria-label="${product.likes} likes">
+        <span class="material-symbols-outlined">favorite</span>
+        <span class="pc-like-n">${product.likes}</span>
+      </div>
       <div class="product-card-overlay" aria-hidden="true">
         <button class="overlay-quick-add" aria-label="Add ${product.name} to cart" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
           <span class="material-symbols-outlined">${product.stock <= 0 ? 'block' : 'add_shopping_cart'}</span>
@@ -545,10 +555,16 @@ function buildProductCard(product) {
     </div>
   `;
 
+  const likeNumEl = card.querySelector('.pc-like-n');
+  function bumpLikes() {
+    if (likeNumEl) likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
+  }
+
   function handleAdd(btn, isOverlay) {
     const success = addToCart(product);
     if (!success) return;
     trackEngagement(product.id, 'like');
+    bumpLikes();
     btn.classList.add('added');
     btn.innerHTML = isOverlay
       ? `<span class="material-symbols-outlined">check</span> Added!`
@@ -576,6 +592,7 @@ function buildProductCard(product) {
   card.querySelector('.grid-like-btn')?.addEventListener('click', function (e) {
     e.stopPropagation();
     trackEngagement(product.id, 'like');
+    bumpLikes();
     this.style.color = 'var(--coral)';
     this.querySelector('span').style.fontVariationSettings = '"FILL" 1, "wght" 400';
     const heart = card.querySelector('.like-heart-burst');
@@ -594,6 +611,7 @@ function buildProductCard(product) {
     if (timesince < 400 && timesince > 0) {
       // Double tap!
       trackEngagement(product.id, 'like');
+      bumpLikes();
       const heart = this.querySelector('.like-heart-burst');
       heart.classList.remove('animate');
       void heart.offsetWidth; // trigger reflow
@@ -868,7 +886,8 @@ async function initShop() {
       tags: p.tags || [],
       emoji: emojiMap[p.category] || 'diamond',
       image: p.image_url || '',
-      stock: p.inventory?.stock || 0
+      stock: p.inventory?.stock || 0,
+      likes: p.likes_count || 0
     }));
 
     // Inject Product Schema

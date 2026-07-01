@@ -53,3 +53,42 @@ create trigger on_order_created
 -- the time the function reads them. The function fetches items
 -- itself, so they don't need to be in the payload above.
 -- ------------------------------------------------------------
+
+-- ============================================================
+-- ORDER DELIVERED → thank-you + review-request email
+-- Fires the same Edge Function with event = 'delivered' when an
+-- online order's status transitions INTO 'delivered'.
+-- ============================================================
+
+create or replace function public.notify_order_delivered()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  if NEW.status = 'delivered'
+     and OLD.status is distinct from 'delivered'
+     and NEW.type = 'online'
+     and NEW.customer_email is not null then
+    perform net.http_post(
+      url     := 'https://vevzlrnwhckuekkvujhq.supabase.co/functions/v1/order-notification',
+      headers := jsonb_build_object(
+        'Content-Type',    'application/json',
+        'x-webhook-secret', '<WEBHOOK_SECRET>'
+      ),
+      body    := jsonb_build_object(
+        'event',  'delivered',
+        'table',  'orders',
+        'record', to_jsonb(NEW)
+      )
+    );
+  end if;
+  return NEW;
+end;
+$$;
+
+drop trigger if exists on_order_delivered on public.orders;
+create trigger on_order_delivered
+  after update of status on public.orders
+  for each row
+  execute function public.notify_order_delivered();
