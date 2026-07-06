@@ -7,7 +7,7 @@
      • press Enter     → /shop.html?search=<query> (Browse All grid)
    Products are lazy-loaded on first open and cached.
    ============================================================ */
-import { getProducts } from './supabase.js';
+import { getProducts, cfImg } from './supabase.js';
 
 const emojiMap = {
   Earrings: 'circle',
@@ -142,7 +142,7 @@ function renderResults(query) {
       <a class="search-result" role="option" href="/shop.html?product=${encodeURIComponent(p.id)}">
         <span class="search-result-thumb">${
           p.image
-            ? `<img src="${p.image}" alt="" loading="lazy" />`
+            ? `<img src="${cfImg(p.image)}" alt="" loading="lazy" />`
             : `<span class="material-symbols-outlined">diamond</span>`
         }</span>
         <span class="search-result-info">

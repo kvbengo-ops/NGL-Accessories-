@@ -9,12 +9,63 @@
  * Worker env (dashboard → the Worker → Settings → Variables and Secrets):
  *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Secret), GEMINI_API_KEY (Secret),
  *   GEMINI_MODEL? and optionally RESEND_API_KEY (Secret), ADMIN_EMAIL, FROM_EMAIL.
+ *
+ * Image caching proxy: GET /img/<path>
+ *   Fetches the image from Supabase Storage and caches it at Cloudflare's edge
+ *   for 30 days (Cache-Control: public, max-age=2592000, immutable).
+ *   First request goes to Supabase; every subsequent request is served instantly
+ *   from the nearest Cloudflare data-centre — no origin roundtrip needed.
  */
 import { processSupport } from './functions/api/_support-core.js';
+
+/** Cache product images from Supabase Storage at Cloudflare's edge. */
+async function handleImageProxy(request, env) {
+  const cache = caches.default;
+
+  // Return from edge cache if available (keyed on the full request URL).
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  // Build the upstream Supabase Storage URL from the /img/<rest> path.
+  const url = new URL(request.url);
+  const storagePath = url.pathname.replace(/^\/img\//, ''); // e.g. "products/ring-gold.jpg"
+  const supabaseUrl = (env.SUPABASE_URL || 'https://vevzlrnwhckuekkvujhq.supabase.co')
+    .replace(/\/$/, '');
+  const originUrl = `${supabaseUrl}/storage/v1/object/public/${storagePath}${url.search}`;
+
+  const originResp = await fetch(originUrl, {
+    cf: { cacheEverything: true, cacheTtl: 2592000 }, // 30 days at Cloudflare layer
+  });
+
+  if (!originResp.ok) {
+    // Don't cache errors — let the browser retry.
+    return new Response('Image not found', { status: originResp.status });
+  }
+
+  // Clone headers and set a strong browser + CDN cache.
+  const headers = new Headers(originResp.headers);
+  headers.set('Cache-Control', 'public, max-age=2592000, immutable'); // 30 days
+  headers.set('Vary', 'Accept-Encoding');
+
+  const response = new Response(originResp.body, {
+    status: originResp.status,
+    headers,
+  });
+
+  // Store in edge cache for subsequent requests.
+  await cache.put(request, response.clone());
+
+  return response;
+}
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Image caching proxy: /img/<supabase-storage-path>
+    if (url.pathname.startsWith('/img/')) {
+      return handleImageProxy(request, env);
+    }
 
     if (url.pathname === '/api/support') {
       if (request.method !== 'POST') {

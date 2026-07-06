@@ -1,5 +1,5 @@
 import './style.css';
-import { getProducts, trackEngagement } from './supabase.js';
+import { getProducts, trackEngagement, cfImg } from './supabase.js';
 import { initSearch } from './search.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
 import './cms-frontend.js';
@@ -146,7 +146,7 @@ function addToCart(product) {
       name: product.name,
       collection: product.categoryLabel,
       price: product.price, // Number
-      image_url: product.image,
+      image_url: cfImg(product.image),
       stock: product.stock,
       quantity: 1
     });
@@ -270,7 +270,7 @@ function buildSwipeCard(product) {
       </div>
     </div>
     ${product.image ? `<div class="card-image" style="position:relative;">
-      <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <img src="${cfImg(product.image)}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>

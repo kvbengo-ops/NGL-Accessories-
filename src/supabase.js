@@ -8,6 +8,27 @@ const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
+/* ── Image caching proxy helper ───────────────────────────── */
+// Rewrites a Supabase Storage URL to go through our Cloudflare Worker's
+// /img/* route, which caches the image at the edge for 30 days.
+// Falls back to the original URL in local dev (no Worker running).
+//
+// Usage:  cfImg(product.image_url)
+//         cfImg(product.image_url, '?width=400')  // future: image transform params
+const SUPABASE_STORAGE_PREFIX = `${(SUPABASE_URL || '').replace(/\/$/, '')}/storage/v1/object/public/`;
+
+export function cfImg(url) {
+  if (!url) return '';
+  // In local dev the Worker proxy doesn't run, so serve directly from Supabase.
+  if (import.meta.env.DEV) return url;
+  // Strip the Supabase storage origin and rewrite to /img/<path>
+  if (url.startsWith(SUPABASE_STORAGE_PREFIX)) {
+    return '/img/' + url.slice(SUPABASE_STORAGE_PREFIX.length);
+  }
+  // Not a Supabase Storage URL — return as-is.
+  return url;
+}
+
 /* ── Product helpers ─────────────────────────────────────── */
 // Public storefront read. Explicit column list ON PURPOSE: cost_price /
 // profit are business-sensitive and the anon role is column-revoked from
