@@ -20,7 +20,11 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": [
-      "/api/*"
+      "/api/*",
+      // /img/* is the Supabase Storage caching proxy in worker.js. Without it
+      // here the asset router answers first and not_found_handling returns
+      // index.html for every image (200 text/html), so the proxy never runs.
+      "/img/*"
     ]
   },
   "compatibility_flags": [
