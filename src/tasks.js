@@ -147,7 +147,7 @@ function renderTasks() {
     }
   });
 
-  const pColor = { low: '#888', medium: '#b8860b', high: '#ef4444' };
+  const pColor = { low: 'var(--adm-text-muted)', medium: 'var(--adm-gold)', high: 'rgb(var(--adm-red))' };
   
   const adminsOptions = allAdmins.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
 
@@ -166,7 +166,7 @@ function renderTasks() {
         return `
           <div class="kanban-card" draggable="true" data-id="${t.id}">
             <div class="kanban-card-header">
-              <span class="kanban-priority" style="color:${pColor[t.priority] || '#888'}">${t.priority}</span>
+              <span class="kanban-priority" style="color:${pColor[t.priority] || 'var(--adm-text-muted)'}">${t.priority}</span>
               <div class="kanban-actions">
                 <button class="action-btn edit-task" data-id="${t.id}" title="Edit"><span class="material-symbols-outlined">edit</span></button>
                 <button class="action-btn delete-task" data-id="${t.id}" title="Delete"><span class="material-symbols-outlined">delete</span></button>
@@ -177,7 +177,7 @@ function renderTasks() {
             
             <div class="kanban-card-footer">
               <div class="kanban-assignee-wrap">
-                <span class="material-symbols-outlined" style="font-size:16px; color:#888;">person</span>
+                <span class="material-symbols-outlined" style="font-size:16px; color:var(--adm-text-muted);">person</span>
                 <select class="admin-select kanban-assignee-select" data-id="${t.id}" style="border:none; padding:0; background:transparent; font-size:12px; font-weight:500;">
                   <option value="">Unassigned</option>
                   ${allAdmins.map(a => `<option value="${a.id}" ${t.assigned_to === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}

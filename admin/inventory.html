@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
+  <script>try{if(localStorage.getItem('ngl_admin_theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
 </head>
 <body class="admin-page">
   <div id="sidebar-container"></div>
@@ -21,11 +22,11 @@
         <p class="admin-page-subtitle">Manage products and stock levels</p>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="admin-header-btn" id="btn-export-csv" style="background: transparent; border: 1px solid rgba(245,241,235,0.2); color: rgba(245,241,235,0.8);">
+        <button class="admin-header-btn" id="btn-export-csv" style="background: transparent; border: 1px solid rgb(var(--adm-fg) / 0.2); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.8));">
           <span class="material-symbols-outlined">download</span>
           Export CSV
         </button>
-        <button class="admin-header-btn" id="btn-open-import" style="background: transparent; border: 1px solid rgba(201,161,74,0.4); color: var(--gold-300);">
+        <button class="admin-header-btn" id="btn-open-import" style="background: transparent; border: 1px solid rgba(201,161,74,0.4); color: var(--adm-gold);">
           <span class="material-symbols-outlined">upload_file</span>
           Batch Import
         </button>
@@ -68,8 +69,8 @@
       <!-- Bulk Actions Bar -->
       <div id="bulk-actions-bar" style="display: none; align-items: center; justify-content: space-between; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="material-symbols-outlined" style="color: #ef4444; font-size: 20px;">info</span>
-          <span style="color: #ef4444; font-weight: 500;"><span id="bulk-selected-count">0</span> items selected</span>
+          <span class="material-symbols-outlined" style="color: rgb(var(--adm-red)); font-size: 20px;">info</span>
+          <span style="color: rgb(var(--adm-red)); font-weight: 500;"><span id="bulk-selected-count">0</span> items selected</span>
         </div>
         <button class="btn-admin-primary" id="btn-bulk-delete" style="background: #ef4444; border-color: #ef4444; color: #fff; padding: 6px 16px; font-size: 13px;">Delete Selected</button>
       </div>
@@ -195,19 +196,19 @@
     <div class="admin-modal" style="max-width: 400px; text-align: center; border-top: 4px solid #ef4444; padding-top: 16px;">
       <div style="margin: 8px 0 16px;">
         <div style="width: 64px; height: 64px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-          <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">warning</span>
+          <span class="material-symbols-outlined" style="color: rgb(var(--adm-red)); font-size: 32px;">warning</span>
         </div>
       </div>
       <h2 class="modal-title" style="margin-bottom: 8px; justify-content: center;">Delete Product?</h2>
-      <p style="color: rgba(245,241,235,0.7); font-size: 15px; line-height: 1.5; margin-bottom: 24px; padding: 0 16px;">
-        You are about to permanently delete <strong id="delete-product-name" style="color: #fff;"></strong>.<br/><br/>
-        <span style="font-size: 13px; color: rgba(245,241,235,0.5);">Note: This will fail if the product is linked to past orders to preserve your sales history.</span>
+      <p style="color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.7)); font-size: 15px; line-height: 1.5; margin-bottom: 24px; padding: 0 16px;">
+        You are about to permanently delete <strong id="delete-product-name" style="color: rgb(var(--adm-fg));"></strong>.<br/><br/>
+        <span style="font-size: 13px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.5));">Note: This will fail if the product is linked to past orders to preserve your sales history.</span>
       </p>
       
       <input type="hidden" id="delete-product-id" />
       
       <div style="display: flex; gap: 12px; padding: 0 16px 8px;">
-        <button type="button" class="btn-admin-ghost" id="cancel-delete-product" style="flex: 1; border: 1px solid rgba(245,241,235,0.2);">Keep It</button>
+        <button type="button" class="btn-admin-ghost" id="cancel-delete-product" style="flex: 1; border: 1px solid rgb(var(--adm-fg) / 0.2);">Keep It</button>
         <button type="button" class="btn-admin-primary" id="confirm-delete-product" style="flex: 1; background: #ef4444; border-color: #ef4444; color: #fff;">Yes, Delete</button>
       </div>
     </div>
@@ -227,10 +228,10 @@
         <!-- Step 1 — Smart Template Generator -->
         <div style="margin-bottom: 20px; padding: 16px; background: rgba(201,161,74,0.08); border: 1px solid rgba(201,161,74,0.2); border-radius: 8px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <span style="background: var(--gold-300); color: #141210; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">1</span>
-            <span style="font-weight: 500; color: rgba(245,241,235,0.9);">Download Template</span>
+            <span style="background: var(--adm-gold-fill); color: #141210; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">1</span>
+            <span style="font-weight: 500; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.9));">Download Template</span>
           </div>
-          <p style="color: rgba(245,241,235,0.6); font-size: 13px; line-height: 1.5; margin-bottom: 12px;">Choose a collection and category to pre-fill, or leave as "Any" for a blank template. Pick how many rows you need.</p>
+          <p style="color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.6)); font-size: 13px; line-height: 1.5; margin-bottom: 12px;">Choose a collection and category to pre-fill, or leave as "Any" for a blank template. Pick how many rows you need.</p>
           
           <div style="display: grid; grid-template-columns: 1fr 1fr 80px; gap: 8px; margin-bottom: 12px;">
             <select id="tpl-collection" class="form-input" style="font-size: 13px; padding: 8px 10px;">
@@ -264,20 +265,20 @@
         <!-- Step 2 -->
         <div style="margin-bottom: 20px; padding: 16px; background: rgba(201,161,74,0.08); border: 1px solid rgba(201,161,74,0.2); border-radius: 8px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <span style="background: var(--gold-300); color: #141210; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">2</span>
-            <span style="font-weight: 500; color: rgba(245,241,235,0.9);">Upload CSV & Images</span>
+            <span style="background: var(--adm-gold-fill); color: #141210; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px;">2</span>
+            <span style="font-weight: 500; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.9));">Upload CSV & Images</span>
           </div>
-          <p style="color: rgba(245,241,235,0.6); font-size: 13px; line-height: 1.5; margin-bottom: 12px;">Upload your filled CSV, and (optionally) select all the product image files that match the 'image_filename' column.</p>
+          <p style="color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.6)); font-size: 13px; line-height: 1.5; margin-bottom: 12px;">Upload your filled CSV, and (optionally) select all the product image files that match the 'image_filename' column.</p>
           
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <label style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(245,241,235,0.06); border: 1px dashed rgba(245,241,235,0.2); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
-              <span class="material-symbols-outlined" style="color: var(--gold-300); font-size: 20px;">description</span>
-              <span id="import-file-label" style="color: rgba(245,241,235,0.7); font-size: 13px;">1. Choose .csv file…</span>
+            <label style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgb(var(--adm-fg) / 0.06); border: 1px dashed rgb(var(--adm-fg) / 0.2); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+              <span class="material-symbols-outlined" style="color: var(--adm-gold); font-size: 20px;">description</span>
+              <span id="import-file-label" style="color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.7)); font-size: 13px;">1. Choose .csv file…</span>
               <input type="file" id="import-csv-file" accept=".csv" style="display: none;" />
             </label>
-            <label style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(245,241,235,0.06); border: 1px dashed rgba(245,241,235,0.2); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
-              <span class="material-symbols-outlined" style="color: var(--gold-300); font-size: 20px;">imagesmode</span>
-              <span id="import-images-label" style="color: rgba(245,241,235,0.7); font-size: 13px;">2. Choose Image files (optional)…</span>
+            <label style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgb(var(--adm-fg) / 0.06); border: 1px dashed rgb(var(--adm-fg) / 0.2); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+              <span class="material-symbols-outlined" style="color: var(--adm-gold); font-size: 20px;">imagesmode</span>
+              <span id="import-images-label" style="color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.7)); font-size: 13px;">2. Choose Image files (optional)…</span>
               <input type="file" id="import-images-file" accept="image/*" multiple style="display: none;" />
             </label>
           </div>
@@ -285,8 +286,8 @@
 
         <!-- Preview -->
         <div id="import-preview" style="display: none; margin-bottom: 16px;">
-          <p style="color: rgba(245,241,235,0.8); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Preview: <span id="import-count" style="color: var(--gold-300);">0</span> products found</p>
-          <div style="max-height: 180px; overflow-y: auto; border: 1px solid rgba(245,241,235,0.1); border-radius: 8px;">
+          <p style="color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.8)); font-size: 14px; font-weight: 500; margin-bottom: 8px;">Preview: <span id="import-count" style="color: var(--adm-gold);">0</span> products found</p>
+          <div style="max-height: 180px; overflow-y: auto; border: 1px solid rgb(var(--adm-fg) / 0.1); border-radius: 8px;">
             <table class="admin-table" style="font-size: 12px;">
               <thead>
                 <tr><th>Name</th><th>Collection</th><th>Price</th><th>Stock</th></tr>

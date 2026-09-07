@@ -63,7 +63,7 @@ function renderTable(products) {
             </button>
           </div>
         </td>
-        <td><span style="font-weight: 500; color: var(--coral);"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">favorite</span>${p.likes_count || 0}</span></td>
+        <td><span style="font-weight: 500; color: rgb(var(--adm-red));"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">favorite</span>${p.likes_count || 0}</span></td>
         <td>${stockBadge(inv.stock, inv.low_stock_threshold)}</td>
         <td>
           <div class="action-btns">
@@ -74,7 +74,7 @@ function renderTable(products) {
               <span class="material-symbols-outlined">${p.is_active ? 'archive' : 'unarchive'}</span>
             </button>
             <button class="action-btn action-btn--delete" data-delete-id="${p.id}" data-delete-name="${p.name}" title="Delete Product">
-              <span class="material-symbols-outlined" style="color:#ef4444;">delete</span>
+              <span class="material-symbols-outlined" style="color:rgb(var(--adm-red));">delete</span>
             </button>
           </div>
         </td>
@@ -621,7 +621,7 @@ function handleCSVUpload(e) {
             <td>\u20B1${r.price.toFixed(2)}</td>
             <td>${r.stock}</td>
           </tr>
-        `).join('') + (parsedRows.length > 10 ? `<tr><td colspan="4" style="text-align:center; color: rgba(245,241,235,0.5);">+${parsedRows.length - 10} more…</td></tr>` : '');
+        `).join('') + (parsedRows.length > 10 ? `<tr><td colspan="4" style="text-align:center; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.5));">+${parsedRows.length - 10} more…</td></tr>` : '');
         document.getElementById('import-preview').style.display = 'block';
         const btn = document.getElementById('confirm-batch-import');
         btn.disabled = false;

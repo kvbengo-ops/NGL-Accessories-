@@ -90,6 +90,10 @@ export function renderSidebar(activePage, admin) {
             <span class="sidebar-user-role">${admin?.role || 'admin'}</span>
           </div>
         </div>
+        <button class="sidebar-logout sidebar-theme" id="sidebar-theme" type="button" aria-pressed="false">
+          <span class="material-symbols-outlined">dark_mode</span>
+          <span class="sidebar-theme-label">Dark mode</span>
+        </button>
         <button class="sidebar-logout" id="sidebar-logout">
           <span class="material-symbols-outlined">logout</span>
           Sign out
@@ -105,10 +109,40 @@ export function renderSidebar(activePage, admin) {
   if (container) {
     container.innerHTML = html;
     document.getElementById('sidebar-logout')?.addEventListener('click', logout);
+    initThemeToggle();
     document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
       document.getElementById('admin-sidebar')?.classList.toggle('open');
     });
   }
+}
+
+/* ── Theme ───────────────────────────────────────────────
+   Admin-only light/dark. The storefront has a single fixed palette, so this
+   deliberately does not touch it. The attribute is set on <html> by an inline
+   snippet in each admin page's <head> — doing it here instead would flash dark
+   before this deferred module runs. */
+const THEME_KEY = 'ngl_admin_theme';
+
+function applyTheme(theme) {
+  const light = theme === 'light';
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  document.dispatchEvent(new CustomEvent('ngl:admin-theme-change'));
+  const btn = document.getElementById('sidebar-theme');
+  if (!btn) return;
+  btn.setAttribute('aria-pressed', String(light));
+  btn.querySelector('.material-symbols-outlined').textContent = light ? 'light_mode' : 'dark_mode';
+  btn.querySelector('.sidebar-theme-label').textContent = light ? 'Light mode' : 'Dark mode';
+}
+
+function initThemeToggle() {
+  let saved = 'dark';
+  try { saved = localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'; } catch (_) { /* ignore */ }
+  applyTheme(saved);
+  document.getElementById('sidebar-theme')?.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    try { localStorage.setItem(THEME_KEY, next); } catch (_) { /* ignore */ }
+    applyTheme(next);
+  });
 }
 
 /* ── Toast Notifications ─────────────────────────────────── */

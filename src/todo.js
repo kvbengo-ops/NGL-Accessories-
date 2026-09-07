@@ -335,10 +335,10 @@ function updateStreak() {
       badge.classList.remove('fire');
     }
     if (streak === 0) {
-      badge.style.background = 'rgba(245,241,235,0.05)';
-      badge.style.borderColor = 'rgba(245,241,235,0.1)';
-      badge.style.color = 'rgba(245,241,235,0.4)';
-      badge.querySelector('.streak-icon').style.color = 'rgba(245,241,235,0.3)';
+      badge.style.background = 'rgb(var(--adm-fg) / 0.05)';
+      badge.style.borderColor = 'rgb(var(--adm-fg) / 0.1)';
+      badge.style.color = 'var(--adm-text-muted)';
+      badge.querySelector('.streak-icon').style.color = 'var(--adm-text-muted)';
     } else {
       badge.style.background = '';
       badge.style.borderColor = '';
@@ -423,7 +423,7 @@ function renderCards() {
     const titleObj = titles[dateStr];
     const customTitle = titleObj ? titleObj.title : '';
     const titleId = titleObj ? titleObj.id : '';
-    const statusStyle = statusText === 'Overdue' ? 'color:#f87171;' : statusText === 'Focus' ? 'color:var(--gold-300);' : '';
+    const statusStyle = statusText === 'Overdue' ? 'color:rgb(var(--adm-red));' : statusText === 'Focus' ? 'color:var(--adm-gold);' : '';
 
     // Per-list progress (drives the progress bar + count and motivates completion)
     const doneCount = group.done.length;

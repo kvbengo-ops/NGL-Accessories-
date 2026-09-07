@@ -56,7 +56,7 @@ async function loadAdmins() {
               <span class="material-symbols-outlined">${a.is_active ? 'person_off' : 'person'}</span>
             </button>
             <button class="action-btn action-btn--delete" data-delete-id="${a.id}" data-delete-name="${escapeHtml(a.name)}" title="Delete Admin">
-              <span class="material-symbols-outlined" style="color:#ef4444;">delete</span>
+              <span class="material-symbols-outlined" style="color:rgb(var(--adm-red));">delete</span>
             </button>
           ` : '<span class="date-cell">(you)</span>'}
         </div>

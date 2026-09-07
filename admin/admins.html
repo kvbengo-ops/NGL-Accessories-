@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
+  <script>try{if(localStorage.getItem('ngl_admin_theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
 </head>
 <body class="admin-page">
   <div id="sidebar-container"></div>
@@ -90,15 +91,15 @@
   <div class="admin-modal-backdrop" id="delete-admin-modal">
     <div class="admin-modal">
       <div class="modal-header">
-        <h2 class="modal-title" style="color: #ef4444;">Delete Admin</h2>
+        <h2 class="modal-title" style="color: rgb(var(--adm-red));">Delete Admin</h2>
         <button class="modal-close-btn" id="close-delete-admin-modal">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
       <form id="delete-admin-form" class="modal-form">
         <input type="hidden" id="delete-admin-user-id" />
-        <p style="margin-bottom: 24px; color: rgba(245,241,235,0.8); line-height: 1.5;">
-          Are you sure you want to permanently delete <strong id="delete-admin-name" style="color: #c9a14a;"></strong>? This action cannot be undone.
+        <p style="margin-bottom: 24px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.8)); line-height: 1.5;">
+          Are you sure you want to permanently delete <strong id="delete-admin-name" style="color: var(--adm-gold);"></strong>? This action cannot be undone.
         </p>
         <div id="delete-admin-error" class="login-error hidden" style="margin-bottom:16px;"></div>
         <div class="modal-actions">
@@ -120,8 +121,8 @@
       </div>
       <form id="edit-role-form" class="modal-form">
         <input type="hidden" id="edit-role-user-id" />
-        <p style="margin-bottom: 16px; color: rgba(245,241,235,0.8); line-height: 1.5; font-size: 14px;">
-          Select a new role for <strong id="edit-role-name" style="color: #c9a14a;"></strong>:
+        <p style="margin-bottom: 16px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.8)); line-height: 1.5; font-size: 14px;">
+          Select a new role for <strong id="edit-role-name" style="color: var(--adm-gold);"></strong>:
         </p>
         <div class="form-field">
           <label class="form-label" for="edit-admin-role">Role *</label>
@@ -153,7 +154,7 @@
         <div class="form-field">
           <label class="form-label" for="new-admin-password">New Password *</label>
           <input type="password" id="new-admin-password" class="form-input" required minlength="8" />
-          <small style="color:rgba(245,241,235,0.4);font-size:12px;margin-top:4px;display:block;">Must be at least 8 characters long.</small>
+          <small style="color:rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.4));font-size:12px;margin-top:4px;display:block;">Must be at least 8 characters long.</small>
         </div>
         <div id="edit-password-error" class="login-error hidden" style="margin-top:16px;"></div>
         <div class="modal-actions">

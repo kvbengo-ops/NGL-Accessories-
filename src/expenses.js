@@ -105,7 +105,7 @@ async function refreshExpenses() {
     populateMonthFilter();
     renderExpenses();
   } catch (err) {
-    tbody.innerHTML = '<tr><td colspan="6" class="table-empty" style="color:var(--error);">Failed to load expenses</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="table-empty" style="color:rgb(var(--adm-red));">Failed to load expenses</td></tr>';
     showToast('Failed to load expenses', 'error');
   }
 }
@@ -140,12 +140,12 @@ function renderExpenses() {
       <tr>
         <td class="date-cell">${e.expense_date ? formatDate(e.expense_date).split(',')[0] : '—'}</td>
         <td style="font-weight:500;">${e.title}</td>
-        <td><span class="type-badge" style="background:rgba(201,168,76,0.1); color:var(--gold-300); border-color:rgba(201,168,76,0.3)">${e.category}</span></td>
-        <td style="font-family:monospace; color:#f87171;">-${formatPrice(e.amount)}</td>
-        <td style="font-size:12px; color:#888;">${adminName}</td>
+        <td><span class="type-badge" style="background:rgba(201,168,76,0.1); color:var(--adm-gold); border-color:rgba(201,168,76,0.3)">${e.category}</span></td>
+        <td style="font-family:monospace; color:rgb(var(--adm-red));">-${formatPrice(e.amount)}</td>
+        <td style="font-size:12px; color:var(--adm-text-muted);">${adminName}</td>
         <td class="actions-cell" style="text-align:right;">
           <button class="action-btn edit-expense" data-id="${e.id}" title="Edit"><span class="material-symbols-outlined">edit</span></button>
-          <button class="action-btn delete-expense" data-id="${e.id}" title="Delete" style="color:var(--error);"><span class="material-symbols-outlined">delete</span></button>
+          <button class="action-btn delete-expense" data-id="${e.id}" title="Delete" style="color:rgb(var(--adm-red));"><span class="material-symbols-outlined">delete</span></button>
         </td>
       </tr>
     `;

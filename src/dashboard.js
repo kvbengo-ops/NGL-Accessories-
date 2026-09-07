@@ -131,7 +131,7 @@ function startTour() {
   if(document.getElementById('kpi-profit-week')) document.getElementById('kpi-profit-week').textContent  = formatPrice(weekProfit);
   document.getElementById('kpi-pending').textContent  = pending;
   document.getElementById('kpi-lowstock').textContent = lowStock;
-  if (lowStock > 0) document.getElementById('kpi-lowstock').style.color = '#ef4444';
+  if (lowStock > 0) document.getElementById('kpi-lowstock').style.color = 'rgb(var(--adm-red))';
 
   // ── P&L Widget (Last 30 Days) ────────────────────────────
   // Rolling 30-day window, consistent with the rolling 7-day week above.
@@ -173,7 +173,10 @@ function startTour() {
 
   // ── Sales Chart (Canvas) ──────────────────────────────────
   const canvas = document.getElementById('sales-chart');
-  if (canvas) drawChart(canvas, salesData);
+  if (canvas) {
+    drawChart(canvas, salesData);
+    document.addEventListener('ngl:admin-theme-change', () => drawChart(canvas, salesData));
+  }
 
   // ── Recent Orders ─────────────────────────────────────────
   const tbody = document.getElementById('recent-orders-body');
@@ -199,16 +202,16 @@ function startTour() {
     if (myTasks.length === 0) {
       tasksTbody.innerHTML = '<tr><td colspan="3" class="table-empty">No pending tasks</td></tr>';
     } else {
-      const pColor = { low: '#888', medium: '#b8860b', high: '#ef4444' };
+      const pColor = { low: 'var(--adm-text-muted)', medium: 'var(--adm-gold)', high: 'rgb(var(--adm-red))' };
       tasksTbody.innerHTML = myTasks.slice(0, 5).map(t => `
         <tr>
           <td>
             <div style="font-weight:500; margin-bottom:2px;">${t.title}</div>
-            ${t.due_date ? `<small style="color:#888;">Due: ${formatDate(t.due_date).split(',')[0]}</small>` : ''}
+            ${t.due_date ? `<small style="color:var(--adm-text-muted);">Due: ${formatDate(t.due_date).split(',')[0]}</small>` : ''}
           </td>
-          <td><span style="color:${pColor[t.priority] || '#888'}; font-size:0.85rem; font-weight:600; text-transform:uppercase;">${t.priority}</span></td>
+          <td><span style="color:${pColor[t.priority] || 'var(--adm-text-muted)'}; font-size:0.85rem; font-weight:600; text-transform:uppercase;">${t.priority}</span></td>
           <td style="text-align:right;">
-            <a href="/admin/tasks.html?id=${t.id}" style="color:var(--gold); font-size:0.9rem; font-weight:500; text-decoration:none;">View &rarr;</a>
+            <a href="/admin/tasks.html?id=${t.id}" style="color:var(--adm-gold); font-size:0.9rem; font-weight:500; text-decoration:none;">View &rarr;</a>
           </td>
         </tr>
       `).join('');
@@ -258,9 +261,9 @@ function startTour() {
     } else {
       trendingEl.innerHTML = trending.map((p, i) => `
         <div class="top-product-row">
-          <span class="top-rank" style="color:var(--gold-300)">${i + 1}</span>
+          <span class="top-rank" style="color:var(--adm-gold)">${i + 1}</span>
           <span class="top-name">${p.name}</span>
-          <span class="top-rev" style="color:var(--coral)"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">favorite</span> ${p.likes_count || 0}</span>
+          <span class="top-rev" style="color:rgb(var(--adm-red))"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">favorite</span> ${p.likes_count || 0}</span>
         </div>
       `).join('');
     }
@@ -270,6 +273,9 @@ function startTour() {
 /* ── Canvas Bar Chart ────────────────────────────────────── */
 function drawChart(canvas, data) {
   const ctx = canvas.getContext('2d');
+  // Canvas pixels do not inherit CSS when the theme changes; resolve and redraw.
+  const styles = getComputedStyle(document.documentElement);
+  const color = (name) => styles.getPropertyValue(name).trim();
   const dpr = window.devicePixelRatio || 1;
   const W   = canvas.parentElement.offsetWidth;
   const H   = 220;
@@ -305,7 +311,7 @@ function drawChart(canvas, data) {
   const gap    = cW / days.length;
 
   // Y gridlines
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = color('--adm-chart-grid');
   ctx.lineWidth   = 1;
   for (let i = 0; i <= 4; i++) {
     const y = pad.top + cH - (i / 4) * cH;
@@ -313,7 +319,7 @@ function drawChart(canvas, data) {
     ctx.moveTo(pad.left, y);
     ctx.lineTo(W - pad.right, y);
     ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillStyle = color('--adm-chart-label');
     ctx.font      = '10px DM Sans';
     ctx.textAlign = 'right';
     ctx.fillText(formatPrice((maxVal * i / 4)).replace('₱','₱'), pad.left - 6, y + 4);
@@ -327,22 +333,22 @@ function drawChart(canvas, data) {
 
     // Gradient
     const grad = ctx.createLinearGradient(0, y, 0, y + bH);
-    grad.addColorStop(0, 'rgba(212,175,55,0.9)');
-    grad.addColorStop(1, 'rgba(212,175,55,0.25)');
+    grad.addColorStop(0, color('--adm-chart-bar-top'));
+    grad.addColorStop(1, color('--adm-chart-bar-bottom'));
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.roundRect(x, y, barW, bH, [4, 4, 0, 0]);
     ctx.fill();
 
     // Label
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillStyle = color('--adm-chart-label');
     ctx.font      = '11px DM Sans';
     ctx.textAlign = 'center';
     ctx.fillText(labels[i], x + barW / 2, H - pad.bottom + 16);
 
     // Value on bar
     if (val > 0) {
-      ctx.fillStyle = 'rgba(212,175,55,0.9)';
+      ctx.fillStyle = color('--adm-gold');
       ctx.font      = '10px DM Sans';
       ctx.fillText('₱' + (val >= 1000 ? (val/1000).toFixed(1)+'K' : val), x + barW / 2, y - 5);
     }
