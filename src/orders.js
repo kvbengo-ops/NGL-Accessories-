@@ -28,50 +28,60 @@ const POS_STATUSES    = ['completed','voided'];
 
 async function loadOrders() {
   const tbody = document.getElementById('orders-body');
-  tbody.innerHTML = '<tr><td colspan="8" class="table-loading">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="4" class="table-loading">Loading…</td></tr>';
   allOrders = await getOrders();
-  renderTable(allOrders);
+  applyOrderFilters();
 }
 
 function renderTable(orders) {
   const tbody = document.getElementById('orders-body');
+  document.getElementById('orders-count').textContent = `${orders.length} of ${allOrders.length} orders`;
   if (orders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No orders found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No orders found</td></tr>';
     return;
   }
   tbody.innerHTML = orders.map(o => `
     <tr data-id="${o.id}">
-      <td class="order-num">${o.order_number}</td>
-      <td>${escapeHtml(o.customer_name) || '—'}</td>
-      <td>${(o.order_items || []).length} item(s)</td>
-      <td><span class="type-badge type-badge--${o.type}">${o.type}</span></td>
-      <td>${formatPrice(o.total)}</td>
-      <td>
-        <select class="status-select" data-order-id="${o.id}" data-type="${o.type}">
-          ${(o.type === 'online' ? ONLINE_STATUSES : POS_STATUSES).map(s =>
-            `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
+      <td class="orders-customer-cell"><span class="orders-customer">${escapeHtml(o.customer_name || (o.type === 'pos' ? 'Walk-in customer' : 'Customer'))}</span><span class="orders-meta">${escapeHtml(String(o.order_number))} ? ${escapeHtml(formatDate(o.created_at))}</span><span class="orders-meta">${o.type === 'pos' ? 'In store' : 'Online'} ? ${(o.order_items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0)} items</span></td>
+      <td class="orders-status-cell">
+        <details class="order-status-picker">
+          <summary aria-label="Change status for order ${escapeHtml(String(o.order_number))}: ${escapeHtml(o.status)}">${escapeHtml(o.status)} <span aria-hidden="true">⌄</span></summary>
+          <div class="order-status-options" aria-label="Choose order status">
+          ${(o.type === 'online' ? ONLINE_STATUSES : POS_STATUSES).map(status =>
+            `<button type="button" data-status="${status}" data-order-id="${o.id}" ${status === o.status ? 'disabled aria-current="true"' : ''}>${status.charAt(0).toUpperCase() + status.slice(1)}${status === o.status ? '<span aria-hidden="true">✓</span>' : ''}</button>`
           ).join('')}
-        </select>
+          </div>
+        </details>
       </td>
-      <td class="date-cell">${formatDate(o.created_at)}</td>
-      <td>
-        <button class="action-btn" data-view-id="${o.id}" title="View details">
-          <span class="material-symbols-outlined">open_in_new</span>
-        </button>
-      </td>
+      <td class="orders-amount">${formatPrice(o.total)}</td>
+      <td class="orders-detail-cell"><button class="orders-view" data-view-id="${o.id}" aria-label="View order ${escapeHtml(String(o.order_number))}">Details <span aria-hidden="true">?</span></button></td>
     </tr>
   `).join('');
 
   // Status change
-  document.querySelectorAll('.status-select').forEach(sel => {
-    sel.addEventListener('change', async () => {
+  document.querySelectorAll('[data-status]').forEach(sel => {
+    sel.addEventListener('click', async () => {
       const id = sel.dataset.orderId;
+      const order = allOrders.find(o => o.id === id);
+      const picker = sel.closest('details');
       if (!confirm('Are you sure you want to change the status of this order?')) {
-        await loadOrders(); // Reset select state
+        picker.open = false;
+        picker.querySelector('summary').focus();
         return;
       }
-      await updateOrderStatus(id, sel.value);
-      showToast('Order status updated');
+      picker.querySelectorAll('button').forEach(button => { button.disabled = true; });
+      picker.setAttribute('aria-busy', 'true');
+      try {
+        await updateOrderStatus(id, sel.dataset.status);
+        if (order) order.status = sel.dataset.status;
+        showToast('Order status updated');
+        applyOrderFilters();
+        const row = [...document.querySelectorAll('.orders-table tr[data-id]')].find(row => row.dataset.id === id);
+        (row?.querySelector('summary') || document.getElementById('orders-filter-status')).focus();
+      } catch (error) {
+        picker.querySelectorAll('button').forEach(button => { button.disabled = button.dataset.status === order?.status; });
+        showToast('Status could not be updated: ' + error.message, 'error');
+      } finally { picker.removeAttribute('aria-busy'); }
     });
   });
 
@@ -82,27 +92,38 @@ function renderTable(orders) {
 }
 
 /* ── Filters ─────────────────────────────────────────────── */
-function setupFilters() {
-  const search      = document.getElementById('orders-search');
-  const filterType  = document.getElementById('orders-filter-type');
-  const filterStat  = document.getElementById('orders-filter-status');
-
-  function apply() {
-    const q    = search.value.toLowerCase();
-    const type = filterType.value;
-    const stat = filterStat.value;
-    const filtered = allOrders.filter(o => {
-      const matchQ = !q || o.order_number.toLowerCase().includes(q) || (o.customer_name || '').toLowerCase().includes(q);
-      const matchT = !type || o.type === type;
-      const matchS = !stat || o.status === stat;
-      return matchQ && matchT && matchS;
-    });
-    renderTable(filtered);
-  }
-  [search, filterType, filterStat].forEach(el => el?.addEventListener('input', apply));
+function applyOrderFilters() {
+  const query = document.getElementById('orders-search').value.trim().toLowerCase();
+  const type = document.getElementById('orders-filter-type').value;
+  const status = document.getElementById('orders-filter-status').value;
+  const filtered = allOrders.filter(order =>
+    (!query || String(order.order_number || '').toLowerCase().includes(query) || (order.customer_name || '').toLowerCase().includes(query)) &&
+    (!type || order.type === type) && (!status || order.status === status)
+  ).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  renderTable(filtered);
 }
 
-/* ── Order Detail Modal ──────────────────────────────────── */
+function setupFilters() {
+  document.addEventListener('click', event => {
+    document.querySelectorAll('.order-status-picker[open]').forEach(picker => {
+      if (!picker.contains(event.target)) picker.open = false;
+    });
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll('.order-status-picker[open]').forEach(picker => {
+      picker.open = false;
+      picker.querySelector('summary').focus();
+    });
+  });
+  const ids = ['orders-search', 'orders-filter-type', 'orders-filter-status'];
+  ids.forEach(id => document.getElementById(id).addEventListener('input', applyOrderFilters));
+  document.getElementById('orders-clear').addEventListener('click', () => {
+    ids.forEach(id => { document.getElementById(id).value = ''; });
+    applyOrderFilters();
+  });
+}
+
 function setupModal() {
   document.getElementById('close-order-modal')?.addEventListener('click', () => closeModal('order-detail-modal'));
 }

@@ -85,7 +85,9 @@
      few rules (.form-input, .form-label, .total-row) are shared with the
      storefront checkout — scoping the defaults to the admin body would leave
      those resolving to nothing out on the shop. Light mode overrides the same
-     names on [data-theme="light"], so the storefront can never be affected.
+     names per theme on [data-theme="..."], so the storefront can never be
+     affected. Light-based themes also carry [data-mode="light"], which the
+     component overrides at the bottom of this file key off.
      Channels are bare "r g b" triplets so callers keep their own alpha:
      rgb(var(--adm-fg) / 0.4). */
   --adm-bg:        #0a0908;   /* page ground        */
@@ -96,7 +98,12 @@
   --adm-fg:        245 241 235;
   --adm-accent:    212 168 83;
   --adm-gold:      #d4a853;   /* gold as TEXT/ICON — must contrast the ground */
-  --adm-gold-fill: #d4a853;   /* gold as a FILL — constant; dark ink rides on it */
+  --adm-gold-fill: #d4a853;   /* gold as a FILL — dark ink rides on it */
+  --adm-gold-fill2: #b8852e;  /* darker stop of every fill gradient        */
+  --adm-gold-ink:  #0e0a00;   /* ink that rides ON a gold fill             */
+  --adm-sidebar: var(--adm-surface); /* sidebar ground. Some themes darken
+     it independently of the page and re-tint that subtree — see the theme
+     blocks near the bottom of this file. */
   --adm-gold2:     201 168 76;
   --adm-red:       248 113 113;
   --adm-green:     52 211 153;
@@ -2022,7 +2029,7 @@ strong { font-weight: 600; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 28px;
+  gap: clamp(14px, 2.4vh, 28px);
 }
 
 /* Direction hints */
@@ -2043,11 +2050,17 @@ strong { font-weight: 600; }
 .hint-chip--skip  { color: #c0392b; background: rgba(192,57,43,0.07); border: 1px solid rgba(192,57,43,0.2); }
 .hint-chip--like  { color: var(--gold-500); background: rgba(117,91,0,0.06); border: 1px solid rgba(117,91,0,0.18); }
 
-/* Card Stack container */
+/* Card Stack container.
+   Discover is a one-screen experience: the stack, the hints and the action
+   buttons have to be on screen together, or you scroll and lose half of it.
+   So the height comes off the viewport and 640px is just the ceiling on tall
+   screens. The 360px floor keeps the card from collapsing under its own body
+   on a very short viewport — below that the page just scrolls again, which is
+   the lesser evil. Same trick as the fullscreen overlay further down. */
 .card-stack {
   position: relative;
   width: min(420px, calc(100vw - 48px));
-  height: 640px;
+  height: clamp(360px, calc(100svh - 300px), 640px);
 }
 
 /* Swipe Card */
@@ -2118,8 +2131,10 @@ strong { font-weight: 600; }
 
 /* Card image */
 .card-image {
-  flex-shrink: 0;
-  height: 340px;
+  /* Absorbs the leftover height so the body always fits, however short the
+     stack gets. 340px is the preferred size, not a floor. */
+  flex: 1 1 340px;
+  min-height: 100px;
   overflow: hidden;
   background: #0d0c0a;   /* ponytail: see .product-card-image */
 }
@@ -2134,7 +2149,8 @@ strong { font-weight: 600; }
 
 /* Card body */
 .card-body {
-  flex: 1;
+  flex: 0 0 auto;
+  min-height: 0;
   padding: 20px 24px 22px;
   display: flex;
   flex-direction: column;
@@ -2171,7 +2187,12 @@ strong { font-weight: 600; }
   line-height: 1.7;
   color: rgba(245,241,235,0.72);
   font-weight: 300;
-  flex: 1;
+  /* Clamped so a long blurb can't push the price and tags off the card. */
+  flex: 0 0 auto;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 .card-tags {
   display: flex;
@@ -2431,6 +2452,9 @@ strong { font-weight: 600; }
 }
 /* The swipe view already spaces children with its own flex gap */
 .swipe-view .shop-filters { margin-bottom: 0; }
+/* Discover needs the vertical room that Browse All can afford to spend. */
+.shop:has(#swipe-view:not(.hidden)) { padding-block: clamp(32px, 5vw, 72px); }
+.shop:has(#swipe-view:not(.hidden)) .shop-header { margin-bottom: clamp(20px, 2.5vw, 36px); }
 
 @media (max-width: 600px) {
   .collection-tabs { align-self: stretch; justify-content: flex-start; }
@@ -2446,8 +2470,56 @@ strong { font-weight: 600; }
 /* Grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 20px;
+}
+.products-grid .product-card { min-width: 0; }
+.products-grid .product-card-name { overflow-wrap: anywhere; }
+.products-grid .product-card-footer {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.products-grid .product-card-actions { flex-wrap: wrap; }
+.compact-product-open { display: none; }
+
+@media (max-width: 1100px) {
+  .products-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(3px, 1vw, 10px);
+  }
+  .products-grid .product-card { position: relative; border-radius: 4px; clip-path: none; }
+  .products-grid .product-card-image img { padding: 2px; }
+  .products-grid .product-card-body { padding: 5px 2px; gap: 4px; }
+  .products-grid .product-card-name {
+    font-size: clamp(10px, 1.4vw, 15px);
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .products-grid .product-card-footer { margin: 0; padding-top: 4px; gap: 0; }
+  .products-grid .product-card-price { font-size: clamp(10px, 1.5vw, 16px); overflow-wrap: anywhere; }
+  .products-grid .product-card-badge,
+  .products-grid .product-card-likes,
+  .products-grid .product-card-overlay,
+  .products-grid .product-card-actions { display: none; }
+  .products-grid .compact-product-open {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    cursor: pointer;
+    z-index: 3;
+  }
+  .products-grid .compact-product-open:focus-visible { outline: 2px solid var(--sage); outline-offset: -2px; }
+  .products-grid .skeleton-body-area { padding: 5px 2px; }
+  .products-grid .skeleton-bar { max-width: 100%; }
 }
 
 /* Card — shared structure */
@@ -2817,12 +2889,10 @@ strong { font-weight: 600; }
   .product-card-overlay { display: none; }
 }
 @media (max-width: 768px) {
-  .products-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .card-stack { width: calc(100vw - 48px); max-width: 420px; height: 600px; }
   .card-image { height: 300px; }
 }
 @media (max-width: 480px) {
-  .products-grid { grid-template-columns: 1fr; }
   .card-stack { width: calc(100vw - 32px); height: 580px; }
   .card-image { height: 280px; }
   .swipe-btn { width: 56px; height: 56px; }
@@ -2922,26 +2992,6 @@ strong { font-weight: 600; }
   width: min(440px, calc(100vw - 32px));
   height: min(680px, calc(100svh - 210px));
 }
-/* Image absorbs the leftover space; the body is sized to its own content so
-   the card contents always fit, no matter how short the viewport is. */
-.swipe-fs-overlay .card-image {
-  flex: 1 1 auto;
-  height: auto;
-  min-height: 100px;
-}
-.swipe-fs-overlay .card-body {
-  flex: 0 0 auto;
-  min-height: 0;
-}
-/* Clamp the blurb so a long description can't push content off the card. */
-.swipe-fs-overlay .card-desc {
-  flex: 0 0 auto;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-}
-
 /* Hint + actions inside fullscreen */
 .swipe-fs-overlay .swipe-hint { margin-top: 0; }
 .swipe-fs-overlay .swipe-actions { gap: 36px; }
@@ -3214,11 +3264,11 @@ strong { font-weight: 600; }
 .login-error { display: flex; align-items: center; gap: 8px; background: rgb(var(--adm-red) / 0.08); border: 1px solid rgb(var(--adm-red) / 0.2); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: rgb(var(--adm-red) / max(var(--adm-accent-min-alpha, 0), 0.9)); }
 .login-error .material-symbols-outlined { font-size: 15px; flex-shrink: 0; }
 .login-error.hidden { display: none; }
-.login-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #b8852e 0%, var(--adm-gold-fill) 50%, #b8852e 100%); background-size: 200% 100%; background-position: right; color: #0e0a00; border: none; border-radius: 10px; padding: 14px 24px; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; transition: background-position 0.4s, transform 0.2s, box-shadow 0.2s; margin-top: 4px; box-shadow: 0 4px 20px rgba(172,128,40,0.35); cursor: pointer; }
+.login-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, var(--adm-gold-fill2) 0%, var(--adm-gold-fill) 50%, var(--adm-gold-fill2) 100%); background-size: 200% 100%; background-position: right; color: var(--adm-gold-ink); border: none; border-radius: 10px; padding: 14px 24px; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; transition: background-position 0.4s, transform 0.2s, box-shadow 0.2s; margin-top: 4px; box-shadow: 0 4px 20px rgba(172,128,40,0.35); cursor: pointer; }
 .login-btn:hover:not(:disabled) { background-position: left; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(172,128,40,0.45); }
 .login-btn:active:not(:disabled) { transform: translateY(0); }
 .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.login-spinner { width: 14px; height: 14px; border: 2px solid rgba(14,10,0,0.25); border-top-color: #0e0a00; border-radius: 50%; animation: spin 0.7s linear infinite; }
+.login-spinner { width: 14px; height: 14px; border: 2px solid color-mix(in srgb, var(--adm-gold-ink) 25%, transparent); border-top-color: var(--adm-gold-ink); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .login-spinner.hidden, .login-arrow.hidden { display: none; }
 .login-back { text-align: center; margin-top: 24px; }
@@ -3230,7 +3280,7 @@ strong { font-weight: 600; }
 .admin-page { background: var(--adm-bg); min-height: 100dvh; display: flex; }
 .admin-page--pos { overflow: hidden; max-height: 100dvh; }
 #sidebar-container { flex-shrink: 0; position: relative; z-index: 50; }
-.admin-sidebar { width: 248px; height: 100vh; background: var(--adm-surface); border-right: 1px solid rgb(var(--adm-accent) / 0.09); display: flex; flex-direction: column; position: sticky; top: 0; overflow: hidden; }
+.admin-sidebar { width: 248px; height: 100vh; background: var(--adm-sidebar); border-right: 1px solid rgb(var(--adm-accent) / 0.09); display: flex; flex-direction: column; position: sticky; top: 0; overflow: hidden; }
 .sidebar-brand { padding: 20px 18px 18px; border-bottom: 1px solid rgb(var(--adm-accent) / 0.07); display: flex; align-items: center; gap: 10px; }
 .sidebar-brand-mark { width: 32px; height: 32px; background: rgb(var(--adm-accent) / 0.1); border: 1px solid rgb(var(--adm-accent) / 0.22); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .sidebar-brand-mark .material-symbols-outlined { font-size: 16px; color: var(--adm-gold); }
@@ -3248,14 +3298,28 @@ strong { font-weight: 600; }
 .sidebar-link.active::before { content: ''; position: absolute; left: 0; top: 22%; bottom: 22%; width: 2.5px; background: var(--adm-gold); border-radius: 0 3px 3px 0; }
 .sidebar-footer { padding: 10px 10px 12px; border-top: 1px solid rgb(var(--adm-accent) / 0.07); display: flex; flex-direction: column; gap: 2px; }
 .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; }
-.sidebar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #b8852e, var(--adm-gold-fill)); border: 1.5px solid rgb(var(--adm-accent) / 0.4); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #0e0a00; flex-shrink: 0; }
+.sidebar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--adm-gold-fill2), var(--adm-gold-fill)); border: 1.5px solid rgb(var(--adm-accent) / 0.4); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: var(--adm-gold-ink); flex-shrink: 0; }
 .sidebar-user-info { flex: 1; min-width: 0; }
 .sidebar-user-name { font-size: 11.5px; font-weight: 500; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.8)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .sidebar-user-role { font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgb(var(--adm-accent) / max(var(--adm-accent-min-alpha, 0), 0.45)); display: block; margin-top: 1px; }
 .sidebar-logout { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.28)); transition: all 0.16s; cursor: pointer; background: transparent; border: none; font-family: var(--font-sans); }
 .sidebar-logout:hover { background: rgb(var(--adm-red) / 0.08); color: rgb(var(--adm-red) / max(var(--adm-accent-min-alpha, 0), 0.8)); }
-.sidebar-theme:hover { background: rgb(var(--adm-accent) / 0.08); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.75)); }
-.sidebar-theme:hover .material-symbols-outlined { color: rgb(var(--adm-accent) / max(var(--adm-accent-min-alpha, 0), 0.7)); }
+.sidebar-theme-summary:hover { background: rgb(var(--adm-accent) / 0.08); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.75)); }
+.sidebar-theme-summary:hover .material-symbols-outlined { color: rgb(var(--adm-accent) / max(var(--adm-accent-min-alpha, 0), 0.7)); }
+/* Theme picker — <details> does the open/close, so no JS state. The menu pops
+   upward because this sits at the bottom of the sidebar. */
+.sidebar-theme { position: relative; }
+.sidebar-theme-summary { list-style: none; }
+.sidebar-theme-summary::-webkit-details-marker { display: none; }
+.sidebar-theme-label { flex: 1; text-align: left; }
+.sidebar-theme-caret { transition: transform 0.16s; }
+.sidebar-theme[open] .sidebar-theme-caret { transform: rotate(180deg); }
+.theme-swatch { display: inline-flex; gap: 2px; flex-shrink: 0; padding: 2px; border-radius: 999px; background: rgb(var(--adm-fg) / 0.08); }
+.theme-swatch i { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(var(--adm-fg) / 0.15); }
+.sidebar-theme-menu { position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; z-index: 20; max-height: 62vh; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 4px; border-radius: 10px; background: var(--adm-card); border: 1px solid rgb(var(--adm-fg) / 0.1); box-shadow: 0 10px 30px rgb(0 0 0 / 0.35); }
+.sidebar-theme-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border: none; border-radius: 7px; background: transparent; cursor: pointer; font-family: var(--font-sans); font-size: 12px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.6)); }
+.sidebar-theme-option:hover { background: rgb(var(--adm-accent) / 0.1); color: rgb(var(--adm-fg)); }
+.sidebar-theme-option.active { background: rgb(var(--adm-accent) / 0.14); color: var(--adm-gold); font-weight: 600; }
 .sidebar-logout .material-symbols-outlined { font-size: 15px; }
 .sidebar-toggle { position: fixed; top: 14px; left: 14px; z-index: 60; display: none; background: rgb(var(--adm-surface-c) / 0.92); border: 1px solid rgb(var(--adm-accent) / 0.22); color: var(--adm-gold); border-radius: 9px; width: 42px; height: 42px; align-items: center; justify-content: center; backdrop-filter: blur(12px); cursor: pointer; transition: background 0.2s; }
 .sidebar-toggle:hover { background: rgb(var(--adm-accent) / 0.1); }
@@ -3267,7 +3331,7 @@ strong { font-weight: 600; }
 .admin-header-actions { display: flex; align-items: center; gap: 8px; }
 .admin-page-title { font-family: var(--font-serif); font-size: 26px; font-weight: 400; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.94)); letter-spacing: -0.01em; }
 .admin-page-subtitle { font-size: 12px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.32)); margin-top: 3px; }
-.admin-header-btn { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, #b8852e, var(--adm-gold-fill)); color: #0e0a00; border: none; border-radius: 9px; padding: 9px 18px; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; white-space: nowrap; box-shadow: 0 3px 14px rgba(172,128,40,0.3); cursor: pointer; }
+.admin-header-btn { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, var(--adm-gold-fill2), var(--adm-gold-fill)); color: var(--adm-gold-ink); border: none; border-radius: 9px; padding: 9px 18px; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; white-space: nowrap; box-shadow: 0 3px 14px rgba(172,128,40,0.3); cursor: pointer; }
 .admin-header-btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(172,128,40,0.4); }
 .admin-header-btn .material-symbols-outlined { font-size: 15px; }
 
@@ -3621,7 +3685,7 @@ strong { font-weight: 600; }
 .tour-progress-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, #b8852e, #e3c77e);
+  background: linear-gradient(90deg, var(--adm-gold-fill2), var(--adm-gold-fill));
   border-radius: 999px;
   box-shadow: 0 0 8px rgba(212,168,83,0.5);
   transition: width 0.4s cubic-bezier(0.22,1,0.36,1);
@@ -3657,7 +3721,7 @@ strong { font-weight: 600; }
 }
 .tour-back:hover { border-color: rgba(212,168,83,0.5); color: rgba(245,241,235,0.9); }
 .tour-next {
-  background: linear-gradient(135deg, #b8852e, #e3c77e);
+  background: linear-gradient(135deg, var(--adm-gold-fill2), #e3c77e);
   border: none;
   color: #1a1305;
   text-transform: uppercase;
@@ -3950,7 +4014,7 @@ select.form-input {
 }
 select.form-input option { color: var(--adm-raised); }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 12px; margin-top: 4px; border-top: 1px solid rgb(var(--adm-accent) / 0.07); }
-.btn-admin-primary { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, #b8852e, var(--adm-gold-fill)); color: #0e0a00; border: none; border-radius: 8px; padding: 10px 20px; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; cursor: pointer; box-shadow: 0 2px 12px rgba(172,128,40,0.25); }
+.btn-admin-primary { display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(135deg, var(--adm-gold-fill2), var(--adm-gold-fill)); color: var(--adm-gold-ink); border: none; border-radius: 8px; padding: 10px 20px; font-family: var(--font-sans); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transition: all 0.2s; cursor: pointer; box-shadow: 0 2px 12px rgba(172,128,40,0.25); }
 .btn-admin-primary:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 18px rgba(172,128,40,0.38); }
 .btn-admin-primary:active:not(:disabled) { transform: translateY(0); }
 .btn-admin-primary:disabled { opacity: 0.42; cursor: not-allowed; }
@@ -4105,7 +4169,7 @@ select.form-input option { color: var(--adm-raised); }
 .pos-pay-tab .material-symbols-outlined { font-size: 16px; }
 .pos-pay-tab.active { background: rgb(var(--adm-accent) / 0.12); color: var(--adm-gold); border-color: rgb(var(--adm-accent) / 0.35); }
 .pos-pay-tab:hover:not(.active) { background: rgb(var(--adm-accent) / 0.06); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.6)); }
-.pos-charge-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, #b8852e, var(--adm-gold-fill)); color: #0e0a00; border-radius: 10px; padding: 14px; font-family: var(--font-sans); font-size: 13px; font-weight: 700; letter-spacing: 0.07em; transition: all 0.2s; box-shadow: 0 4px 16px rgba(172,128,40,0.4); cursor: pointer; border: none; }
+.pos-charge-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, var(--adm-gold-fill2), var(--adm-gold-fill)); color: var(--adm-gold-ink); border-radius: 10px; padding: 14px; font-family: var(--font-sans); font-size: 13px; font-weight: 700; letter-spacing: 0.07em; transition: all 0.2s; box-shadow: 0 4px 16px rgba(172,128,40,0.4); cursor: pointer; border: none; }
 .pos-charge-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 7px 22px rgba(172,128,40,0.5); }
 .pos-charge-btn:disabled { opacity: 0.26; cursor: not-allowed; box-shadow: none; transform: none; }
 .pos-charge-btn .material-symbols-outlined { font-size: 18px; }
@@ -5331,15 +5395,38 @@ select.form-input option { color: var(--adm-raised); }
   justify-content: center;
 }
 
-/* ── Admin light mode ─────────────────────────────────────
-   Same channel names, light values. Status hues drop to their darker
-   variants so coloured text and icons still clear 4.5:1 on white — the
-   dark-mode pastels (#34d399 & co.) sit around 1.9:1 there. */
-[data-theme="light"] {
-  /* Text needs stronger opacity than decorative borders and surface tints.
-     These floors apply only to foreground declarations, including icons. */
+/* ──────────────────────────── Admin themes ────────────────────────────
+   Same channel names, different values. "dark" (Obsidian) is :root; every
+   block below overrides only what differs, so dark themes inherit the dark
+   status hues and [data-mode="light"] carries what all light grounds share.
+
+   Six themes pair a DARK sidebar with a LIGHT page. They set --adm-sidebar
+   plus a handful of --adm-side-* values, and the :is() rule at the end of this
+   section re-declares the channels on .admin-sidebar so that subtree themes
+   itself. Nothing else in the file needed new selectors.
+
+   Values here are generated — each theme is really just a background, a
+   sidebar and an accent; the tints, muted ink and chart colours are derived
+   from those three and checked to clear 4.5:1. To add one, follow the pattern
+   and add a row to THEMES in src/admin.js. */
+
+/* Shared by every light ground: status hues drop to their darker variants so
+   coloured text and icons still clear 4.5:1 on white — the dark-mode pastels
+   (#34d399 & co.) sit around 1.9:1 there. The alpha floors apply only to
+   foreground declarations, including icons, not to decorative borders. */
+[data-mode="light"] {
   --adm-text-min-alpha: 0.72;
   --adm-accent-min-alpha: 1;
+  --adm-red:       153 27 27;
+  --adm-green:     4 100 72;
+  --adm-blue:      30 64 175;
+  --adm-amber:     146 64 14;
+  --adm-purple:    107 33 168;
+  --adm-orange:    154 52 18;
+}
+
+/* Ivory — warm cream, bronze accent. The original light mode. */
+[data-theme="light"] {
   --adm-bg:        #f2efe7;
   --adm-surface:   #fffdf8;
   --adm-card:      #ffffff;
@@ -5349,12 +5436,6 @@ select.form-input option { color: var(--adm-raised); }
   --adm-accent:    107 79 16;
   --adm-gold:      #6b4f10;   /* --adm-gold-fill intentionally not overridden */
   --adm-gold2:     107 79 16;
-  --adm-red:       153 27 27;
-  --adm-green:     4 100 72;
-  --adm-blue:      30 64 175;
-  --adm-amber:     146 64 14;
-  --adm-purple:    107 33 168;
-  --adm-orange:    154 52 18;
   --adm-text-muted: #625b50;
   --adm-chart-grid: #d4cbbd;
   --adm-chart-label: #625b50;
@@ -5363,44 +5444,267 @@ select.form-input option { color: var(--adm-raised); }
   --adm-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%237a5c12' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
-[data-theme="light"] :is(.admin-page, .admin-login-page) { color-scheme: light; }
+/* Forest & Ivory */
+[data-theme="forest"] {
+  --adm-bg:                #F5F4EF;
+  --adm-surface:           #fdfdfb;
+  --adm-card:              #ffffff;
+  --adm-raised:            #f9f8f5;
+  --adm-surface-c:         255 255 255;
+  --adm-sidebar:           #203A32;
+  --adm-fg:                24 44 38;
+  --adm-accent:            49 92 75;
+  --adm-gold:              #315C4B;
+  --adm-gold2:             49 92 75;
+  --adm-gold-fill:         #315C4B;
+  --adm-gold-fill2:        #26483a;
+  --adm-gold-ink:          #ffffff;
+  --adm-text-muted:        #5f6c66;
+  --adm-chart-grid:        #d8d7d2;
+  --adm-chart-label:       #5f6c66;
+  --adm-chart-bar-top:     #315C4B;
+  --adm-chart-bar-bottom:  #b1c1bb;
+  --adm-side-gold:         #a2b6ae;
+  --adm-side-gold2:        #648578;
+  --adm-side-card:         #364e46;
+  --adm-side-raised:       #445a53;
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23315C4B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Ink & Paper */
+[data-theme="ink"] {
+  --adm-bg:                #F4F5F7;
+  --adm-surface:           #fdfdfd;
+  --adm-card:              #ffffff;
+  --adm-raised:            #f8f9fa;
+  --adm-surface-c:         255 255 255;
+  --adm-sidebar:           #192536;
+  --adm-fg:                19 28 40;
+  --adm-accent:            54 93 145;
+  --adm-gold:              #365D91;
+  --adm-gold2:             54 93 145;
+  --adm-gold-fill:         #365D91;
+  --adm-gold-fill2:        #2a4971;
+  --adm-gold-ink:          #ffffff;
+  --adm-text-muted:        #5b616a;
+  --adm-chart-grid:        #d7d8d9;
+  --adm-chart-label:       #5b616a;
+  --adm-chart-bar-top:     #365D91;
+  --adm-chart-bar-bottom:  #b3c1d5;
+  --adm-side-gold:         #a5b6ce;
+  --adm-side-gold2:        #6886ac;
+  --adm-side-card:         #303b4a;
+  --adm-side-raised:       #3e4856;
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23365D91' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Warm Stone */
+[data-theme="stone"] {
+  --adm-bg:                #F3F0EB;
+  --adm-surface:           #fcfcfb;
+  --adm-card:              #ffffff;
+  --adm-raised:            #f8f6f3;
+  --adm-surface-c:         255 255 255;
+  --adm-sidebar:           #37332F;
+  --adm-fg:                41 38 35;
+  --adm-accent:            121 96 75;
+  --adm-gold:              #79604B;
+  --adm-gold2:             121 96 75;
+  --adm-gold-fill:         #79604B;
+  --adm-gold-fill2:        #5e4b3a;
+  --adm-gold-ink:          #ffffff;
+  --adm-text-muted:        #6a6763;
+  --adm-chart-grid:        #d6d3cf;
+  --adm-chart-label:       #6a6763;
+  --adm-chart-bar-top:     #79604B;
+  --adm-chart-bar-bottom:  #ccc3bb;
+  --adm-side-gold:         #c3b7ae;
+  --adm-side-gold2:        #9a8878;
+  --adm-side-card:         #4b4744;
+  --adm-side-raised:       #575450;
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2379604B' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Wine & Linen */
+[data-theme="wine"] {
+  --adm-bg:                #F7F2EE;
+  --adm-surface:           #fdfcfb;
+  --adm-card:              #ffffff;
+  --adm-raised:            #faf7f4;
+  --adm-surface-c:         255 255 255;
+  --adm-sidebar:           #422832;
+  --adm-fg:                50 30 38;
+  --adm-accent:            133 62 85;
+  --adm-gold:              #853E55;
+  --adm-gold2:             133 62 85;
+  --adm-gold-fill:         #853E55;
+  --adm-gold-fill2:        #683042;
+  --adm-gold-ink:          #ffffff;
+  --adm-text-muted:        #716266;
+  --adm-chart-grid:        #d9d5d1;
+  --adm-chart-label:       #716266;
+  --adm-chart-bar-top:     #853E55;
+  --adm-chart-bar-bottom:  #d1b6be;
+  --adm-side-gold:         #c8a8b2;
+  --adm-side-gold2:        #a46e80;
+  --adm-side-card:         #553e46;
+  --adm-side-raised:       #604a53;
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23853E55' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Plum & Mist */
+[data-theme="plum"] {
+  --adm-bg:                #F4F2F7;
+  --adm-surface:           #fdfcfd;
+  --adm-card:              #ffffff;
+  --adm-raised:            #f8f7fa;
+  --adm-surface-c:         255 255 255;
+  --adm-sidebar:           #30283D;
+  --adm-fg:                36 30 46;
+  --adm-accent:            112 81 140;
+  --adm-gold:              #70518C;
+  --adm-gold2:             112 81 140;
+  --adm-gold-fill:         #70518C;
+  --adm-gold-fill2:        #573f6d;
+  --adm-gold-ink:          #ffffff;
+  --adm-text-muted:        #67626e;
+  --adm-chart-grid:        #d7d5d9;
+  --adm-chart-label:       #67626e;
+  --adm-chart-bar-top:     #70518C;
+  --adm-chart-bar-bottom:  #c9bdd3;
+  --adm-side-gold:         #bfb1cb;
+  --adm-side-gold2:        #947ca9;
+  --adm-side-card:         #453e50;
+  --adm-side-raised:       #514a5c;
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2370518C' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Ocean & Salt */
+[data-theme="ocean"] {
+  --adm-bg:                #F0F5F5;
+  --adm-surface:           #fcfdfd;
+  --adm-card:              #ffffff;
+  --adm-raised:            #f6f9f9;
+  --adm-surface-c:         255 255 255;
+  --adm-sidebar:           #193A40;
+  --adm-fg:                19 44 48;
+  --adm-accent:            40 108 118;
+  --adm-gold:              #286C76;
+  --adm-gold2:             40 108 118;
+  --adm-gold-fill:         #286C76;
+  --adm-gold-fill2:        #1f545c;
+  --adm-gold-ink:          #ffffff;
+  --adm-text-muted:        #5a6c6f;
+  --adm-chart-grid:        #d3d8d8;
+  --adm-chart-label:       #5a6c6f;
+  --adm-chart-bar-top:     #286C76;
+  --adm-chart-bar-bottom:  #adc7cb;
+  --adm-side-gold:         #9ebdc1;
+  --adm-side-gold2:        #5e9198;
+  --adm-side-card:         #304e53;
+  --adm-side-raised:       #3e5a5f;
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23286C76' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Graphite */
+[data-theme="graphite"] {
+  --adm-bg:                #191B1E;
+  --adm-surface:           #141517;
+  --adm-card:              #212326;
+  --adm-raised:            #2b2d30;
+  --adm-surface-c:         20 21 23;
+  --adm-sidebar:           #131518;
+  --adm-fg:                239 239 239;
+  --adm-accent:            168 185 202;
+  --adm-gold:              #A8B9CA;
+  --adm-gold2:             168 185 202;
+  --adm-gold-fill:         #A8B9CA;
+  --adm-gold-fill2:        #798591;
+  --adm-gold-ink:          #141618;
+  --adm-chart-grid:        rgb(239 239 239 / 0.07);
+  --adm-chart-label:       rgb(239 239 239 / 0.45);
+  --adm-chart-bar-top:     color-mix(in srgb, #A8B9CA 90%, transparent);
+  --adm-chart-bar-bottom:  color-mix(in srgb, #A8B9CA 22%, transparent);
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23A8B9CA' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Midnight Brass */
+[data-theme="brass"] {
+  --adm-bg:                #1C1B18;
+  --adm-surface:           #161513;
+  --adm-card:              #242320;
+  --adm-raised:            #2e2d2a;
+  --adm-surface-c:         22 21 19;
+  --adm-sidebar:           #141310;
+  --adm-fg:                239 239 239;
+  --adm-accent:            196 166 106;
+  --adm-gold:              #C4A66A;
+  --adm-gold2:             196 166 106;
+  --adm-gold-fill:         #C4A66A;
+  --adm-gold-fill2:        #8d784c;
+  --adm-gold-ink:          #18140d;
+  --adm-chart-grid:        rgb(239 239 239 / 0.07);
+  --adm-chart-label:       rgb(239 239 239 / 0.45);
+  --adm-chart-bar-top:     color-mix(in srgb, #C4A66A 90%, transparent);
+  --adm-chart-bar-bottom:  color-mix(in srgb, #C4A66A 22%, transparent);
+  --adm-select-arrow:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23C4A66A' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* These themes hang a dark sidebar off a light page. Custom properties
+   inherit, so re-declaring the channels on .admin-sidebar re-themes that
+   whole subtree — no extra selectors anywhere else. */
+:is([data-theme="forest"], [data-theme="ink"], [data-theme="stone"], [data-theme="wine"], [data-theme="plum"], [data-theme="ocean"]) .admin-sidebar {
+  color-scheme: dark;
+  --adm-text-min-alpha: 0;
+  --adm-accent-min-alpha: 0.55;
+  --adm-fg: 245 246 245;
+  --adm-accent: 255 255 255;
+  --adm-gold: var(--adm-side-gold);
+  --adm-gold-fill: var(--adm-side-gold);
+  --adm-gold-fill2: var(--adm-side-gold2);
+  --adm-gold-ink: #101312;
+  --adm-card: var(--adm-side-card);
+  --adm-raised: var(--adm-side-raised);
+}
+
+[data-mode="light"] :is(.admin-page, .admin-login-page) { color-scheme: light; }
 
 /* Shared components with fixed dark-theme ink need explicit admin overrides. */
-[data-theme="light"] .admin-page :is(.table-loading, .table-empty, .date-cell) { color: var(--adm-text-muted); }
-[data-theme="light"] .admin-page :is(.order-num, .kanban-count) { color: var(--adm-gold); }
-[data-theme="light"] .admin-page :is(.collection--natural, .pos-coll--natural) { color: rgb(var(--adm-green)); }
-[data-theme="light"] .admin-page :is(.collection--lush, .pos-coll--lush, .form-error, .kanban-due.overdue) { color: rgb(var(--adm-red)); }
-[data-theme="light"] .admin-page .kanban-status-dot.pending { color: rgb(var(--adm-amber)); }
-[data-theme="light"] .admin-page .kanban-status-dot.in_progress { color: rgb(var(--adm-blue)); }
-[data-theme="light"] .admin-page .kanban-status-dot.completed { color: rgb(var(--adm-green)); }
-[data-theme="light"] .admin-page .payment-proof-link span { color: var(--adm-gold); }
-[data-theme="light"] .admin-page .img-upload-clear { color: #fff; }
-[data-theme="light"] .admin-page :is(.admin-select, .status-select, select.form-input) { background-image: var(--adm-select-arrow); }
-[data-theme="light"] .admin-page :is(.admin-select, .status-select, .form-input, .kanban-assignee-select) option { background: var(--adm-card); color: rgb(var(--adm-fg)); }
+[data-mode="light"] .admin-page :is(.table-loading, .table-empty, .date-cell) { color: var(--adm-text-muted); }
+[data-mode="light"] .admin-page :is(.order-num, .kanban-count) { color: var(--adm-gold); }
+[data-mode="light"] .admin-page :is(.collection--natural, .pos-coll--natural) { color: rgb(var(--adm-green)); }
+[data-mode="light"] .admin-page :is(.collection--lush, .pos-coll--lush, .form-error, .kanban-due.overdue) { color: rgb(var(--adm-red)); }
+[data-mode="light"] .admin-page .kanban-status-dot.pending { color: rgb(var(--adm-amber)); }
+[data-mode="light"] .admin-page .kanban-status-dot.in_progress { color: rgb(var(--adm-blue)); }
+[data-mode="light"] .admin-page .kanban-status-dot.completed { color: rgb(var(--adm-green)); }
+[data-mode="light"] .admin-page .payment-proof-link span { color: var(--adm-gold); }
+[data-mode="light"] .admin-page .img-upload-clear { color: #fff; }
+[data-mode="light"] .admin-page :is(.admin-select, .status-select, select.form-input) { background-image: var(--adm-select-arrow); }
+[data-mode="light"] .admin-page :is(.admin-select, .status-select, .form-input, .kanban-assignee-select) option { background: var(--adm-card); color: rgb(var(--adm-fg)); }
 
 /* To-do rows and focused inputs previously kept a dark background or white ink. */
-[data-theme="light"] .admin-page :is(.todo-back-btn:hover, .todo-date-display, .todo-motivation-icon, .todo-card-date, .todo-section-title.today) { color: var(--adm-gold); }
-[data-theme="light"] .admin-page :is(.todo-quick-form, .todo-item) { background: var(--adm-card); }
-[data-theme="light"] .admin-page :is(.todo-item:hover, .todo-item:active) { background: var(--adm-raised); }
-[data-theme="light"] .admin-page .todo-card-title-input:focus { color: rgb(var(--adm-fg)); }
-[data-theme="light"] .admin-page .todo-item.completed { opacity: 1; }
-[data-theme="light"] .admin-page .todo-quick-date::-webkit-calendar-picker-indicator { filter: none; }
+[data-mode="light"] .admin-page :is(.todo-back-btn:hover, .todo-date-display, .todo-motivation-icon, .todo-card-date, .todo-section-title.today) { color: var(--adm-gold); }
+[data-mode="light"] .admin-page :is(.todo-quick-form, .todo-item) { background: var(--adm-card); }
+[data-mode="light"] .admin-page :is(.todo-item:hover, .todo-item:active) { background: var(--adm-raised); }
+[data-mode="light"] .admin-page .todo-card-title-input:focus { color: rgb(var(--adm-fg)); }
+[data-mode="light"] .admin-page .todo-item.completed { opacity: 1; }
+[data-mode="light"] .admin-page .todo-quick-date::-webkit-calendar-picker-indicator { filter: none; }
 
 /* Flatpickr imports a dark theme; override its text, arrows and selected states. */
-[data-theme="light"] .flatpickr-calendar { color: rgb(var(--adm-fg)); }
-[data-theme="light"] .flatpickr-calendar :is(.flatpickr-month, .flatpickr-weekdays, .flatpickr-weekday, .flatpickr-monthDropdown-months, .flatpickr-monthDropdown-month) { background: var(--adm-raised); color: rgb(var(--adm-fg)); }
-[data-theme="light"] .flatpickr-calendar :is(.cur-year, .flatpickr-day) { color: rgb(var(--adm-fg)); }
-[data-theme="light"] .flatpickr-calendar :is(.flatpickr-prev-month, .flatpickr-next-month) { color: var(--adm-gold); fill: var(--adm-gold); }
-[data-theme="light"] .flatpickr-calendar .numInputWrapper span.arrowUp:after { border-bottom-color: var(--adm-gold); }
-[data-theme="light"] .flatpickr-calendar .numInputWrapper span.arrowDown:after { border-top-color: var(--adm-gold); }
-[data-theme="light"] .flatpickr-calendar :is(.prevMonthDay, .nextMonthDay, .flatpickr-disabled) { color: var(--adm-text-muted); }
-[data-theme="light"] .flatpickr-calendar .flatpickr-day:hover { background: rgb(var(--adm-accent) / 0.12); border-color: var(--adm-gold); }
-[data-theme="light"] .flatpickr-calendar .flatpickr-day.today { border-color: var(--adm-gold); }
-[data-theme="light"] .flatpickr-calendar :is(.flatpickr-day.selected, .flatpickr-day.today:hover) { background: var(--gold-500); color: #fff; }
+[data-mode="light"] .flatpickr-calendar { color: rgb(var(--adm-fg)); }
+[data-mode="light"] .flatpickr-calendar :is(.flatpickr-month, .flatpickr-weekdays, .flatpickr-weekday, .flatpickr-monthDropdown-months, .flatpickr-monthDropdown-month) { background: var(--adm-raised); color: rgb(var(--adm-fg)); }
+[data-mode="light"] .flatpickr-calendar :is(.cur-year, .flatpickr-day) { color: rgb(var(--adm-fg)); }
+[data-mode="light"] .flatpickr-calendar :is(.flatpickr-prev-month, .flatpickr-next-month) { color: var(--adm-gold); fill: var(--adm-gold); }
+[data-mode="light"] .flatpickr-calendar .numInputWrapper span.arrowUp:after { border-bottom-color: var(--adm-gold); }
+[data-mode="light"] .flatpickr-calendar .numInputWrapper span.arrowDown:after { border-top-color: var(--adm-gold); }
+[data-mode="light"] .flatpickr-calendar :is(.prevMonthDay, .nextMonthDay, .flatpickr-disabled) { color: var(--adm-text-muted); }
+[data-mode="light"] .flatpickr-calendar .flatpickr-day:hover { background: rgb(var(--adm-accent) / 0.12); border-color: var(--adm-gold); }
+[data-mode="light"] .flatpickr-calendar .flatpickr-day.today { border-color: var(--adm-gold); }
+[data-mode="light"] .flatpickr-calendar :is(.flatpickr-day.selected, .flatpickr-day.today:hover) { background: var(--gold-500); color: #fff; }
 
 /* The support console keeps light message panels in either theme. */
-[data-theme="light"] .admin-page .support-queue-item:hover,
-[data-theme="light"] .admin-page .support-queue-item:focus-visible { background: var(--adm-raised); }
-[data-theme="light"] .admin-page .support-thread-messages { background: var(--adm-raised); }
-[data-theme="light"] .admin-page .support-thread-messages .support-message--admin .bubble { background: var(--charcoal-2); color: #fff; }
-[data-theme="light"] .admin-page .support-empty-state .material-symbols-outlined { opacity: 0.72; }
+[data-mode="light"] .admin-page .support-queue-item:hover,
+[data-mode="light"] .admin-page .support-queue-item:focus-visible { background: var(--adm-raised); }
+[data-mode="light"] .admin-page .support-thread-messages { background: var(--adm-raised); }
+[data-mode="light"] .admin-page .support-thread-messages .support-message--admin .bubble { background: var(--charcoal-2); color: #fff; }
+[data-mode="light"] .admin-page .support-empty-state .material-symbols-outlined { opacity: 0.72; }

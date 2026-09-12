@@ -7,6 +7,8 @@ import { requireAuth, renderSidebar, showToast, formatPrice, openModal, closeMod
 let allProducts = [];
 let editingId   = null;
 let parsedRows  = [];
+const selectedIds  = new Set();      // survives re-render (filtering)
+const pendingStock = new Map();      // product id -> unsaved stock value
 
 (async () => {
   const admin = await requireAuth();
@@ -20,7 +22,9 @@ async function loadProducts() {
   const tbody = document.getElementById('inventory-body');
   tbody.innerHTML = '<tr><td colspan="9" class="table-loading">Loading…</td></tr>';
   allProducts = await getAllProducts();
-  renderTable(allProducts);
+  // drop queued edits for products that no longer exist
+  pendingStock.forEach((_, id) => { if (!allProducts.some(p => p.id === id)) pendingStock.delete(id); });
+  applyFilters();
 }
 
 function stockBadge(stock, threshold) {
@@ -32,7 +36,9 @@ function stockBadge(stock, threshold) {
 function renderTable(products) {
   const tbody = document.getElementById('inventory-body');
   if (products.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="table-empty">No products found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="table-empty">No products match these filters. Try another name or clear the filters above.</td></tr>';
+    updateBulkActions();
+    updateStockBar();
     return;
   }
   tbody.innerHTML = products.map(p => {
@@ -40,7 +46,7 @@ function renderTable(products) {
     return `
       <tr data-id="${p.id}">
         <td style="text-align: center;">
-          <input type="checkbox" class="row-checkbox" value="${p.id}" style="cursor: pointer;" />
+          <input type="checkbox" class="row-checkbox" value="${p.id}" style="cursor: pointer;" ${selectedIds.has(p.id) ? 'checked' : ''} />
         </td>
         <td>
           <div class="product-cell">
@@ -56,11 +62,9 @@ function renderTable(products) {
         <td>${formatPrice(p.price)}</td>
         <td>
           <div class="stock-edit-wrap">
-            <input type="number" class="stock-input" value="${inv.stock}" min="0"
-              data-product-id="${p.id}" data-threshold="${inv.low_stock_threshold}" />
-            <button class="stock-save-btn" data-product-id="${p.id}" title="Save stock">
-              <span class="material-symbols-outlined">check</span>
-            </button>
+            <input type="number" class="stock-input" value="${pendingStock.has(p.id) ? pendingStock.get(p.id) : inv.stock}" min="0"
+              data-product-id="${p.id}" data-threshold="${inv.low_stock_threshold}"
+              style="${pendingStock.has(p.id) ? 'border-color:#eab308;background:rgba(234,179,8,0.08);' : ''}" />
           </div>
         </td>
         <td><span style="font-weight: 500; color: rgb(var(--adm-red));"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;">favorite</span>${p.likes_count || 0}</span></td>
@@ -82,17 +86,31 @@ function renderTable(products) {
     `;
   }).join('');
 
-  // Stock save
-  document.querySelectorAll('.stock-save-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const pid    = btn.dataset.productId;
-      const input  = document.querySelector(`.stock-input[data-product-id="${pid}"]`);
-      const stock  = parseInt(input.value);
-      const thresh = parseInt(input.dataset.threshold);
-      if (isNaN(stock) || stock < 0) return;
-      await updateStock(pid, stock, thresh);
-      showToast('Stock updated');
-      await loadProducts();
+  const columnLabels = ['Select', 'Product', 'Collection', 'Category', 'Price', 'Stock', 'Likes', 'Status', 'Actions'];
+  tbody.querySelectorAll('tr').forEach(row => {
+    const product = products.find(p => p.id === row.dataset.id);
+    [...row.cells].forEach((cell, index) => { cell.dataset.label = columnLabels[index]; });
+    row.querySelector('.row-checkbox').setAttribute('aria-label', `Select ${product.name}`);
+    row.querySelector('.stock-input').setAttribute('aria-label', `Stock quantity for ${product.name}`);
+    row.querySelectorAll('.action-btn').forEach(button => {
+      const label = document.createElement('span');
+      label.textContent = button.title;
+      button.appendChild(label);
+      button.setAttribute('aria-label', `${button.title}: ${product.name}`);
+    });
+  });
+
+  // Stock edits are queued, then saved together via "Save All Stock"
+  document.querySelectorAll('.stock-input').forEach(input => {
+    input.addEventListener('input', () => {
+      const pid      = input.dataset.productId;
+      const original = allProducts.find(p => p.id === pid)?.inventory?.stock ?? 0;
+      const stock    = parseInt(input.value);
+      if (isNaN(stock) || stock < 0 || stock === original) pendingStock.delete(pid);
+      else pendingStock.set(pid, stock);
+      input.style.borderColor = pendingStock.has(pid) ? '#eab308' : '';
+      input.style.background  = pendingStock.has(pid) ? 'rgba(234,179,8,0.08)' : '';
+      updateStockBar();
     });
   });
 
@@ -103,7 +121,10 @@ function renderTable(products) {
 
   // Row selection
   document.querySelectorAll('.row-checkbox').forEach(c => {
-    c.addEventListener('change', updateBulkActions);
+    c.addEventListener('change', () => {
+      c.checked ? selectedIds.add(c.value) : selectedIds.delete(c.value);
+      updateBulkActions();
+    });
   });
 
   // Delete
@@ -125,57 +146,118 @@ function renderTable(products) {
       await loadProducts();
     });
   });
+
+  updateBulkActions();
+  updateStockBar();
 }
 
 /* ── Filters ─────────────────────────────────────────────── */
-function setupFilters() {
-  const search       = document.getElementById('inv-search');
-  const filterColl   = document.getElementById('inv-filter-collection');
-  const filterCat    = document.getElementById('inv-filter-category');
-  const filterStock  = document.getElementById('inv-filter-stock');
+function applyFilters() {
+  const q    = document.getElementById('inv-search').value.trim().toLowerCase();
+  const coll = document.getElementById('inv-filter-collection').value;
+  const cat  = document.getElementById('inv-filter-category').value;
+  const st   = document.getElementById('inv-filter-stock').value;
+  const status = document.getElementById('inv-filter-status').value;
+  const sort = document.getElementById('inv-sort').value;
+  document.getElementById('inv-total').textContent = allProducts.length;
+  document.getElementById('inv-low').textContent = allProducts.filter(p => (p.inventory?.stock ?? 0) > 0 && p.inventory.stock <= (p.inventory.low_stock_threshold ?? 5)).length;
+  document.getElementById('inv-out').textContent = allProducts.filter(p => (p.inventory?.stock ?? 0) === 0).length;
+  document.querySelectorAll('[data-stock-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.stockView === st)));
 
-  function applyFilters() {
-    const q    = search.value.toLowerCase();
-    const coll = filterColl.value;
-    const cat  = filterCat.value;
-    const st   = filterStock.value;
-
-    const filtered = allProducts.filter(p => {
-      const inv       = p.inventory || { stock: 0, low_stock_threshold: 5 };
-      const matchQ    = !q || p.name.toLowerCase().includes(q);
-      const matchColl = !coll || p.collection === coll;
-      const matchCat  = !cat  || p.category  === cat;
-      const matchSt   = !st
-        || (st === 'low' && inv.stock > 0 && inv.stock <= inv.low_stock_threshold)
-        || (st === 'out' && inv.stock === 0);
-      return matchQ && matchColl && matchCat && matchSt;
-    });
-    renderTable(filtered);
-  }
-
-  [search, filterColl, filterCat, filterStock].forEach(el => {
-    el?.addEventListener('input', applyFilters);
+  const filtered = allProducts.filter(p => {
+    const inv       = p.inventory || { stock: 0, low_stock_threshold: 5 };
+    const matchQ    = !q || p.name.toLowerCase().includes(q);
+    const matchColl = !coll || p.collection === coll;
+    const matchCat  = !cat  || p.category  === cat;
+    const matchSt   = !st
+      || (st === 'low' && inv.stock > 0 && inv.stock <= inv.low_stock_threshold)
+      || (st === 'out' && inv.stock === 0);
+    const matchStatus = !status || (status === 'active' ? p.is_active : !p.is_active);
+    return matchQ && matchColl && matchCat && matchSt && matchStatus;
   });
+  filtered.sort((a, b) => {
+    if (sort === 'stock') return (a.inventory?.stock ?? 0) - (b.inventory?.stock ?? 0) || a.name.localeCompare(b.name);
+    if (sort === 'price-asc') return a.price - b.price;
+    if (sort === 'price-desc') return b.price - a.price;
+    return a.name.localeCompare(b.name);
+  });
+  document.getElementById('inv-result-count').textContent = `${filtered.length} of ${allProducts.length}`;
+  renderTable(filtered);
+}
+
+function setupFilters() {
+  ['inv-search', 'inv-filter-collection', 'inv-filter-category', 'inv-filter-stock', 'inv-filter-status', 'inv-sort']
+    .forEach(id => document.getElementById(id)?.addEventListener('input', applyFilters));
+  document.getElementById('inv-reset').addEventListener('click', () => {
+    ['inv-search', 'inv-filter-collection', 'inv-filter-category', 'inv-filter-stock', 'inv-filter-status'].forEach(id => { document.getElementById(id).value = ''; });
+    applyFilters();
+  });
+  document.querySelectorAll('[data-stock-view]').forEach(button => button.addEventListener('click', () => {
+    document.getElementById('inv-filter-stock').value = button.dataset.stockView;
+    applyFilters();
+  }));
 }
 
 /* ── Bulk Actions ────────────────────────────────────────── */
 function updateBulkActions() {
   const checkboxes = document.querySelectorAll('.row-checkbox');
-  const selected = Array.from(checkboxes).filter(c => c.checked);
-  const bulkBar = document.getElementById('bulk-actions-bar');
-  const countSpan = document.getElementById('bulk-selected-count');
-  const selectAll = document.getElementById('select-all-checkbox');
-  
-  if (selected.length > 0) {
-    bulkBar.style.display = 'flex';
-    countSpan.textContent = selected.length;
-  } else {
-    bulkBar.style.display = 'none';
-  }
-  
+  const bulkBar    = document.getElementById('bulk-actions-bar');
+  const selectAll  = document.getElementById('select-all-checkbox');
+
+  bulkBar.style.display = selectedIds.size > 0 ? 'flex' : 'none';
+  document.getElementById('bulk-selected-count').textContent = selectedIds.size;
+
   if (selectAll) {
-    selectAll.checked = checkboxes.length > 0 && selected.length === checkboxes.length;
+    selectAll.indeterminate = Array.from(checkboxes).some(c => selectedIds.has(c.value)) && !Array.from(checkboxes).every(c => selectedIds.has(c.value));
+    selectAll.checked = checkboxes.length > 0 &&
+      Array.from(checkboxes).every(c => selectedIds.has(c.value));
   }
+}
+
+function updateStockBar() {
+  document.getElementById('stock-save-bar').style.display = pendingStock.size > 0 ? 'flex' : 'none';
+  document.getElementById('stock-pending-count').textContent = pendingStock.size;
+}
+
+/* Save every queued stock edit in one upsert, then patch local state — no reload. */
+async function handleSaveAllStock() {
+  const btn = document.getElementById('btn-save-stock');
+  if (pendingStock.size === 0) return;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const rows = Array.from(pendingStock, ([id, stock]) => ({
+    product_id: id,
+    stock,
+    low_stock_threshold: allProducts.find(p => p.id === id)?.inventory?.low_stock_threshold ?? 5,
+  }));
+
+  try {
+    const { error } = await supabase.from('inventory').upsert(rows, { onConflict: 'product_id' });
+    if (error) throw error;
+    rows.forEach(r => {
+      const p = allProducts.find(x => x.id === r.product_id);
+      if (p) p.inventory = { ...(p.inventory || {}), ...r };
+    });
+    showToast(`Stock updated for ${rows.length} product(s)`);
+    pendingStock.clear();
+    applyFilters();
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save All Stock';
+  }
+}
+
+async function handleBulkArchive(archive) {
+  if (selectedIds.size === 0) return;
+  const ids = Array.from(selectedIds);
+  const { error } = await supabase.from('products').update({ is_active: !archive }).in('id', ids);
+  if (error) return showToast(error.message, 'error');
+  showToast(`${ids.length} product(s) ${archive ? 'archived' : 'restored'}`);
+  selectedIds.clear();
+  await loadProducts();
 }
 
 /* ── Modal ───────────────────────────────────────────────── */
@@ -189,18 +271,27 @@ function setupModal() {
   document.getElementById('confirm-delete-product')?.addEventListener('click', handleConfirmDeleteProduct);
 
   document.getElementById('select-all-checkbox')?.addEventListener('change', (e) => {
-    document.querySelectorAll('.row-checkbox').forEach(c => c.checked = e.target.checked);
+    document.querySelectorAll('.row-checkbox').forEach(c => {
+      c.checked = e.target.checked;
+      e.target.checked ? selectedIds.add(c.value) : selectedIds.delete(c.value);
+    });
     updateBulkActions();
   });
 
   document.getElementById('btn-bulk-delete')?.addEventListener('click', () => {
-    const selected = Array.from(document.querySelectorAll('.row-checkbox:checked'));
-    if (selected.length === 0) return;
-    
-    const ids = selected.map(c => c.value);
-    document.getElementById('delete-product-id').value = ids.join(',');
-    document.getElementById('delete-product-name').textContent = `${selected.length} selected products`;
+    if (selectedIds.size === 0) return;
+    document.getElementById('delete-product-id').value = Array.from(selectedIds).join(',');
+    document.getElementById('delete-product-name').textContent = `${selectedIds.size} selected products`;
     openModal('delete-product-modal');
+  });
+
+  document.getElementById('btn-bulk-archive')?.addEventListener('click', () => handleBulkArchive(true));
+  document.getElementById('btn-bulk-restore')?.addEventListener('click', () => handleBulkArchive(false));
+
+  document.getElementById('btn-save-stock')?.addEventListener('click', handleSaveAllStock);
+  document.getElementById('btn-discard-stock')?.addEventListener('click', () => {
+    pendingStock.clear();
+    applyFilters();
   });
 
   // Batch Import/Export
@@ -237,9 +328,9 @@ async function handleConfirmDeleteProduct() {
     closeModal('delete-product-modal');
     
     // Reset bulk state
+    selectedIds.clear();
     const selectAll = document.getElementById('select-all-checkbox');
     if (selectAll) selectAll.checked = false;
-    document.getElementById('bulk-actions-bar').style.display = 'none';
     
     await loadProducts();
   } catch (err) {

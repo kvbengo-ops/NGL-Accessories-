@@ -90,10 +90,20 @@ export function renderSidebar(activePage, admin) {
             <span class="sidebar-user-role">${admin?.role || 'admin'}</span>
           </div>
         </div>
-        <button class="sidebar-logout sidebar-theme" id="sidebar-theme" type="button" aria-pressed="false">
-          <span class="material-symbols-outlined">dark_mode</span>
-          <span class="sidebar-theme-label">Dark mode</span>
-        </button>
+        <details class="sidebar-theme" id="sidebar-theme">
+          <summary class="sidebar-logout sidebar-theme-summary">
+            <span class="theme-swatch" id="sidebar-theme-swatch"></span>
+            <span class="sidebar-theme-label"></span>
+            <span class="material-symbols-outlined sidebar-theme-caret">expand_more</span>
+          </summary>
+          <div class="sidebar-theme-menu">
+            ${THEMES.map(t => `
+              <button type="button" class="sidebar-theme-option" data-theme-id="${t.id}">
+                <span class="theme-swatch">${swatchHtml(t)}</span>
+                <span>${t.label}</span>
+              </button>`).join('')}
+          </div>
+        </details>
         <button class="sidebar-logout" id="sidebar-logout">
           <span class="material-symbols-outlined">logout</span>
           Sign out
@@ -116,32 +126,66 @@ export function renderSidebar(activePage, admin) {
   }
 }
 
-/* ── Theme ───────────────────────────────────────────────
-   Admin-only light/dark. The storefront has a single fixed palette, so this
-   deliberately does not touch it. The attribute is set on <html> by an inline
-   snippet in each admin page's <head> — doing it here instead would flash dark
-   before this deferred module runs. */
-const THEME_KEY = 'ngl_admin_theme';
+/* ── Theme ──────────────────────────────
+   Admin-only. The storefront has a single fixed palette, so this deliberately
+   does not touch it. Both attributes are set on <html> by an inline snippet in
+   each admin page's <head> — doing it here instead would flash the default
+   before this deferred module runs.
 
-function applyTheme(theme) {
-  const light = theme === 'light';
-  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+   Adding a theme: add a palette block in style.css and one row here. Light
+   grounds must say mode 'light' so they pick up the component overrides — the
+   mode is mirrored into storage so the inline snippet never has to know the
+   list. */
+const THEME_KEY = 'ngl_admin_theme';
+const MODE_KEY  = 'ngl_admin_mode';
+
+const THEMES = [
+  // swatch = [background, sidebar, accent] — the dropdown preview, kept in
+  // step by hand with the palette blocks in style.css.
+  { id: 'dark',     label: 'Obsidian',        mode: 'dark',   swatch: ['#0a0908', '#0d0c0a', '#d4a853'] },
+  { id: 'light',    label: 'Ivory',           mode: 'light',  swatch: ['#f2efe7', '#fffdf8', '#6b4f10'] },
+  { id: 'forest',   label: 'Forest & Ivory',  mode: 'light',  swatch: ['#F5F4EF', '#203A32', '#315C4B'] },
+  { id: 'ink',      label: 'Ink & Paper',     mode: 'light',  swatch: ['#F4F5F7', '#192536', '#365D91'] },
+  { id: 'stone',    label: 'Warm Stone',      mode: 'light',  swatch: ['#F3F0EB', '#37332F', '#79604B'] },
+  { id: 'wine',     label: 'Wine & Linen',    mode: 'light',  swatch: ['#F7F2EE', '#422832', '#853E55'] },
+  { id: 'plum',     label: 'Plum & Mist',     mode: 'light',  swatch: ['#F4F2F7', '#30283D', '#70518C'] },
+  { id: 'ocean',    label: 'Ocean & Salt',    mode: 'light',  swatch: ['#F0F5F5', '#193A40', '#286C76'] },
+  { id: 'graphite', label: 'Graphite',        mode: 'dark',   swatch: ['#191B1E', '#131518', '#A8B9CA'] },
+  { id: 'brass',    label: 'Midnight Brass',  mode: 'dark',   swatch: ['#1C1B18', '#141310', '#C4A66A'] },
+];
+
+const swatchHtml = (t) => t.swatch.map(c => `<i style="background:${c}"></i>`).join('');
+
+function applyTheme(id) {
+  const theme = THEMES.find(t => t.id === id) || THEMES[0];
+  document.documentElement.dataset.theme = theme.id;
+  document.documentElement.dataset.mode  = theme.mode;
   document.dispatchEvent(new CustomEvent('ngl:admin-theme-change'));
-  const btn = document.getElementById('sidebar-theme');
-  if (!btn) return;
-  btn.setAttribute('aria-pressed', String(light));
-  btn.querySelector('.material-symbols-outlined').textContent = light ? 'light_mode' : 'dark_mode';
-  btn.querySelector('.sidebar-theme-label').textContent = light ? 'Light mode' : 'Dark mode';
+  try {
+    localStorage.setItem(THEME_KEY, theme.id);
+    localStorage.setItem(MODE_KEY, theme.mode);
+  } catch (_) { /* ignore */ }
+  const picker = document.getElementById('sidebar-theme');
+  if (!picker) return;
+  picker.querySelector('#sidebar-theme-swatch').innerHTML = swatchHtml(theme);
+  picker.querySelector('.sidebar-theme-label').textContent = theme.label;
+  picker.querySelectorAll('.sidebar-theme-option').forEach(b =>
+    b.classList.toggle('active', b.dataset.themeId === theme.id));
 }
 
 function initThemeToggle() {
-  let saved = 'dark';
-  try { saved = localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'; } catch (_) { /* ignore */ }
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (_) { /* ignore */ }
   applyTheme(saved);
-  document.getElementById('sidebar-theme')?.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-    try { localStorage.setItem(THEME_KEY, next); } catch (_) { /* ignore */ }
-    applyTheme(next);
+  const picker = document.getElementById('sidebar-theme');
+  picker?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.sidebar-theme-option');
+    if (!btn) return;
+    applyTheme(btn.dataset.themeId);
+    picker.open = false;
+  });
+  document.addEventListener('click', (e) => {
+    if (picker && !picker.contains(e.target)) picker.open = false;
   });
 }
 

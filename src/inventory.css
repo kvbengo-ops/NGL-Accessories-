@@ -1,0 +1,72 @@
+.inventory-page .admin-main { gap: 24px; }
+.inventory-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.inventory-header-actions #btn-add-product { order: -1; }
+.inventory-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.inventory-stat { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 20px; border: 1px solid rgb(var(--adm-accent) / .18); border-radius: 14px; background: var(--adm-card); color: rgb(var(--adm-fg)); text-align: left; font: inherit; cursor: pointer; }
+.inventory-stat[aria-pressed="true"] { border-color: var(--adm-gold); background: rgb(var(--adm-accent) / .09); }
+.inventory-stat > span { font-size: 13px; font-weight: 600; }
+.inventory-stat strong { font-size: 30px; line-height: 1.1; }
+.inventory-stat small { color: rgb(var(--adm-fg) / .65); font-size: 12px; }
+.inventory-filters { padding: 20px; }
+.inventory-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.inventory-section-heading h2 { margin: 0; font-family: var(--font-sans); font-size: 16px; font-weight: 600; color: rgb(var(--adm-fg)); }
+.inventory-section-heading p { margin: 7px 0 0; font-size: 12px; line-height: 1.6; color: rgb(var(--adm-fg) / .65); }
+.inventory-filters .filter-bar { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(4, minmax(125px, 1fr)); align-items: end; margin-top: 16px; gap: 12px; }
+.inventory-filter, .inventory-label { display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: rgb(var(--adm-fg) / .75); min-width: 0; }
+.inventory-label { margin-bottom: 8px; }
+.inventory-page .search-wrap { min-width: 0; }
+.inventory-page .search-icon { top: auto; bottom: 12px; transform: none; }
+.inventory-page .admin-search, .inventory-page .admin-select { width: 100%; min-height: 44px; }
+.inventory-list-heading { padding: 20px; border-bottom: 1px solid rgb(var(--adm-accent) / .12); }
+#inv-result-count { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 400; color: rgb(var(--adm-fg) / .65); }
+.inventory-page #bulk-actions-bar, .inventory-page #stock-save-bar { margin: 12px !important; gap: 12px; flex-wrap: wrap; }
+.inventory-page #bulk-actions-bar { background: rgb(var(--adm-accent) / .08) !important; border-color: rgb(var(--adm-accent) / .2) !important; }
+.inventory-page #bulk-actions-bar > div > span { color: var(--adm-gold) !important; }
+.inventory-page #stock-save-bar > div > span { color: var(--adm-gold) !important; }
+.inventory-page #bulk-actions-bar > div, .inventory-page #stock-save-bar > div { flex-wrap: wrap; }
+.inventory-page .admin-table th, .inventory-page .admin-table td { padding: 14px 12px; }
+.inventory-page .admin-table th { color: rgb(var(--adm-fg) / .65); letter-spacing: .08em; }
+.inventory-page .product-cell { min-width: 165px; }
+.inventory-page .product-cell-name { white-space: normal; overflow-wrap: anywhere; }
+.inventory-page .stock-input { min-height: 44px; width: 72px; }
+.inventory-page .action-btns { flex-wrap: wrap; gap: 6px; }
+.inventory-page .action-btn { width: auto; min-height: 40px; padding: 8px; gap: 5px; font-size: 11px; color: rgb(var(--adm-fg) / .75); border-color: rgb(var(--adm-fg) / .12); }
+.inventory-page .action-btn--edit { color: var(--adm-gold); }
+.inventory-page input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--adm-gold); }
+.inventory-page button:focus-visible, .inventory-page input:focus-visible, .inventory-page select:focus-visible { outline: 2px solid var(--adm-gold); outline-offset: 3px; }
+.inventory-page #product-modal .modal-header { position: sticky; top: 0; background: var(--adm-card); z-index: 2; }
+.inventory-page #product-modal .modal-actions { position: sticky; bottom: 0; background: var(--adm-card); padding-block: 16px; border-top: 1px solid rgb(var(--adm-accent) / .15); }
+@media (max-width: 1250px) {
+  .inventory-filters .filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inventory-filters .search-wrap { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .inventory-page .admin-main { gap: 16px; }
+  .inventory-header-actions { width: 100%; }
+  .inventory-header-actions #btn-add-product { flex-basis: 100%; justify-content: center; }
+  .inventory-header-actions > button { flex: 1; justify-content: center; }
+  .inventory-overview { gap: 8px; }
+  .inventory-stat { padding: 12px 8px; gap: 8px; }
+  .inventory-stat > span { font-size: 11px; }
+  .inventory-stat strong { font-size: 24px; }
+  .inventory-stat small { display: none; }
+  .inventory-filters, .inventory-list-heading { padding: 16px; }
+  .inventory-list-heading > .inventory-filter { width: 100%; }
+  .inventory-page .table-wrap { overflow: visible; }
+  #inventory-table, #inventory-body { display: block; width: 100%; }
+  #inventory-table thead { display: block; position: static; }
+  #inventory-table thead tr { display: block; }
+  #inventory-table thead th { display: none; }
+  #inventory-table thead th:first-child { display: flex; align-items: center; gap: 10px; width: 100% !important; }
+  #inventory-table thead th:first-child::after { content: 'Select all visible products'; letter-spacing: 0; text-transform: none; }
+  #inventory-body tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 12px; padding: 12px; gap: 12px; border: 1px solid rgb(var(--adm-accent) / .18); border-radius: 10px; }
+  #inventory-body td { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  #inventory-body td::before { content: attr(data-label); font-size: 10px; color: rgb(var(--adm-fg) / .6); }
+  #inventory-body td:nth-child(1), #inventory-body td:nth-child(2), #inventory-body td:last-child { grid-column: 1 / -1; }
+  #inventory-body td:first-child { flex-direction: row; align-items: center; }
+  #inventory-body td:nth-child(2)::before, #inventory-body .table-empty::before, #inventory-body .table-loading::before { display: none; }
+  #inventory-body .product-cell { min-width: 0; }
+  #inventory-body .action-btns { width: 100%; }
+  #inventory-body .action-btn { flex: 1; min-height: 44px; }
+  #inventory-body .table-empty, #inventory-body .table-loading { grid-column: 1 / -1; padding: 20px 0; }
+}

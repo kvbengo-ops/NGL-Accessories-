@@ -300,6 +300,13 @@ function buildSwipeCard(product) {
     openModal(product);
   });
 
+  const compactOpen = document.createElement('button');
+  compactOpen.type = 'button';
+  compactOpen.className = 'compact-product-open';
+  compactOpen.setAttribute('aria-label', `View ${product.name}, ${formatPrice(product.price)} details`);
+  compactOpen.addEventListener('click', () => openModal(product));
+  card.appendChild(compactOpen);
+
   // Double tap to like
   const likeNumEl = card.querySelector('.pc-like-n');
   let lastTap = 0;
@@ -1102,4 +1109,3 @@ initShop().then(() => {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeFullscreen();
   });
 })();
-

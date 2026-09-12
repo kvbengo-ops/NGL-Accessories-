@@ -9,16 +9,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
-  <script>try{if(localStorage.getItem('ngl_admin_theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
+  <link rel="stylesheet" href="/src/support-admin.css">
+  <script>try{var d=document.documentElement.dataset;d.theme=localStorage.getItem('ngl_admin_theme')||'dark';d.mode=localStorage.getItem('ngl_admin_mode')||'dark'}catch(e){}</script>
 </head>
-<body class="admin-page">
+<body class="admin-page live-chat-page">
   <div id="sidebar-container"></div>
   
   <main class="admin-main">
     <div class="admin-header">
       <div class="admin-header-title">
-        <h1>Live Chat</h1>
-        <p>Support your customers in real time.</p>
+        <h1 class="admin-page-title">Live Chat</h1>
+        <p class="admin-page-subtitle">Customer conversations, all in one inbox.</p>
       </div>
     </div>
 
@@ -27,7 +28,11 @@
         <!-- Left Pane: Queue -->
         <div class="support-queue" id="support-queue">
           <div class="support-queue-header">
-            <h3>Active Conversations</h3>
+            <div class="chat-inbox-heading"><h2>Inbox</h2><span id="chat-queue-count" aria-live="polite"></span><button type="button" id="chat-refresh" class="btn-admin-ghost" aria-label="Refresh conversations">Refresh</button></div>
+            <label class="chat-field" for="chat-search">Search conversations</label>
+            <input type="search" id="chat-search" placeholder="Name, email or message" class="admin-search">
+            <label class="chat-field" for="chat-filter">Show</label>
+            <select id="chat-filter" class="admin-select"><option value="open">Open conversations</option><option value="needs_human">Needs a reply</option><option value="mine">Assigned to me</option><option value="resolved">Resolved</option><option value="all">All conversations</option></select>
           </div>
           <div class="support-queue-list" id="support-queue-list">
             <!-- Queue items populate here -->
@@ -39,18 +44,20 @@
         <div class="support-thread" id="support-thread">
           <div class="support-empty-state" id="support-thread-empty">
             <span class="material-symbols-outlined">forum</span>
-            <p>Select a conversation to view.</p>
+            <h2>Your customer inbox</h2><p>Choose a conversation to read its history and reply. Chats needing a person appear first.</p>
           </div>
           
           <div class="support-thread-content hidden" id="support-thread-content">
             <div class="support-thread-header">
+              <button type="button" id="chat-back" class="btn-admin-ghost" aria-label="Back to inbox">← Inbox</button>
               <div class="support-thread-info">
                 <h3 id="support-thread-name">Customer</h3>
+                <p id="support-thread-email"></p>
                 <span class="status-badge" id="support-thread-status">Status</span>
               </div>
               <div class="support-thread-actions">
-                <button class="btn-outline" id="btn-takeover">Take Over</button>
-                <button class="btn-primary" id="btn-resolve">Resolve</button>
+                <button class="btn-admin-ghost" id="btn-takeover">Assign to me</button>
+                <button class="btn-admin-primary" id="btn-resolve">Mark resolved</button>
               </div>
             </div>
             
@@ -58,11 +65,15 @@
               <!-- Thread messages -->
             </div>
             
+            <div class="chat-composer">
+            <p id="chat-reply-hint" role="status"></p>
             <div class="support-thread-input">
-              <textarea id="support-admin-input" placeholder="Type your reply..." rows="1" disabled></textarea>
-              <button id="support-admin-send" class="btn-primary" disabled>
-                <span class="material-symbols-outlined">send</span>
+              <textarea id="support-admin-input" aria-label="Reply to customer" aria-describedby="chat-reply-hint" placeholder="Write a reply…" rows="2" disabled></textarea>
+              <button id="support-admin-send" class="btn-admin-primary" disabled>
+                <span>Send</span><span class="material-symbols-outlined" aria-hidden="true">send</span>
               </button>
+            </div>
+            <small class="chat-keyboard-hint">Enter to send · Shift + Enter for a new line</small>
             </div>
           </div>
         </div>

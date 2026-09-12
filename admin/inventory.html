@@ -10,9 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
-  <script>try{if(localStorage.getItem('ngl_admin_theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
+  <link rel="stylesheet" href="/src/inventory.css" />
+  <script>try{var d=document.documentElement.dataset;d.theme=localStorage.getItem('ngl_admin_theme')||'dark';d.mode=localStorage.getItem('ngl_admin_mode')||'dark'}catch(e){}</script>
 </head>
-<body class="admin-page">
+<body class="admin-page inventory-page">
   <div id="sidebar-container"></div>
 
   <main class="admin-main">
@@ -21,7 +22,7 @@
         <h1 class="admin-page-title">Inventory</h1>
         <p class="admin-page-subtitle">Manage products and stock levels</p>
       </div>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <div class="inventory-header-actions">
         <button class="admin-header-btn" id="btn-export-csv" style="background: transparent; border: 1px solid rgb(var(--adm-fg) / 0.2); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), 0.8));">
           <span class="material-symbols-outlined">download</span>
           Export CSV
@@ -37,49 +38,79 @@
       </div>
     </header>
 
-    <!-- Filters -->
+    <section class="inventory-overview" aria-label="Inventory overview">
+      <button class="inventory-stat" data-stock-view="" aria-pressed="true"><span>All products</span><strong id="inv-total">—</strong><small>Browse your catalog</small></button>
+      <button class="inventory-stat" data-stock-view="low" aria-pressed="false"><span>Low stock</span><strong id="inv-low">—</strong><small>Ready for restocking</small></button>
+      <button class="inventory-stat" data-stock-view="out" aria-pressed="false"><span>Out of stock</span><strong id="inv-out">—</strong><small>Needs attention</small></button>
+    </section>
+
+    <section class="admin-card inventory-filters" aria-label="Find products">
+    <div class="inventory-section-heading"><h2>Find products</h2><button type="button" class="btn-admin-ghost" id="inv-reset">Clear filters</button></div>
     <div class="filter-bar">
       <div class="search-wrap">
+        <label for="inv-search" class="inventory-label">Search by name</label>
         <span class="material-symbols-outlined search-icon">search</span>
         <input type="text" id="inv-search" class="admin-search" placeholder="Search products…" />
       </div>
-      <select id="inv-filter-collection" class="admin-select">
+      <label class="inventory-filter"><span>Collection</span><select id="inv-filter-collection" class="admin-select">
         <option value="">All Collections</option>
         <option value="Natural">Natural</option>
         <option value="Grace">Grace</option>
         <option value="Lush">Lush</option>
-      </select>
-      <select id="inv-filter-category" class="admin-select">
+      </select></label>
+      <label class="inventory-filter"><span>Category</span><select id="inv-filter-category" class="admin-select">
         <option value="">All Categories</option>
         <option value="Earrings">Earrings</option>
         <option value="Rings">Rings</option>
         <option value="Bracelets">Bracelets</option>
         <option value="Necklaces">Necklaces</option>
         <option value="Anklets">Anklets</option>
-      </select>
-      <select id="inv-filter-stock" class="admin-select">
+      </select></label>
+      <label class="inventory-filter"><span>Stock level</span><select id="inv-filter-stock" class="admin-select">
         <option value="">All Stock</option>
         <option value="low">Low Stock</option>
         <option value="out">Out of Stock</option>
-      </select>
+      </select></label>
+      <label class="inventory-filter"><span>Visibility</span><select id="inv-filter-status" class="admin-select"><option value="">Active &amp; archived</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
     </div>
+    </section>
 
     <!-- Table -->
-    <section class="admin-card">
+    <section class="admin-card inventory-list">
+      <div class="inventory-section-heading inventory-list-heading">
+        <div><h2>Products <span id="inv-result-count" aria-live="polite"></span></h2><p>Update quantities in the Stock field, then select Save All Stock.</p></div>
+        <label class="inventory-filter"><span>Sort by</span><select id="inv-sort" class="admin-select"><option value="name">Name: A–Z</option><option value="stock">Stock: lowest first</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select></label>
+      </div>
       <!-- Bulk Actions Bar -->
       <div id="bulk-actions-bar" style="display: none; align-items: center; justify-content: space-between; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="material-symbols-outlined" style="color: rgb(var(--adm-red)); font-size: 20px;">info</span>
           <span style="color: rgb(var(--adm-red)); font-weight: 500;"><span id="bulk-selected-count">0</span> items selected</span>
         </div>
-        <button class="btn-admin-primary" id="btn-bulk-delete" style="background: #ef4444; border-color: #ef4444; color: #fff; padding: 6px 16px; font-size: 13px;">Delete Selected</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-admin-ghost" id="btn-bulk-archive" style="padding: 6px 16px; font-size: 13px;">Archive</button>
+          <button class="btn-admin-ghost" id="btn-bulk-restore" style="padding: 6px 16px; font-size: 13px;">Restore</button>
+          <button class="btn-admin-primary" id="btn-bulk-delete" style="background: #ef4444; border-color: #ef4444; color: #fff; padding: 6px 16px; font-size: 13px;">Delete Selected</button>
+        </div>
+      </div>
+
+      <!-- Unsaved Stock Bar -->
+      <div id="stock-save-bar" style="display: none; align-items: center; justify-content: space-between; background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.25); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: #a16207; font-size: 20px;">inventory_2</span>
+          <span style="color: #a16207; font-weight: 500;"><span id="stock-pending-count">0</span> unsaved stock change(s)</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-admin-ghost" id="btn-discard-stock" style="padding: 6px 16px; font-size: 13px;">Discard</button>
+          <button class="btn-admin-primary" id="btn-save-stock" style="padding: 6px 16px; font-size: 13px;">Save All Stock</button>
+        </div>
       </div>
 
       <div class="table-wrap">
         <table class="admin-table" id="inventory-table">
           <thead>
             <tr>
-              <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-checkbox" style="cursor: pointer;" /></th>
+              <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-checkbox" aria-label="Select all visible products" style="cursor: pointer;" /></th>
               <th>Product</th>
               <th>Collection</th>
               <th>Category</th>
@@ -312,6 +343,5 @@
   <script type="module" src="/src/inventory.js"></script>
 </body>
 </html>
-
 
 

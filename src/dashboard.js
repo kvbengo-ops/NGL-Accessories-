@@ -79,18 +79,12 @@ function startTour() {
   // Greeting
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('dashboard-greeting').textContent = `${greeting}, ${admin.name} ✦`;
+  document.getElementById('dashboard-greeting').textContent = `${greeting}, ${admin.name}.`;
 
   // Tour Logic
   const btnStartTour = document.getElementById('btn-start-tour');
   if (btnStartTour) {
     btnStartTour.addEventListener('click', startTour);
-  }
-  if (!localStorage.getItem('ngl_admin_tour_seen')) {
-    setTimeout(() => {
-      startTour();
-      localStorage.setItem('ngl_admin_tour_seen', 'true');
-    }, 1000);
   }
 
   // Load all data in parallel
@@ -176,27 +170,23 @@ function startTour() {
   if (canvas) {
     drawChart(canvas, salesData);
     document.addEventListener('ngl:admin-theme-change', () => drawChart(canvas, salesData));
+    new ResizeObserver(() => drawChart(canvas, salesData)).observe(canvas.parentElement);
   }
 
   // ── Recent Orders ─────────────────────────────────────────
   const tbody = document.getElementById('recent-orders-body');
-  const recent = orders.slice(0, 10);
-  if (recent.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No orders yet</td></tr>';
-  } else {
-    tbody.innerHTML = recent.map(o => `
-      <tr>
-        <td class="order-num">${o.order_number}</td>
-        <td>${escapeHtml(o.customer_name) || '—'}</td>
-        <td><span class="type-badge type-badge--${o.type}">${o.type}</span></td>
-        <td>${formatPrice(o.total)}</td>
-        <td>${statusBadge(o.status)}</td>
-        <td class="date-cell">${formatDate(o.created_at)}</td>
-      </tr>
-    `).join('');
-  }
+  const recent = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+  tbody.innerHTML = recent.length ? recent.map(o => {
+    const date = new Date(o.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const channel = o.type === 'pos' ? 'In store' : o.type === 'online' ? 'Online' : o.type || '';
+    const status = String(o.status || 'Unknown').replaceAll('_', ' ');
+    return `<tr>
+      <td><span class="recent-order-customer">${escapeHtml(o.customer_name || 'Walk-in customer')}</span><span class="recent-order-meta">${escapeHtml(String(o.order_number || '?'))} ? ${escapeHtml(date)}${channel ? ' ? ' + escapeHtml(channel) : ''}</span></td>
+      <td><span class="recent-order-status">${escapeHtml(status)}</span></td>
+      <td class="recent-order-amount">${formatPrice(o.total)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="3" class="recent-orders-empty">No orders yet. New orders will appear here.</td></tr>';
 
-  // ── My Pending Tasks ──────────────────────────────────────
   const tasksTbody = document.getElementById('pending-tasks-body');
   if (tasksTbody) {
     if (myTasks.length === 0) {
@@ -274,15 +264,14 @@ function startTour() {
 function drawChart(canvas, data) {
   const ctx = canvas.getContext('2d');
   // Canvas pixels do not inherit CSS when the theme changes; resolve and redraw.
-  const styles = getComputedStyle(document.documentElement);
+  const styles = getComputedStyle(canvas);
   const color = (name) => styles.getPropertyValue(name).trim();
   const dpr = window.devicePixelRatio || 1;
-  const W   = canvas.parentElement.offsetWidth;
-  const H   = 220;
+  const W   = canvas.getBoundingClientRect().width;
+  const H   = canvas.getBoundingClientRect().height;
+  if (!W || !H) return;
   canvas.width  = W * dpr;
   canvas.height = H * dpr;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
   ctx.scale(dpr, dpr);
 
   // Build last 7 days labels

@@ -1,0 +1,66 @@
+.orders-page .admin-main { gap: 28px; }
+.orders-page .admin-header { padding-bottom: 24px; border-bottom: 1px solid rgb(var(--adm-fg) / .15); }
+.orders-page #btn-export-csv { min-height: 44px; gap: 8px; display: inline-flex; align-items: center; font-size: 12px; }
+.orders-page .filter-bar { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(2, minmax(140px, 1fr)) auto; align-items: end; gap: 16px; }
+.orders-page .search-wrap { min-width: 0; }
+.orders-page .search-wrap label, .orders-filter { display: flex; flex-direction: column; gap: 8px; font-size: 11px; color: rgb(var(--adm-fg) / .65); }
+.orders-page .search-wrap label { margin-bottom: 8px; }
+.orders-page .search-icon { top: auto; bottom: 12px; transform: none; }
+.orders-page .admin-search, .orders-page .admin-select { width: 100%; border-radius: 4px; min-height: 44px; }
+.orders-page #orders-clear { min-height: 44px; font-size: 12px; }
+.orders-ledger { border-top: 2px solid rgb(var(--adm-fg) / .55); min-width: 0; }
+.orders-list-heading { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0; color: rgb(var(--adm-fg) / .65); font-size: 11px; }
+.orders-list-heading p { margin: 0; }
+.orders-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.orders-table th { font-size: 11px; font-weight: 400; color: rgb(var(--adm-fg) / .6); text-align: left; padding: 0 16px 12px 0; border-bottom: 1px solid rgb(var(--adm-fg) / .2); }
+.orders-table th:first-child { width: 46%; }
+.orders-table th:nth-child(2) { width: 22%; }
+.orders-table th:nth-child(3) { width: 20%; text-align: right; }
+.orders-table th:last-child { width: 12%; padding-right: 0; text-align: right; }
+.orders-table td { padding: 22px 16px 22px 0; border-bottom: 1px solid rgb(var(--adm-fg) / .1); vertical-align: middle; overflow-wrap: anywhere; }
+.orders-customer { display: block; font-size: 14px; font-weight: 500; color: rgb(var(--adm-fg) / .95); line-height: 1.5; }
+.orders-meta { display: block; font-size: 11px; line-height: 1.7; margin-top: 4px; color: rgb(var(--adm-fg) / .6); }
+.orders-page .status-select { width: 100%; max-width: 165px; min-height: 44px; background-color: transparent; border: 1px solid rgb(var(--adm-fg) / .18); color: rgb(var(--adm-fg) / .85); font-size: 12px; border-radius: 4px; padding: 8px; text-transform: none; }
+.orders-page .status-select option { background: var(--adm-card); color: rgb(var(--adm-fg)); }
+.orders-amount { font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; color: rgb(var(--adm-fg) / .95); text-align: right; }
+.orders-table .orders-detail-cell { padding-right: 0; text-align: right; }
+.orders-view { background: transparent; color: rgb(var(--adm-fg) / .8); border: 0; min-height: 44px; font: 12px var(--font-sans); text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+.orders-page button:focus-visible, .orders-page select:focus-visible, .orders-page input:focus-visible { outline: 2px solid var(--adm-gold); outline-offset: 3px; }
+.orders-page .admin-modal { border-radius: 6px; }
+.orders-page .modal-header { border-bottom: 1px solid rgb(var(--adm-fg) / .15); }
+.orders-page .order-detail-heading { color: rgb(var(--adm-fg) / .7); letter-spacing: .04em; }
+.orders-page .order-detail-content { overflow-wrap: anywhere; }
+.orders-page .order-detail-content .type-badge, .orders-page .order-detail-content .status-badge { background: transparent; border: 0; padding: 0; color: rgb(var(--adm-fg) / .85); letter-spacing: 0; text-transform: capitalize; }
+.orders-page .order-detail-content .status-badge::before { display: none; }
+@media (max-width: 850px) {
+  .orders-page .filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .orders-page .search-wrap { grid-column: 1 / -1; }
+  .orders-page #orders-clear { grid-column: 1 / -1; justify-self: end; }
+}
+@media (max-width: 600px) {
+  .orders-page .admin-main { gap: 20px; }
+  .orders-table, .orders-table tbody { display: block; }
+  .orders-table thead { display: none; }
+  .orders-table tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, auto); gap: 12px; padding: 20px 0; border-bottom: 1px solid rgb(var(--adm-fg) / .15); }
+  .orders-table td { display: block; min-width: 0; padding: 0; border: 0; }
+  .orders-customer-cell { grid-column: 1; grid-row: 1; }
+  .orders-amount { grid-column: 2; grid-row: 1; }
+  .orders-status-cell { grid-column: 1; grid-row: 2; }
+  .orders-detail-cell { grid-column: 2; grid-row: 2; }
+  .orders-table .table-empty, .orders-table .table-loading { grid-column: 1 / -1; }
+  .orders-page .status-select { font-size: 16px; }
+}
+.orders-ledger .table-wrap { overflow: visible; }
+.order-status-picker { position: relative; width: fit-content; max-width: 100%; }
+.order-status-picker summary { list-style: none; display: inline-flex; gap: 6px; align-items: center; min-height: 36px; padding: 4px 0; font-size: 12px; color: rgb(var(--adm-fg) / .8); text-transform: capitalize; cursor: pointer; }
+.order-status-picker summary::-webkit-details-marker { display: none; }
+.order-status-picker summary > span { color: rgb(var(--adm-fg) / .5); }
+.order-status-picker summary:focus-visible { outline: 2px solid var(--adm-gold); outline-offset: 3px; }
+.order-status-picker[open] summary { color: var(--adm-gold); }
+.order-status-options { position: absolute; top: 100%; left: 0; z-index: 5; width: 155px; padding: 5px; background: var(--adm-card); border: 1px solid rgb(var(--adm-fg) / .2); border-radius: 6px; box-shadow: 0 8px 24px #0002; }
+.order-status-options button { width: 100%; min-height: 38px; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; font: 12px var(--font-sans); color: rgb(var(--adm-fg) / .85); background: transparent; border: 0; border-radius: 3px; text-align: left; cursor: pointer; }
+.order-status-options button:hover:not(:disabled) { background: rgb(var(--adm-fg) / .06); }
+.order-status-options button[aria-current] { color: var(--adm-gold); cursor: default; }
+@media (pointer: coarse) {
+  .order-status-picker summary, .order-status-options button { min-height: 44px; }
+}
