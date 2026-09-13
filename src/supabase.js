@@ -11,22 +11,26 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 /* ── Image caching proxy helper ───────────────────────────── */
 // Rewrites a Supabase Storage URL to go through our Cloudflare Worker's
 // /img/* route, which caches the image at the edge for 30 days.
-// Falls back to the original URL in local dev (no Worker running).
 //
-// Usage:  cfImg(product.image_url)
-//         cfImg(product.image_url, '?width=400')  // future: image transform params
-const SUPABASE_STORAGE_PREFIX = `${(SUPABASE_URL || '').replace(/\/$/, '')}/storage/v1/object/public/`;
+// Pass `size` to get a resized copy (Supabase image transformations): the
+// photo is scaled to fit inside a size×size box — never cropped — and served
+// as WebP. Uploads are 1–3 MB originals, so always pass a size for display.
+//
+// Usage:  cfImg(product.image_url, 600)   // card
+//         cfImg(product.image_url)        // untouched original
+const SUPABASE_BASE = (SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_STORAGE_PREFIX = `${SUPABASE_BASE}/storage/v1/object/public/`;
 
-export function cfImg(url) {
-  if (!url) return '';
-  // In local dev the Worker proxy doesn't run, so serve directly from Supabase.
-  if (import.meta.env.DEV) return url;
-  // Strip the Supabase storage origin and rewrite to /img/<path>
-  if (url.startsWith(SUPABASE_STORAGE_PREFIX)) {
-    return '/img/' + url.slice(SUPABASE_STORAGE_PREFIX.length);
+export function cfImg(url, size) {
+  // Not a Supabase Storage URL (or already rewritten) — return as-is.
+  if (!url || !url.startsWith(SUPABASE_STORAGE_PREFIX)) return url || '';
+  const path = url.slice(SUPABASE_STORAGE_PREFIX.length);
+  const qs = size ? `?width=${size}&height=${size}&resize=contain&quality=75` : '';
+  // In local dev the Worker proxy doesn't run, so hit Supabase directly.
+  if (import.meta.env.DEV) {
+    return size ? `${SUPABASE_BASE}/storage/v1/render/image/public/${path}${qs}` : url;
   }
-  // Not a Supabase Storage URL — return as-is.
-  return url;
+  return `/img/${path}${qs}`;
 }
 
 /* ── Product helpers ─────────────────────────────────────── */

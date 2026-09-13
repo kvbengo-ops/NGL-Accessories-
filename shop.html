@@ -164,9 +164,9 @@
       <!-- Header -->
       <div class="shop-header">
         <span class="label-caps gold reveal-up-el" style="--d:0ms">Browse &amp; Shop</span>
-        <h1 class="shop-title reveal-up-el" style="--d:100ms">Find Your Perfect Piece</h1>
+        <h1 class="shop-title reveal-up-el" style="--d:100ms">A little <em>spark.</em><br />A lot of you.</h1>
         <p class="shop-subtitle reveal-up-el" style="--d:200ms">
-          Swipe right to add to cart — or flip to Browse All for the full collection.
+          Everyday pieces. Unexpected favorites. Find the one that feels like you.
         </p>
         <div class="view-toggle reveal-up-el" style="--d:300ms" role="group" aria-label="Product view mode">
           <button class="view-btn active" id="btn-swipe-view" aria-pressed="true">
@@ -186,6 +186,8 @@
 
       <!-- ── SWIPE VIEW ── -->
       <div class="swipe-view" id="swipe-view">
+        <details class="discovery-filters" id="discovery-filters">
+          <summary><span class="material-symbols-outlined" aria-hidden="true">tune</span><span>Filters</span><span id="discovery-filter-summary">All pieces</span><span class="material-symbols-outlined filter-chevron" aria-hidden="true">expand_more</span></summary>
         <div class="shop-filters">
           <div class="collection-tabs" id="swipe-collection-tabs" role="tablist" aria-label="Filter by collection">
             <button class="collection-tab active" role="tab" aria-selected="true" data-col="all">All</button>
@@ -203,7 +205,9 @@
             <button class="category-chip" aria-pressed="false" data-cat="Anklets">Anklets</button>
           </div>
           <p class="filter-count" id="swipe-count" aria-live="polite"></p>
+          <button class="discovery-filter-done" id="discovery-filter-done" type="button">Show pieces</button>
         </div>
+        </details>
         <div class="swipe-hint" aria-hidden="true">
           <div class="hint-chip hint-chip--skip">
             <span class="material-symbols-outlined">close</span> Skip
@@ -218,10 +222,12 @@
         <div class="swipe-actions" id="swipe-actions">
           <button class="swipe-btn swipe-btn--skip" id="btn-action-skip" aria-label="Skip this product">
             <span class="material-symbols-outlined">close</span>
+            <span class="swipe-action-label">Skip</span>
           </button>
           <span class="swipe-counter" id="swipe-counter" aria-live="polite">1 / 9</span>
           <button class="swipe-btn swipe-btn--like" id="btn-action-like" aria-label="Add product to cart">
-            <span class="material-symbols-outlined">favorite</span>
+            <span class="material-symbols-outlined">add_shopping_cart</span>
+            <span class="swipe-action-label">Add to cart</span>
           </button>
         </div>
 

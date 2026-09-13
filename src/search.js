@@ -142,7 +142,7 @@ function renderResults(query) {
       <a class="search-result" role="option" href="/shop.html?product=${encodeURIComponent(p.id)}">
         <span class="search-result-thumb">${
           p.image
-            ? `<img src="${cfImg(p.image)}" alt="" loading="lazy" />`
+            ? `<img src="${cfImg(p.image, 240)}" alt="" loading="lazy" />`
             : `<span class="material-symbols-outlined">diamond</span>`
         }</span>
         <span class="search-result-info">

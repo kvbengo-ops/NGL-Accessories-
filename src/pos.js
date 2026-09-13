@@ -32,7 +32,7 @@ function renderProductGrid(prods) {
     return `
       <button class="pos-product-tile" data-id="${p.id}" title="${p.name}">
         ${p.image_url
-          ? `<img src="${cfImg(p.image_url)}" alt="${p.name}" class="pos-tile-img" />`
+          ? `<img src="${cfImg(p.image_url, 400)}" alt="${p.name}" class="pos-tile-img" />`
           : `<div class="pos-tile-placeholder"><span class="material-symbols-outlined">diamond</span></div>`
         }
         <div class="pos-tile-info">

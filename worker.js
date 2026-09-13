@@ -31,9 +31,18 @@ async function handleImageProxy(request, env) {
   const storagePath = url.pathname.replace(/^\/img\//, ''); // e.g. "products/ring-gold.jpg"
   const supabaseUrl = (env.SUPABASE_URL || 'https://vevzlrnwhckuekkvujhq.supabase.co')
     .replace(/\/$/, '');
-  const originUrl = `${supabaseUrl}/storage/v1/object/public/${storagePath}${url.search}`;
+  // A query string (?width=…&height=…&resize=contain, built by cfImg) asks for a
+  // resized copy via Supabase image transformations.
+  // ponytail: product-images only — transforms bill per distinct origin image,
+  // so /img/ must not become a free resizer for every public bucket.
+  const transform = url.search && storagePath.startsWith('product-images/');
+  const endpoint = transform ? 'render/image' : 'object';
+  const originUrl = `${supabaseUrl}/storage/v1/${endpoint}/public/${storagePath}${url.search}`;
 
   const originResp = await fetch(originUrl, {
+    // Supabase only converts to WebP when the request says it's accepted;
+    // without this every resize comes back as a (much larger) PNG.
+    headers: { Accept: 'image/webp,image/*' },
     cf: { cacheEverything: true, cacheTtl: 2592000 }, // 30 days at Cloudflare layer
   });
 

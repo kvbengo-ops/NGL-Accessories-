@@ -146,7 +146,7 @@ function addToCart(product) {
       name: product.name,
       collection: product.categoryLabel,
       price: product.price, // Number
-      image_url: cfImg(product.image),
+      image_url: product.image, // raw URL; checkout sizes it with cfImg()
       stock: product.stock,
       quantity: 1
     });
@@ -199,7 +199,7 @@ let modalProduct = null;
 
 function openModal(product) {
   modalProduct = product;
-  modalImg.src        = product.image || '';
+  modalImg.src        = cfImg(product.image, 1000);
   modalImg.alt        = product.name;
   modalBadge.className = `modal-category-badge modal-badge--${product.category}`;
   modalBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:10px">${product.emoji}</span>${product.categoryLabel}`;
@@ -270,7 +270,7 @@ function buildSwipeCard(product) {
       </div>
     </div>
     ${product.image ? `<div class="card-image" style="position:relative;">
-      <img src="${cfImg(product.image)}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <img src="${cfImg(product.image, 800)}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>
@@ -521,34 +521,26 @@ function buildProductCard(product) {
   card.dataset.id = product.id;
   card.innerHTML = `
     <div class="product-card-image" style="position:relative;">
-      <img src="${product.image}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <img src="${cfImg(product.image, 600)}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>
         <span class="pc-like-n">${product.likes}</span>
       </div>
-      <div class="product-card-overlay" aria-hidden="true">
-        <button class="overlay-quick-add" aria-label="Add ${product.name} to cart" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
-          <span class="material-symbols-outlined">${product.stock <= 0 ? 'block' : 'add_shopping_cart'}</span>
-          ${product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
-        </button>
-      </div>
+      <button class="product-photo-open" aria-label="View ${product.name} details"></button>
+      <button class="grid-like-btn product-like-action" aria-label="Like ${product.name}">
+        <span class="material-symbols-outlined">favorite</span>
+      </button>
     </div>
     <div class="product-card-body">
       <span class="product-card-badge badge--${product.category}">${product.categoryLabel}</span>
-      <h3 class="product-card-name">${product.name}</h3>
+      <h3 class="product-card-name"><button class="product-name-link grid-view-btn">${product.name}</button></h3>
       <div class="product-card-footer">
         <span class="product-card-price">${formatPrice(product.price)}</span>
         <div class="product-card-actions">
-          <button class="card-view-btn grid-view-btn" aria-label="View ${product.name} details">
-            <span class="material-symbols-outlined">open_in_full</span>
-          </button>
-          <button class="card-view-btn grid-like-btn" aria-label="Like ${product.name}" style="transition: color 0.3s">
-            <span class="material-symbols-outlined">favorite</span>
-          </button>
           <button class="btn-add-cart" aria-label="Add ${product.name} to cart" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
             <span class="material-symbols-outlined">${product.stock <= 0 ? 'block' : 'add_shopping_cart'}</span>
-            ${product.stock <= 0 ? 'Out of Stock' : 'Add'}
+            ${product.stock <= 0 ? 'Sold out' : 'Add to bag'}
           </button>
         </div>
       </div>
@@ -573,7 +565,7 @@ function buildProductCard(product) {
       btn.classList.remove('added');
       btn.innerHTML = isOverlay
         ? `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`
-        : `<span class="material-symbols-outlined">add_shopping_cart</span> Add`;
+        : `<span class="material-symbols-outlined">add_shopping_cart</span> Add to bag`;
     }, 2000);
   }
 
@@ -603,30 +595,7 @@ function buildProductCard(product) {
     }
   });
 
-  // Compact grid (≤1100px): full-card tap target that opens the details modal
-  const compactOpen = document.createElement('button');
-  compactOpen.type = 'button';
-  compactOpen.className = 'compact-product-open';
-  compactOpen.setAttribute('aria-label', `View ${product.name}, ${formatPrice(product.price)} details`);
-  compactOpen.addEventListener('click', () => openModal(product));
-  card.appendChild(compactOpen);
-
-  // Double tap to like
-  let lastTap = 0;
-  card.querySelector('.product-card-image')?.addEventListener('click', function(e) {
-    const now = new Date().getTime();
-    const timesince = now - lastTap;
-    if (timesince < 400 && timesince > 0) {
-      // Double tap!
-      trackEngagement(product.id, 'like');
-      bumpLikes();
-      const heart = this.querySelector('.like-heart-burst');
-      heart.classList.remove('animate');
-      void heart.offsetWidth; // trigger reflow
-      heart.classList.add('animate');
-    }
-    lastTap = new Date().getTime();
-  });
+  card.querySelector('.product-photo-open')?.addEventListener('click', () => openModal(product));
 
   return card;
 }
@@ -769,12 +738,30 @@ function setupCategoryChips(chipsEl, onChange) {
 }
 
 // Discover (swipe) filters
+const discoveryFilters = document.getElementById('discovery-filters');
+function updateDiscoveryFilterSummary() {
+  const selected = [
+    swipeFilterCollection !== 'all' && document.querySelector('#swipe-collection-tabs .active')?.textContent,
+    swipeFilterCategory !== 'all' && swipeFilterCategory,
+  ].filter(Boolean);
+  const summary = document.getElementById('discovery-filter-summary');
+  if (summary) summary.textContent = selected.join(' · ') || 'All pieces';
+}
+discoveryFilters?.addEventListener('toggle', () => {
+  if (discoveryFilters.open) moveIndicator(document.getElementById('swipe-collection-tabs'));
+});
+document.getElementById('discovery-filter-done')?.addEventListener('click', () => {
+  discoveryFilters.open = false;
+  discoveryFilters.querySelector('summary').focus();
+});
 setupCollectionTabs(document.getElementById('swipe-collection-tabs'), (tab) => {
   swipeFilterCollection = tab.dataset.col;
+  updateDiscoveryFilterSummary();
   initSwipeStack();
 });
 setupCategoryChips(document.getElementById('swipe-category-chips'), (chip) => {
   swipeFilterCategory = chip.dataset.cat;
+  updateDiscoveryFilterSummary();
   initSwipeStack();
 });
 
@@ -785,6 +772,7 @@ window.addEventListener('resize', () => {
 });
 
 function showSwipeView() {
+  const isSwitching = swipeViewEl?.classList.contains('hidden');
   swipeViewEl?.classList.remove('hidden');
   gridViewEl?.classList.add('hidden');
   btnSwipe?.classList.add('active');
@@ -793,9 +781,11 @@ function showSwipeView() {
   btnGrid?.setAttribute('aria-pressed', 'false');
   initSwipeStack();
   requestAnimationFrame(() => moveIndicator(document.getElementById('swipe-collection-tabs')));
+  if (isSwitching) animateViewChange(swipeViewEl);
 }
 
 function showGridView() {
+  const isSwitching = gridViewEl?.classList.contains('hidden');
   gridViewEl?.classList.remove('hidden');
   swipeViewEl?.classList.add('hidden');
   btnGrid?.classList.add('active');
@@ -804,6 +794,15 @@ function showGridView() {
   btnSwipe?.setAttribute('aria-pressed', 'false');
   renderGrid();
   requestAnimationFrame(() => moveIndicator(document.getElementById('grid-collection-tabs')));
+  if (isSwitching) animateViewChange(gridViewEl);
+}
+
+function animateViewChange(view) {
+  if (!view || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  view.getAnimations().forEach(animation => animation.cancel());
+  view.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }], {
+    duration: 220, easing: 'ease-out',
+  });
 }
 
 btnSwipe?.addEventListener('click', showSwipeView);

@@ -189,7 +189,7 @@ function renderCartReview() {
 
   container.innerHTML = cart.map((item, i) => `
     <div class="cart-review-item">
-      ${item.image_url ? `<img src="${cfImg(item.image_url)}" alt="${item.name}" class="cart-review-img" />` : `<div class="cart-review-img-empty"><span class="material-symbols-outlined">diamond</span></div>`}
+      ${item.image_url ? `<img src="${cfImg(item.image_url, 240)}" alt="${item.name}" class="cart-review-img" />` : `<div class="cart-review-img-empty"><span class="material-symbols-outlined">diamond</span></div>`}
       <div class="cart-review-info">
         <span class="cart-review-name">${item.name}</span>
         <span class="cart-review-coll">${item.collection || ''}</span>
