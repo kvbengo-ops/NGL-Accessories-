@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NGL Circle — NGL Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+  <script>try{var d=document.documentElement.dataset;d.theme=localStorage.getItem('ngl_admin_theme')||'dark';d.mode=localStorage.getItem('ngl_admin_mode')||'dark'}catch(e){}</script>
+  <style>
+    .cadm-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+    .cadm-filter {
+      display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px;
+      border: 1px solid rgb(var(--adm-accent) / .18); border-radius: 999px; background: transparent;
+      color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .7));
+      font: 500 13px var(--font-sans); cursor: pointer;
+    }
+    .cadm-filter:hover { background: rgb(var(--adm-accent) / .06); }
+    .cadm-filter[aria-pressed="true"] {
+      background: rgb(var(--adm-accent) / .14); border-color: rgb(var(--adm-accent) / .45);
+      color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .95));
+    }
+    .cadm-count {
+      min-width: 22px; padding: 1px 7px; border-radius: 999px; text-align: center;
+      background: rgb(var(--adm-fg) / .08); font-size: 12px; font-variant-numeric: tabular-nums;
+    }
+    .cadm-list { display: grid; gap: 12px; }
+    .cadm-list:focus { outline: none; }
+    .cadm-post {
+      display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 16px; padding: 16px;
+      background: var(--adm-card); border: 1px solid rgb(var(--adm-accent) / .1); border-radius: 14px;
+    }
+    .cadm-media {
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      width: 96px; height: 96px; border-radius: 10px;
+      background: rgb(var(--adm-fg) / .05); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .35));
+    }
+    .cadm-media a { display: block; width: 100%; height: 100%; }
+    .cadm-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .cadm-head {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+      color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .92)); font-size: 14px;
+    }
+    .cadm-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+    .cadm-badge--verified { background: rgb(var(--adm-green) / .14); color: rgb(var(--adm-green)); }
+    .cadm-badge--unverified { background: rgb(var(--adm-fg) / .08); color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .65)); }
+    .cadm-time { color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .5)); font-size: 12px; }
+    .cadm-stars { display: flex; margin-top: 6px; color: rgb(var(--adm-fg) / .3); }
+    .cadm-stars .material-symbols-outlined { font-size: 17px; }
+    .cadm-stars .is-on { color: var(--adm-gold); font-variation-settings: 'FILL' 1; }
+    .cadm-caption {
+      margin: 8px 0 0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+      color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .85));
+    }
+    .cadm-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 10px 0 0; font-size: 12px; }
+    .cadm-meta dt { display: inline; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .5)); }
+    .cadm-meta dd { display: inline; margin: 0 0 0 4px; color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .8)); overflow-wrap: anywhere; }
+    .cadm-actions { display: flex; flex-direction: column; gap: 8px; }
+    .cadm-actions button { justify-content: center; min-height: 40px; white-space: nowrap; }
+    .cadm-actions .material-symbols-outlined { font-size: 16px; }
+    .cadm-empty {
+      padding: 40px 16px; text-align: center; border-radius: 14px;
+      background: var(--adm-card); border: 1px dashed rgb(var(--adm-accent) / .18);
+      color: rgb(var(--adm-fg) / max(var(--adm-text-min-alpha, 0), .55));
+    }
+    @media (max-width: 700px) {
+      .cadm-post { grid-template-columns: 64px minmax(0, 1fr); }
+      .cadm-media { width: 64px; height: 64px; }
+      .cadm-actions { grid-column: 1 / -1; flex-direction: row; }
+      .cadm-actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body class="admin-page">
+  <div id="sidebar-container"></div>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <div class="admin-header-title">
+        <h1 class="admin-page-title">NGL Circle</h1>
+        <p class="admin-page-subtitle" id="cadm-subtitle" aria-live="polite">Community posts and reviews from review.html.</p>
+      </div>
+      <div class="admin-header-actions">
+        <button type="button" class="btn-admin-ghost" id="cadm-refresh">
+          <span class="material-symbols-outlined" aria-hidden="true">refresh</span>Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="cadm-filters" role="group" aria-label="Show posts">
+        <button type="button" class="cadm-filter" data-status="pending" aria-pressed="true">Pending <span class="cadm-count" data-count="pending">0</span></button>
+        <button type="button" class="cadm-filter" data-status="published" aria-pressed="false">Published <span class="cadm-count" data-count="published">0</span></button>
+        <button type="button" class="cadm-filter" data-status="rejected" aria-pressed="false">Rejected <span class="cadm-count" data-count="rejected">0</span></button>
+      </div>
+
+      <div class="cadm-list" id="cadm-list" tabindex="-1">
+        <div class="cadm-empty">Loading posts…</div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/circle-admin.js"></script>
+</body>
+</html>

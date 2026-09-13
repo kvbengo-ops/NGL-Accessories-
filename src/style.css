@@ -2514,59 +2514,6 @@ strong { font-weight: 600; }
   gap: 12px;
 }
 .products-grid .product-card-actions { flex-wrap: wrap; }
-.compact-product-open { display: none; }
-
-/* Compact grid: the whole card opens the details modal, and a full-width
-   Add button sits above that tap layer so ordering is one tap. */
-@media (max-width: 1100px) {
-  .products-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-  .products-grid .product-card { position: relative; border-radius: 4px; clip-path: none; }
-  .products-grid .product-card-image img { padding: 6px; }
-  .products-grid .product-card-body { padding: 10px 12px 12px; gap: 6px; }
-  .products-grid .product-card-name {
-    font-size: 16px;
-    line-height: 1.3;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-  .products-grid .product-card-footer { margin: 0; padding-top: 8px; gap: 8px; }
-  .products-grid .product-card-price { font-size: 17px; overflow-wrap: anywhere; }
-  .products-grid .product-card-badge,
-  .products-grid .product-card-likes,
-  .products-grid .product-card-overlay,
-  .products-grid .grid-view-btn,
-  .products-grid .grid-like-btn { display: none; }
-  .products-grid .product-card-actions { width: 100%; }
-  .products-grid .btn-add-cart {
-    position: relative;
-    z-index: 4;
-    width: 100%;
-    min-height: 40px;
-    justify-content: center;
-    font-size: 10px;
-  }
-  .products-grid .compact-product-open {
-    display: block;
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    border-radius: inherit;
-    background: transparent;
-    cursor: pointer;
-    z-index: 3;
-  }
-  .products-grid .compact-product-open:focus-visible { outline: 2px solid var(--sage); outline-offset: -2px; }
-  .products-grid .skeleton-body-area { padding: 5px 2px; }
-  .products-grid .skeleton-bar { max-width: 100%; }
-}
 @media (max-width: 600px) {
   .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .products-grid .product-card-name { font-size: 14px; }
@@ -2700,55 +2647,6 @@ strong { font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   .swipe-card .product-card-likes { animation: none; }
 }
-
-/* Hover overlay — hidden on touch via @media (hover:none) */
-.product-card-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 16px;
-  opacity: 0;
-  transition: opacity 0.3s var(--ease-expo);
-  pointer-events: none;
-}
-.product-card--natural .product-card-overlay { background: linear-gradient(0deg, rgba(0,28,8,0.78) 0%, transparent 52%); }
-.product-card--grace   .product-card-overlay { background: linear-gradient(0deg, rgba(32,18,0,0.78) 0%, transparent 52%); }
-.product-card--lush    .product-card-overlay { background: linear-gradient(0deg, rgba(4,20,30,0.82) 0%, transparent 52%); }
-.product-card:hover .product-card-overlay { opacity: 1; pointer-events: auto; }
-
-/* Overlay quick-add — base shape */
-.overlay-quick-add {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 20px;
-  font-family: var(--font-sans);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  border-radius: var(--r-full);
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-  transform: translateY(8px);
-  transition: transform 0.3s var(--ease-expo), background 0.2s;
-}
-.overlay-quick-add .material-symbols-outlined { font-size: 13px; font-variation-settings: 'wght' 300; }
-.product-card:hover .overlay-quick-add { transform: translateY(0); }
-.overlay-quick-add.added { pointer-events: none; transform: translateY(0); background: rgba(90,180,90,0.88); color: #fff; }
-
-/* Per-category overlay button — color + shape */
-.product-card--natural .overlay-quick-add { border-radius: var(--r-full); background: rgba(164,180,164,0.92); color: #0e1a0d; }
-.product-card--natural .overlay-quick-add:hover { background: rgba(192,212,192,1); }
-
-.product-card--grace .overlay-quick-add { border-radius: 3px; background: rgba(201,168,76,0.92); color: #1a1207; }
-.product-card--grace .overlay-quick-add:hover { background: rgba(224,194,100,1); }
-
-.product-card--lush .overlay-quick-add { border-radius: var(--r-full); background: rgba(78,205,196,0.92); color: #041e28; }
-.product-card--lush .overlay-quick-add:hover { background: rgba(110,225,218,1); }
 
 /* Card body */
 .product-card-body {
@@ -2935,10 +2833,6 @@ strong { font-weight: 600; }
 .shop-toast .material-symbols-outlined { font-size: 15px; font-variation-settings: 'FILL' 1; }
 
 /* ── 27. SHOP RESPONSIVE ─────────────────────────────────── */
-@media (hover: none) {
-  /* On touch devices, rely on footer add button — hide image overlay */
-  .product-card-overlay { display: none; }
-}
 @media (max-width: 768px) {
   .card-stack { width: calc(100vw - 48px); max-width: 420px; height: 600px; }
   .card-image { height: 300px; }
@@ -2963,9 +2857,7 @@ strong { font-weight: 600; }
 }
 @media (prefers-reduced-motion: reduce) {
   .product-card { animation: none; opacity: 1; }
-  .product-card-image img,
-  .product-card-overlay,
-  .overlay-quick-add { transition: none; }
+  .product-card-image img { transition: none; }
   .skeleton-slab, .skeleton-bar { animation: none; }
 }
 /* ── 29. SWIPE FULLSCREEN MODE ───────────────────────────── */
@@ -6105,4 +5997,22 @@ select.form-input option { color: var(--adm-raised); }
   .shop .products-grid .btn-add-cart { width: 100%; }
   .shop .swipe-view .card-body { padding: 12px 8px 16px; gap: 6px; }
   .shop .swipe-view .card-name { font-size: 26px; }
+}
+
+/* Card refinements: buying info you can read at a glance, a persistent
+   "In bag" state for one-of-a-kind pieces, and a heart that stays filled. */
+.shop .products-grid .product-card-badge { font-size: 11px; }
+.shop .products-grid .product-card-price {
+  font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.shop .products-grid .btn-add-cart { font-size: 13px; font-weight: 600; }
+.shop .products-grid .btn-add-cart.in-bag {
+  background: transparent; color: var(--piece-accent); border-color: var(--piece-edge);
+}
+.shop .products-grid .btn-add-cart.in-bag:hover {
+  background: transparent; color: var(--piece-accent); border-color: var(--piece-accent);
+}
+.shop .products-grid .product-like-action.is-liked { color: var(--coral); }
+.shop .products-grid .product-like-action.is-liked .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
 }

@@ -67,6 +67,7 @@ export default defineConfig(({ mode }) => {
           'admin-settings': resolve(__dirname, 'admin/settings.html'),
           'admin-cms': resolve(__dirname, 'admin/cms.html'),
           'admin-support': resolve(__dirname, 'admin/support.html'),
+          'admin-circle': resolve(__dirname, 'admin/circle.html'),
         },
       },
     },

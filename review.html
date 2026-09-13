@@ -1,220 +1,423 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NGL Circle — Share your NGL experience | NGL Accessories</title>
+  <meta name="description" content="Share the confidence, joy, and little moments your NGL piece brings you — and cheer on other NGL customers." />
   <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
-  <link rel="apple-touch-icon" href="/favicon-192x192.png" />
-  <title>Leave a Review — NGL Accessories</title>
-  <meta name="description" content="Loved your NGL Accessories order? Leave a review and read what other customers are saying." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,300..400,0..1,0" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
-
   <style>
-    .rv-page { background: var(--charcoal); min-height: 100vh; }
-    .rv-layout {
-      min-height: calc(100vh - 65px);
-      display: flex; align-items: flex-start; justify-content: center;
-      padding: 48px 24px 80px;
+    .circle-page {
+      --c-bg: #f8f3eb;
+      --c-surface: #fffdf9;
+      --c-sunken: #faf6ef;
+      --c-ink: #28231d;
+      --c-ink-2: #5a5044;
+      --c-ink-3: #71675a;
+      --c-line: #e1d5c4;
+      --c-line-soft: #eee5d8;
+      --c-line-strong: #d3c3a8;
+      --c-gold: #7a5c24;
+      --c-star: #b07a12;
+      --c-star-empty: #a08c66;
+      --c-dark: #2d2822;
+      --c-on-dark: #f7e9c0;
+      --c-good: #3f6b45;
+      margin: 0;
+      min-height: 100vh;
+      background: var(--c-bg);
+      color: var(--c-ink);
+      font-family: var(--font-sans);
     }
-    .rv-container { width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 24px; }
+    .circle-page [hidden] { display: none !important; }
+    .circle-page :focus-visible { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+    .circle-sr {
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip-path: inset(50%); white-space: nowrap;
+    }
 
-    .rv-header { text-align: center; padding-bottom: 8px; }
-    .rv-eyebrow {
-      font-family: var(--font-sans); font-size: 9px; font-weight: 500;
-      letter-spacing: 0.32em; text-transform: uppercase; color: var(--gold-500);
-      display: block; margin-bottom: 10px;
+    .circle-skip {
+      position: absolute; left: 16px; top: -60px; z-index: 10;
+      padding: 10px 16px; border-radius: 999px;
+      background: var(--c-dark); color: var(--c-on-dark); text-decoration: none; font-size: 14px;
     }
-    .rv-title {
-      font-family: var(--font-serif); font-size: clamp(28px, 5vw, 40px);
-      font-weight: 300; color: rgba(245,241,235,0.92); margin-bottom: 8px;
-    }
-    .rv-subtitle { font-size: 13px; color: rgba(245,241,235,0.4); line-height: 1.6; }
+    .circle-skip:focus { top: 12px; }
 
-    .rv-card {
-      background: rgba(26,23,20,0.85); border: 1px solid rgba(201,168,76,0.12);
-      border-radius: 20px; padding: 32px;
+    /* Nav */
+    .circle-nav {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 12px clamp(16px, 5vw, 72px);
+      border-bottom: 1px solid #ded3c1;
     }
-    .rv-card h2 {
-      font-family: var(--font-serif); font-size: 18px; font-weight: 400;
-      color: rgba(245,241,235,0.8); margin-bottom: 20px;
+    .circle-logo { font: 400 23px var(--font-serif); color: inherit; text-decoration: none; }
+    .circle-nav-links { display: flex; gap: clamp(8px, 3vw, 28px); }
+    .circle-nav-links a {
+      display: inline-flex; align-items: center; min-height: 44px;
+      color: var(--c-ink-2); font: 500 12px var(--font-sans);
+      letter-spacing: .12em; text-transform: uppercase; text-decoration: none;
+    }
+    .circle-nav-links a:hover { color: var(--c-ink); }
+    .circle-nav-links a[aria-current="page"] { color: var(--c-gold); }
+
+    /* Layout */
+    .circle-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 400px) minmax(0, 600px);
+      justify-content: center; align-items: start;
+      gap: clamp(32px, 6vw, 96px);
+      max-width: 1180px; margin: 0 auto;
+      padding: clamp(40px, 7vw, 96px) clamp(16px, 4vw, 32px) 96px;
+    }
+    .circle-intro { position: sticky; top: 40px; }
+    .circle-kicker {
       display: flex; align-items: center; gap: 10px;
+      color: var(--c-gold); font: 500 12px var(--font-sans); letter-spacing: .18em; text-transform: uppercase;
     }
-    .rv-card h2 .material-symbols-outlined { font-size: 20px; color: var(--gold-500); }
+    .circle-kicker::before { content: ''; width: 28px; height: 1px; background: currentColor; }
+    .circle-title {
+      margin: 20px 0 16px;
+      font: 300 clamp(44px, 6vw, 80px)/.95 var(--font-serif); letter-spacing: -.04em;
+    }
+    .circle-title em { color: var(--c-gold); }
+    .circle-lede { max-width: 380px; margin: 0; color: var(--c-ink-2); font: 400 16px/1.7 var(--font-sans); }
+    .circle-promises { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 0; padding: 0; list-style: none; }
+    .circle-promise {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+      border: 1px solid var(--c-line-strong); border-radius: 999px;
+      color: var(--c-ink-2); font-size: 13px;
+    }
+    .circle-promise .material-symbols-outlined { font-size: 17px; color: var(--c-gold); }
 
-    .rv-form { display: flex; flex-direction: column; gap: 16px; }
-    .rv-label {
-      font-family: var(--font-sans); font-size: 10px; font-weight: 600;
-      letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,241,235,0.5);
-      margin-bottom: 6px; display: block;
-    }
-    .rv-input, .rv-textarea {
-      width: 100%; background: rgba(245,241,235,0.04);
-      border: 1px solid rgba(201,168,76,0.15); border-radius: 10px;
-      padding: 13px 16px; font-family: var(--font-sans); font-size: 14px;
-      color: rgba(245,241,235,0.85); outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .rv-textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
-    .rv-input::placeholder, .rv-textarea::placeholder { color: rgba(245,241,235,0.25); }
-    .rv-input:focus, .rv-textarea:focus {
-      border-color: rgba(201,168,76,0.4); box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
-    }
+    /* Feed column */
+    .circle-feed-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .circle-feed-head h2 { margin: 0; font: 400 clamp(26px, 3vw, 32px)/1.15 var(--font-serif); }
+    .circle-sort { color: var(--c-ink-3); font-size: 13px; }
 
-    /* ── Star rating (native radios, no JS state needed) ── */
-    .rv-stars { display: inline-flex; flex-direction: row-reverse; gap: 4px; }
-    .rv-stars input { position: absolute; opacity: 0; pointer-events: none; }
-    .rv-stars label {
-      cursor: pointer; color: rgba(245,241,235,0.18);
-      font-size: 34px; line-height: 1; transition: color 0.15s;
-    }
-    .rv-stars label .material-symbols-outlined { font-size: 34px; }
-    .rv-stars input:checked ~ label,
-    .rv-stars label:hover,
-    .rv-stars label:hover ~ label { color: var(--gold-400); }
-    .rv-stars input:focus-visible + label { outline: 2px solid var(--gold-300); outline-offset: 2px; border-radius: 4px; }
+    .circle-card { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 18px; }
 
-    .rv-msg {
-      display: none; align-items: center; gap: 8px; font-size: 12px;
-      border-radius: 8px; padding: 10px 14px; line-height: 1.45;
+    /* "Share your moment" prompt */
+    .circle-composer { margin-bottom: 16px; }
+    .circle-prompt {
+      display: flex; align-items: center; gap: 12px; width: 100%; min-height: 68px;
+      padding: 12px 14px; border: 0; border-radius: 18px; background: none;
+      color: var(--c-ink-3); font: 400 15px var(--font-sans); text-align: left; cursor: pointer;
     }
-    .rv-msg .material-symbols-outlined { font-size: 16px; flex-shrink: 0; }
-    .rv-msg--error {
-      color: var(--coral-light); background: rgba(232,112,90,0.08);
-      border: 1px solid rgba(232,112,90,0.2);
-    }
-    .rv-msg--ok {
-      color: #22c55e; background: rgba(34,197,94,0.08);
-      border: 1px solid rgba(34,197,94,0.25);
+    .circle-prompt:hover .circle-prompt-cta { background: #4a3f33; }
+    .circle-prompt-cta {
+      margin-left: auto; padding: 9px 16px; border-radius: 999px;
+      background: var(--c-dark); color: var(--c-on-dark); font-size: 13px; font-weight: 500;
+      transition: background-color 150ms ease;
     }
 
-    .rv-submit {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; background: var(--gold-500); color: #fff; border: none;
-      border-radius: 10px; padding: 14px 24px; font-family: var(--font-sans);
-      font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-      cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 20px rgba(117,91,0,0.35);
-      margin-top: 4px;
+    /* Composer dialog (native <dialog>: focus trap, Escape and top layer for free) */
+    .circle-dialog {
+      width: min(560px, calc(100vw - 32px)); max-width: none;
+      max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
+      margin: auto; /* style.css zeroes every margin, which un-centres a modal dialog */
+      padding: 0; border: 0; border-radius: 20px;
+      background: var(--c-surface); color: var(--c-ink);
+      box-shadow: 0 24px 60px #2a1f1233;
+      overflow: hidden;
     }
-    .rv-submit:hover:not(:disabled) {
-      background: var(--gold-400); transform: translateY(-1px);
-      box-shadow: 0 6px 28px rgba(117,91,0,0.45);
+    .circle-dialog[open] { display: flex; flex-direction: column; }
+    .circle-dialog::backdrop { background: #211b14a6; backdrop-filter: blur(6px); }
+    .circle-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .circle-dialog-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--c-line-soft);
     }
-    .rv-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+    .circle-dialog-head h2 { margin: 0; font: 400 26px/1.2 var(--font-serif); }
+    .circle-icon-btn {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 44px; height: 44px; border: 1px solid var(--c-line); border-radius: 50%;
+      background: var(--c-sunken); color: var(--c-ink-2); cursor: pointer;
+    }
+    .circle-icon-btn:hover { background: #f3eadc; }
+    .circle-dialog-body { display: grid; gap: 16px; flex: 1; min-height: 0; overflow-y: auto; padding: 16px 20px; }
 
-    /* ── Public review wall ── */
-    .rv-wall { display: flex; flex-direction: column; gap: 14px; }
-    .rv-wall-title {
-      font-family: var(--font-sans); font-size: 10px; font-weight: 600;
-      letter-spacing: 0.24em; text-transform: uppercase; color: rgba(245,241,235,0.35);
-      margin-bottom: 2px;
+    .circle-label { display: block; margin-bottom: 6px; color: var(--c-ink-2); font: 500 13px var(--font-sans); }
+    .circle-optional { color: var(--c-ink-3); font-weight: 400; }
+    .circle-input, .circle-textarea {
+      display: block; width: 100%; box-sizing: border-box;
+      padding: 12px 14px; border: 1px solid #d8cbb8; border-radius: 10px;
+      background: var(--c-sunken); color: var(--c-ink);
+      font: 400 16px/1.5 var(--font-sans);
     }
-    .rv-item {
-      background: rgba(26,23,20,0.6); border: 1px solid rgba(201,168,76,0.1);
-      border-radius: 14px; padding: 18px 20px;
-    }
-    .rv-item-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-    .rv-item-name { font-size: 13px; font-weight: 600; color: rgba(245,241,235,0.85); }
-    .rv-item-date { font-size: 11px; color: rgba(245,241,235,0.3); white-space: nowrap; }
-    .rv-item-stars { color: var(--gold-400); font-size: 14px; letter-spacing: 2px; }
-    .rv-item-body { font-size: 13px; color: rgba(245,241,235,0.6); line-height: 1.6; }
-    .rv-empty { font-size: 13px; color: rgba(245,241,235,0.35); text-align: center; padding: 8px 0; }
+    .circle-input:focus, .circle-textarea:focus { border-color: #9a7838; box-shadow: 0 0 0 3px #9a78381f; outline: none; }
+    .circle-textarea { min-height: 112px; resize: vertical; }
+    .circle-help { margin: 8px 0 0; color: var(--c-ink-2); font-size: 13px; line-height: 1.5; }
+    .circle-help strong { color: var(--c-good); font-weight: 500; }
 
-    @media (max-width: 600px) {
-      .rv-card { padding: 24px 20px; border-radius: 16px; }
+    .circle-form-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .circle-photo { position: relative; }
+    .circle-photo-input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+    .circle-chip-btn {
+      display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
+      border: 1px solid var(--c-line-strong); border-radius: 999px;
+      color: var(--c-ink-2); font-size: 14px; cursor: pointer;
+    }
+    .circle-chip-btn:hover { background: #f3eadc; }
+    .circle-chip-btn .material-symbols-outlined { font-size: 19px; color: var(--c-gold); }
+    .circle-photo-input:focus-visible + .circle-chip-btn { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+    .circle-photo-preview { position: relative; width: 160px; margin: 10px 0 0; }
+    .circle-photo-preview img { display: block; width: 160px; height: 160px; object-fit: cover; border-radius: 12px; }
+    .circle-photo-remove {
+      position: absolute; top: 6px; right: 6px;
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; border: 0; border-radius: 50%;
+      background: #28231dcc; color: #fff; cursor: pointer;
+    }
+    .circle-count { padding-top: 12px; color: var(--c-ink-3); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+    /* Star rating (radio group: arrow keys work; tap the chosen star again to clear) */
+    .circle-rating { margin: 0; padding: 0; border: 0; min-width: 0; }
+    .circle-rating legend { padding: 0; }
+    .circle-stars { display: flex; align-items: center; flex-wrap: wrap; }
+    .circle-star-input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .circle-star {
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; border-radius: 50%;
+      color: var(--c-star-empty); cursor: pointer;
+    }
+    .circle-star .material-symbols-outlined { font-size: 30px; }
+    .circle-star:hover { background: #f3eadc; }
+    .circle-star-input:focus-visible + .circle-star { outline: 2px solid var(--c-gold); outline-offset: 1px; }
+    .circle-rating[data-rating="1"] .circle-star:nth-of-type(-n+1),
+    .circle-rating[data-rating="2"] .circle-star:nth-of-type(-n+2),
+    .circle-rating[data-rating="3"] .circle-star:nth-of-type(-n+3),
+    .circle-rating[data-rating="4"] .circle-star:nth-of-type(-n+4),
+    .circle-rating[data-rating="5"] .circle-star:nth-of-type(-n+5) { color: var(--c-star); }
+    .circle-rating[data-rating="1"] .circle-star:nth-of-type(-n+1) .material-symbols-outlined,
+    .circle-rating[data-rating="2"] .circle-star:nth-of-type(-n+2) .material-symbols-outlined,
+    .circle-rating[data-rating="3"] .circle-star:nth-of-type(-n+3) .material-symbols-outlined,
+    .circle-rating[data-rating="4"] .circle-star:nth-of-type(-n+4) .material-symbols-outlined,
+    .circle-rating[data-rating="5"] .circle-star:nth-of-type(-n+5) .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+    .circle-rating-text { margin-left: 8px; color: var(--c-ink-3); font-size: 13px; }
+
+    .circle-error { margin: 0; padding: 10px 12px; border-radius: 10px; background: #fbe9e4; color: #8a2f1d; font-size: 14px; line-height: 1.5; }
+    .circle-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px; border-top: 1px solid var(--c-line-soft); }
+    .circle-btn, .circle-btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 18px; border-radius: 999px;
+      font: 500 14px var(--font-sans); cursor: pointer;
+      transition: background-color 150ms ease;
+    }
+    .circle-btn { border: 0; background: var(--c-dark); color: var(--c-on-dark); }
+    .circle-btn:hover { background: #4a3f33; }
+    .circle-btn:disabled { opacity: .6; cursor: progress; }
+    .circle-btn .material-symbols-outlined { font-size: 18px; }
+    .circle-btn-ghost { border: 1px solid var(--c-line-strong); background: transparent; color: var(--c-ink-2); }
+    .circle-btn-ghost:hover { background: #f3eadc; }
+
+    .circle-status { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: #e9f1e6; color: var(--c-good); font-size: 14px; line-height: 1.5; }
+    .circle-status:empty { display: none; }
+
+    /* Posts */
+    .circle-post { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 18px 16px; border-bottom: 1px solid var(--c-line-soft); }
+    .circle-post:last-child { border-bottom: 0; }
+    .circle-avatar {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #ece2d0; color: var(--c-gold); font: 500 19px var(--font-serif);
+    }
+    .circle-avatar .material-symbols-outlined { font-size: 20px; }
+    .circle-post-head { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+    .circle-post-name { color: var(--c-ink); font-size: 15px; font-weight: 500; }
+    .circle-verified { display: inline-flex; align-items: center; gap: 3px; color: var(--c-good); font-size: 12px; }
+    .circle-verified .material-symbols-outlined { font-size: 15px; font-variation-settings: 'FILL' 1; }
+    .circle-post-time { color: var(--c-ink-3); font-size: 12px; }
+    .circle-post-time::before { content: '·'; margin-right: 8px; }
+    .circle-post-stars { display: flex; margin-top: 4px; color: var(--c-star-empty); }
+    .circle-post-stars .material-symbols-outlined { font-size: 18px; }
+    .circle-post-stars .is-on { color: var(--c-star); font-variation-settings: 'FILL' 1; }
+    .circle-post-caption { margin: 6px 0 0; color: #3b342b; font-size: 15px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .circle-post-photo {
+      display: block; width: 100%; max-width: 100%; aspect-ratio: 4 / 5; object-fit: cover;
+      margin-top: 12px; border-radius: 14px; background: var(--c-line-soft);
+    }
+
+    .circle-reactions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .circle-reaction {
+      display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+      border: 1px solid var(--c-line); border-radius: 999px; background: var(--c-surface);
+      color: var(--c-ink-2); font: 500 14px var(--font-sans); font-variant-numeric: tabular-nums;
+      cursor: pointer; touch-action: manipulation;
+      transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+    }
+    .circle-reaction:hover { background: #f5ede0; }
+    .circle-reaction:active { transform: scale(.96); }
+    .circle-reaction[aria-pressed="true"] { background: #f6ead3; border-color: #caa964; color: #6b4f1a; cursor: default; }
+    .circle-reaction-emoji { font-size: 17px; line-height: 1; }
+
+    /* Feed states */
+    .circle-empty { padding: 44px 20px; text-align: center; color: var(--c-ink-2); }
+    .circle-empty h3 { margin: 0 0 8px; color: var(--c-ink); font: 400 26px var(--font-serif); }
+    .circle-empty p { margin: 0 auto 18px; max-width: 340px; font-size: 15px; line-height: 1.6; }
+    .circle-skeleton { display: grid; grid-template-columns: 44px 1fr; gap: 12px; padding: 18px 16px; border-bottom: 1px solid var(--c-line-soft); }
+    .circle-skeleton:last-child { border-bottom: 0; }
+    .circle-skeleton span { display: block; border-radius: 8px; background: linear-gradient(90deg, #efe7da 25%, #f7f1e7 50%, #efe7da 75%); background-size: 400% 100%; animation: circle-shimmer 1.4s ease infinite; }
+    .circle-skeleton > span { width: 44px; height: 44px; border-radius: 50%; }
+    .circle-skeleton-lines { display: grid; gap: 10px; }
+    .circle-skeleton-lines span:nth-child(1) { width: 40%; height: 14px; }
+    .circle-skeleton-lines span:nth-child(2) { width: 92%; height: 14px; }
+    .circle-skeleton-lines span:nth-child(3) { width: 70%; height: 14px; }
+    @keyframes circle-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .circle-skeleton span { animation: none; }
+      .circle-reaction, .circle-btn, .circle-btn-ghost, .circle-prompt-cta { transition: none; }
+      .circle-reaction:active { transform: none; }
+    }
+
+    @media (max-width: 860px) {
+      .circle-layout { grid-template-columns: minmax(0, 1fr); max-width: 640px; gap: 28px; padding-top: 32px; }
+      .circle-intro { position: static; }
+      .circle-title { margin-top: 14px; font-size: clamp(40px, 11vw, 56px); }
+      .circle-promises { margin-top: 20px; }
+    }
+    @media (max-width: 480px) {
+      .circle-logo { font-size: 20px; }
+      .circle-nav-links a { letter-spacing: .06em; }
+      .circle-feed-head { flex-direction: column; gap: 2px; }
+      .circle-post, .circle-skeleton { grid-template-columns: 36px minmax(0, 1fr); padding: 16px 12px; }
+      .circle-avatar, .circle-skeleton > span { width: 36px; height: 36px; }
+      /* Composer becomes a bottom sheet */
+      .circle-dialog {
+        width: 100%; margin: auto 0 0;
+        max-height: 92vh; max-height: 92dvh;
+        border-radius: 20px 20px 0 0;
+      }
+      .circle-dialog-body { padding: 14px 16px; }
+      .circle-actions { flex-direction: column-reverse; padding: 12px 16px; }
+      .circle-actions > button { width: 100%; }
     }
   </style>
 </head>
-<body class="rv-page">
+<body class="circle-page">
+  <a class="circle-skip" href="#circle-feed">Skip to posts</a>
 
-  <nav class="checkout-nav">
-    <a href="/index.html" class="checkout-nav-logo">NGL Accessories</a>
-    <a href="/support.html" class="checkout-secure" style="text-decoration:none;font-size:11px;gap:6px;">
-      <span class="material-symbols-outlined" style="font-size:16px">help_outline</span>
-      Need Help?
-    </a>
+  <nav class="circle-nav" aria-label="Main">
+    <a class="circle-logo" href="/home.html">NGL Accessories</a>
+    <div class="circle-nav-links">
+      <a href="/shop.html">Shop</a>
+      <a href="/review.html" aria-current="page">NGL Circle</a>
+    </div>
   </nav>
 
-  <div class="rv-layout">
-    <div class="rv-container">
+  <main class="circle-layout">
+    <section class="circle-intro" aria-labelledby="circle-title">
+      <span class="circle-kicker">The NGL circle</span>
+      <h1 class="circle-title" id="circle-title">Share your <em>NGL</em> experience.</h1>
+      <p class="circle-lede">Show us the piece that makes you feel a little more like yourself. Your story might be the lift someone else needs today.</p>
+      <ul class="circle-promises">
+        <li class="circle-promise"><span class="material-symbols-outlined" aria-hidden="true">favorite</span>Celebrate your style</li>
+        <li class="circle-promise"><span class="material-symbols-outlined" aria-hidden="true">volunteer_activism</span>Lift someone up</li>
+        <li class="circle-promise"><span class="material-symbols-outlined" aria-hidden="true">star</span>Rate your piece</li>
+      </ul>
+    </section>
 
-      <div class="rv-header">
-        <span class="rv-eyebrow">✦ Customer Reviews</span>
-        <h1 class="rv-title">Leave a Review</h1>
-        <p class="rv-subtitle">Received your order? We'd love to hear how it went.</p>
+    <section class="circle-feed-col" aria-labelledby="circle-feed-title">
+      <header class="circle-feed-head">
+        <h2 id="circle-feed-title">Little moments from the circle</h2>
+        <span class="circle-sort">Latest first</span>
+      </header>
+
+      <div class="circle-card circle-composer">
+        <button class="circle-prompt" id="circle-prompt" type="button" aria-haspopup="dialog" aria-controls="circle-dialog">
+          <span class="circle-avatar" aria-hidden="true"><span class="material-symbols-outlined">auto_awesome</span></span>
+          <span>Share your NGL moment…</span>
+          <span class="circle-prompt-cta" aria-hidden="true">Post</span>
+        </button>
       </div>
 
-      <!-- ── Review form ── -->
-      <div class="rv-card" id="rv-form-card">
-        <h2><span class="material-symbols-outlined">rate_review</span> Rate your order</h2>
-        <form class="rv-form" id="rv-form" novalidate>
-          <div>
-            <label class="rv-label">Your rating</label>
-            <div class="rv-stars" id="rv-stars">
-              <!-- reversed order so CSS ~ can fill stars to the left -->
-              <input type="radio" name="rating" id="star5" value="5" /><label for="star5" title="5 stars"><span class="material-symbols-outlined">star</span></label>
-              <input type="radio" name="rating" id="star4" value="4" /><label for="star4" title="4 stars"><span class="material-symbols-outlined">star</span></label>
-              <input type="radio" name="rating" id="star3" value="3" /><label for="star3" title="3 stars"><span class="material-symbols-outlined">star</span></label>
-              <input type="radio" name="rating" id="star2" value="2" /><label for="star2" title="2 stars"><span class="material-symbols-outlined">star</span></label>
-              <input type="radio" name="rating" id="star1" value="1" /><label for="star1" title="1 star"><span class="material-symbols-outlined">star</span></label>
-            </div>
-          </div>
-          <div class="form-field">
-            <label class="rv-label" for="rv-body">Your review <span style="text-transform:none;letter-spacing:0;color:rgba(245,241,235,0.3);">(optional)</span></label>
-            <textarea id="rv-body" class="rv-textarea" maxlength="1000" placeholder="Tell us what you loved…"></textarea>
-          </div>
-          <div class="form-field">
-            <label class="rv-label" for="rv-order">Order Number</label>
-            <input type="text" id="rv-order" class="rv-input" placeholder="NGL-20260609-1234" autocomplete="off" required />
-          </div>
-          <div class="form-field">
-            <label class="rv-label" for="rv-email">Email Address</label>
-            <input type="email" id="rv-email" class="rv-input" placeholder="you@example.com" autocomplete="email" required />
-          </div>
+      <p class="circle-status" id="circle-status" role="status" aria-live="polite"></p>
 
-          <div class="rv-msg rv-msg--error" id="rv-error" role="alert">
-            <span class="material-symbols-outlined">error</span>
-            <span id="rv-error-text"></span>
-          </div>
-
-          <button type="submit" class="rv-submit" id="rv-submit">
-            <span class="material-symbols-outlined">send</span>
-            Submit Review
-          </button>
-        </form>
+      <div class="circle-card circle-feed" id="circle-feed" aria-busy="true" tabindex="-1">
+        <div class="circle-skeleton" aria-hidden="true"><span></span><div class="circle-skeleton-lines"><span></span><span></span><span></span></div></div>
+        <div class="circle-skeleton" aria-hidden="true"><span></span><div class="circle-skeleton-lines"><span></span><span></span><span></span></div></div>
+        <div class="circle-skeleton" aria-hidden="true"><span></span><div class="circle-skeleton-lines"><span></span><span></span><span></span></div></div>
       </div>
+    </section>
+  </main>
 
-      <!-- ── Success (replaces form after submit) ── -->
-      <div class="rv-card" id="rv-thanks" style="display:none; text-align:center;">
-        <div style="font-size:44px; color:var(--gold-400); margin-bottom:8px;">
-          <span class="material-symbols-outlined" style="font-size:44px;">favorite</span>
+  <dialog class="circle-dialog" id="circle-dialog" aria-labelledby="circle-dialog-title">
+    <form class="circle-form" id="circle-form" novalidate>
+      <header class="circle-dialog-head">
+        <h2 id="circle-dialog-title">Share your NGL moment</h2>
+        <button class="circle-icon-btn" id="circle-close" type="button" aria-label="Close">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <div class="circle-dialog-body">
+        <div>
+          <label class="circle-label" for="circle-caption">Your moment</label>
+          <textarea class="circle-textarea" id="circle-caption" maxlength="500" rows="4" required
+            placeholder="What did wearing your NGL piece make you feel?"></textarea>
         </div>
-        <h2 style="justify-content:center; margin-bottom:8px;">Thank you!</h2>
-        <p class="rv-subtitle">Your review has been submitted. We truly appreciate you taking the time.</p>
-        <div style="margin-top:20px;">
-          <a href="/shop.html" class="btn-checkout-primary">
-            <span class="material-symbols-outlined">storefront</span> Continue Shopping
-          </a>
+
+        <div class="circle-form-row">
+          <div class="circle-photo">
+            <input class="circle-photo-input" id="circle-photo-input" type="file" accept="image/jpeg,image/png,image/webp" />
+            <label class="circle-chip-btn" for="circle-photo-input">
+              <span class="material-symbols-outlined" aria-hidden="true">add_a_photo</span>Add a photo
+            </label>
+            <figure class="circle-photo-preview" id="circle-photo-preview" hidden>
+              <img id="circle-photo-img" alt="Your selected photo" />
+              <button class="circle-photo-remove" id="circle-photo-remove" type="button" aria-label="Remove photo">
+                <span class="material-symbols-outlined" aria-hidden="true">close</span>
+              </button>
+            </figure>
+          </div>
+          <span class="circle-count" id="circle-count">0 / 500</span>
         </div>
+
+        <fieldset class="circle-rating" id="circle-rating" data-rating="0">
+          <legend class="circle-label">Rate your NGL piece <span class="circle-optional">(optional)</span></legend>
+          <div class="circle-stars">
+            <input class="circle-star-input" type="radio" name="rating" id="circle-star-1" value="1" />
+            <label class="circle-star" for="circle-star-1"><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="circle-sr">1 star</span></label>
+            <input class="circle-star-input" type="radio" name="rating" id="circle-star-2" value="2" />
+            <label class="circle-star" for="circle-star-2"><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="circle-sr">2 stars</span></label>
+            <input class="circle-star-input" type="radio" name="rating" id="circle-star-3" value="3" />
+            <label class="circle-star" for="circle-star-3"><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="circle-sr">3 stars</span></label>
+            <input class="circle-star-input" type="radio" name="rating" id="circle-star-4" value="4" />
+            <label class="circle-star" for="circle-star-4"><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="circle-sr">4 stars</span></label>
+            <input class="circle-star-input" type="radio" name="rating" id="circle-star-5" value="5" />
+            <label class="circle-star" for="circle-star-5"><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="circle-sr">5 stars</span></label>
+            <span class="circle-rating-text" id="circle-rating-text" aria-live="polite"></span>
+          </div>
+        </fieldset>
+
+        <div>
+          <label class="circle-label" for="circle-name">Display name <span class="circle-optional">(optional)</span></label>
+          <input class="circle-input" id="circle-name" maxlength="50" autocomplete="nickname" placeholder="An NGL friend" />
+        </div>
+
+        <div>
+          <label class="circle-label" for="circle-contact">Email or mobile number <span class="circle-optional">(optional)</span></label>
+          <input class="circle-input" id="circle-contact" type="text" inputmode="email" autocomplete="email" maxlength="120"
+            placeholder="you@example.com or 0917 123 4567" aria-describedby="circle-contact-help" />
+          <p class="circle-help" id="circle-contact-help">Use the one from your order and your post goes live right away as a <strong>Verified buyer</strong>. Otherwise our team gives it a quick look first. Never shown publicly.</p>
+        </div>
+
+        <p class="circle-error" id="circle-error" role="alert" hidden></p>
       </div>
 
-      <!-- ── Public review wall ── -->
-      <div class="rv-wall">
-        <div class="rv-wall-title">What customers are saying</div>
-        <div id="rv-wall-list" class="rv-wall">
-          <p class="rv-empty">Loading reviews…</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
+      <footer class="circle-actions">
+        <button class="circle-btn-ghost" id="circle-cancel" type="button">Cancel</button>
+        <button class="circle-btn" id="circle-submit" type="submit">
+          <span class="material-symbols-outlined" aria-hidden="true">send</span>Post to the Circle
+        </button>
+      </footer>
+    </form>
+  </dialog>
 
   <script type="module" src="/src/review.js"></script>
-  <script type="module" src="/src/main.js"></script>
-  <script type="module" src="/src/support-widget.js"></script>
 </body>
 </html>

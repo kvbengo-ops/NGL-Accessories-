@@ -165,6 +165,24 @@ function addToCart(product) {
   return true;
 }
 
+// Most pieces are one-of-a-kind (stock 1): once the bag holds every unit,
+// "Add" can only fail, so cards and the modal offer "In bag · View" instead.
+function isInBagFull(product) {
+  const item = cart.find(i => i.id === product.id);
+  return !!item && item.quantity >= product.stock;
+}
+
+/* ── LIKES ── */
+// ponytail: session-only dedupe (resets on reload) so one visitor can't pump
+// likes_count by tapping; persist to localStorage if repeat visits skew it.
+const likedIds = new Set();
+function likeOnce(product) {
+  if (likedIds.has(product.id)) return false;
+  likedIds.add(product.id);
+  trackEngagement(product.id, 'like');
+  return true;
+}
+
 /* ── TOAST ── */
 let toastTimer = null;
 
@@ -211,6 +229,9 @@ function openModal(product) {
   if (product.stock <= 0) {
     modalCartBtn.innerHTML = `<span class="material-symbols-outlined">block</span> Out of Stock`;
     modalCartBtn.disabled  = true;
+  } else if (isInBagFull(product)) {
+    modalCartBtn.innerHTML = `<span class="material-symbols-outlined">check</span> In your bag · View`;
+    modalCartBtn.disabled  = false;
   } else {
     modalCartBtn.innerHTML = `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`;
     modalCartBtn.disabled  = false;
@@ -241,9 +262,12 @@ document.addEventListener('keydown', (e) => {
 // Add to cart from modal
 modalCartBtn?.addEventListener('click', () => {
   if (!modalProduct) return;
+  if (isInBagFull(modalProduct)) { window.location.href = '/checkout.html'; return; }
   const success = addToCart(modalProduct);
   if (!success) return;
-  trackEngagement(modalProduct.id, 'like');
+  likeOnce(modalProduct);
+  // Let the grid card behind the modal catch up (In bag / liked).
+  document.querySelector(`#products-grid .product-card[data-id="${modalProduct.id}"]`)?.syncState?.();
   modalCartBtn.innerHTML = `<span class="material-symbols-outlined">check</span> Added!`;
   modalCartBtn.classList.add('added');
   modalCartBtn.disabled = true;
@@ -308,8 +332,9 @@ function buildSwipeCard(product) {
     const timesince = now - lastTap;
     if (timesince < 400 && timesince > 0) {
       // Double tap!
-      trackEngagement(product.id, 'like');
-      if (likeNumEl) likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
+      if (likeOnce(product) && likeNumEl) {
+        likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
+      }
       const heart = this.querySelector('.like-heart-burst');
       heart.classList.remove('animate');
       void heart.offsetWidth; // trigger reflow
@@ -456,7 +481,7 @@ class SwipeStack {
 
     if (direction === 'right' && product) {
       addToCart(product);
-      trackEngagement(product.id, 'like');
+      likeOnce(product);
     }
 
     setTimeout(() => {
@@ -527,75 +552,72 @@ function buildProductCard(product) {
         <span class="material-symbols-outlined">favorite</span>
         <span class="pc-like-n">${product.likes}</span>
       </div>
-      <button class="product-photo-open" aria-label="View ${product.name} details"></button>
-      <button class="grid-like-btn product-like-action" aria-label="Like ${product.name}">
+      <button class="product-photo-open" type="button" tabindex="-1" aria-hidden="true"></button>
+      <button class="grid-like-btn product-like-action" type="button" aria-label="Like ${product.name}">
         <span class="material-symbols-outlined">favorite</span>
       </button>
     </div>
     <div class="product-card-body">
       <span class="product-card-badge badge--${product.category}">${product.categoryLabel}</span>
-      <h3 class="product-card-name"><button class="product-name-link grid-view-btn">${product.name}</button></h3>
+      <h3 class="product-card-name"><button class="product-name-link grid-view-btn" type="button">${product.name}</button></h3>
       <div class="product-card-footer">
         <span class="product-card-price">${formatPrice(product.price)}</span>
         <div class="product-card-actions">
-          <button class="btn-add-cart" aria-label="Add ${product.name} to cart" ${product.stock <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
-            <span class="material-symbols-outlined">${product.stock <= 0 ? 'block' : 'add_shopping_cart'}</span>
-            ${product.stock <= 0 ? 'Sold out' : 'Add to bag'}
-          </button>
+          <button class="btn-add-cart" type="button"></button>
         </div>
       </div>
     </div>
   `;
 
   const likeNumEl = card.querySelector('.pc-like-n');
-  function bumpLikes() {
-    if (likeNumEl) likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
+  const heart     = card.querySelector('.like-heart-burst');
+  const likeBtn   = card.querySelector('.grid-like-btn');
+  const addBtn    = card.querySelector('.btn-add-cart');
+
+  function syncLiked() {
+    const liked = likedIds.has(product.id);
+    likeBtn.classList.toggle('is-liked', liked);
+    likeBtn.setAttribute('aria-pressed', String(liked));
   }
 
-  function handleAdd(btn, isOverlay) {
-    const success = addToCart(product);
-    if (!success) return;
-    trackEngagement(product.id, 'like');
-    bumpLikes();
-    btn.classList.add('added');
-    btn.innerHTML = isOverlay
-      ? `<span class="material-symbols-outlined">check</span> Added!`
-      : `<span class="material-symbols-outlined">check</span> Added`;
-    setTimeout(() => {
-      btn.classList.remove('added');
-      btn.innerHTML = isOverlay
-        ? `<span class="material-symbols-outlined">add_shopping_cart</span> Add to Cart`
-        : `<span class="material-symbols-outlined">add_shopping_cart</span> Add to bag`;
-    }, 2000);
-  }
-
-  card.querySelector('.overlay-quick-add')?.addEventListener('click', function (e) {
-    e.stopPropagation();
-    handleAdd(this, true);
-  });
-  card.querySelector('.btn-add-cart')?.addEventListener('click', function (e) {
-    e.stopPropagation();
-    handleAdd(this, false);
-  });
-  card.querySelector('.grid-view-btn')?.addEventListener('click', function (e) {
-    e.stopPropagation();
-    openModal(product);
-  });
-  card.querySelector('.grid-like-btn')?.addEventListener('click', function (e) {
-    e.stopPropagation();
-    trackEngagement(product.id, 'like');
-    bumpLikes();
-    this.style.color = 'var(--coral)';
-    this.querySelector('span').style.fontVariationSettings = '"FILL" 1, "wght" 400';
-    const heart = card.querySelector('.like-heart-burst');
-    if (heart) {
-      heart.classList.remove('animate');
-      void heart.offsetWidth; // trigger reflow
-      heart.classList.add('animate');
+  function syncAddBtn() {
+    if (product.stock <= 0) {
+      addBtn.disabled = true;
+      addBtn.textContent = 'Sold out';
+      return;
     }
+    const inBag = isInBagFull(product);
+    addBtn.classList.toggle('in-bag', inBag);
+    addBtn.innerHTML = inBag
+      ? `<span class="material-symbols-outlined">check</span> In bag · View`
+      : `<span class="material-symbols-outlined">add_shopping_cart</span> Add to bag`;
+    addBtn.setAttribute('aria-label', inBag ? `${product.name} is in your bag. View bag` : `Add ${product.name} to bag`);
+  }
+
+  // Also called by the modal after it adds/likes this piece.
+  card.syncState = () => { syncAddBtn(); syncLiked(); };
+  card.syncState();
+
+  addBtn.addEventListener('click', () => {
+    if (isInBagFull(product)) { window.location.href = '/checkout.html'; return; }
+    if (!addToCart(product)) return;
+    // Adding counts as a like (unchanged behaviour), once per visit.
+    if (likeOnce(product) && likeNumEl) likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
+    card.syncState();
   });
 
-  card.querySelector('.product-photo-open')?.addEventListener('click', () => openModal(product));
+  likeBtn.addEventListener('click', () => {
+    if (!likeOnce(product)) return;
+    if (likeNumEl) likeNumEl.textContent = Number(likeNumEl.textContent || 0) + 1;
+    syncLiked();
+    heart.classList.remove('animate');
+    void heart.offsetWidth; // restart the burst animation
+    heart.classList.add('animate');
+  });
+
+  const open = () => openModal(product);
+  card.querySelector('.grid-view-btn').addEventListener('click', open);
+  card.querySelector('.product-photo-open').addEventListener('click', open);
 
   return card;
 }

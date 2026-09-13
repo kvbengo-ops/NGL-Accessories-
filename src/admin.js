@@ -53,6 +53,7 @@ export function renderSidebar(activePage, admin) {
     { href: '/admin/pos.html',       icon: 'point_of_sale',   label: 'POS'       },
     { href: '/admin/expenses.html',  icon: 'receipt',         label: 'Expenses'  },
     { href: '/admin/support.html',   icon: 'forum',           label: 'Live Chat' },
+    { href: '/admin/circle.html',    icon: 'reviews',         label: 'NGL Circle' },
     { section: 'Settings', superadminOnly: true },
     { href: '/admin/admins.html',    icon: 'manage_accounts', label: 'Admins', superadminOnly: true },
     { href: '/admin/settings.html',  icon: 'settings',        label: 'Store Settings', superadminOnly: true },
