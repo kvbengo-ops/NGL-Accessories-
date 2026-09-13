@@ -300,13 +300,6 @@ function buildSwipeCard(product) {
     openModal(product);
   });
 
-  const compactOpen = document.createElement('button');
-  compactOpen.type = 'button';
-  compactOpen.className = 'compact-product-open';
-  compactOpen.setAttribute('aria-label', `View ${product.name}, ${formatPrice(product.price)} details`);
-  compactOpen.addEventListener('click', () => openModal(product));
-  card.appendChild(compactOpen);
-
   // Double tap to like
   const likeNumEl = card.querySelector('.pc-like-n');
   let lastTap = 0;
@@ -609,6 +602,14 @@ function buildProductCard(product) {
       heart.classList.add('animate');
     }
   });
+
+  // Compact grid (≤1100px): full-card tap target that opens the details modal
+  const compactOpen = document.createElement('button');
+  compactOpen.type = 'button';
+  compactOpen.className = 'compact-product-open';
+  compactOpen.setAttribute('aria-label', `View ${product.name}, ${formatPrice(product.price)} details`);
+  compactOpen.addEventListener('click', () => openModal(product));
+  card.appendChild(compactOpen);
 
   // Double tap to like
   let lastTap = 0;
