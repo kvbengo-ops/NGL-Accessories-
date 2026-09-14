@@ -7,30 +7,8 @@ import './cms-frontend.js';
 const isFinePointer = window.matchMedia('(pointer: fine)').matches;
 
 /* ── NAVBAR ── */
-const navbar    = document.getElementById('navbar');
-const navToggle = document.getElementById('nav-toggle');
-const navDrawer = document.getElementById('nav-drawer');
+// Navigation is initialized once by main.js, also loaded on this page.
 
-window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 50);
-}, { passive: true });
-
-navToggle?.addEventListener('click', () => {
-  const open = navToggle.getAttribute('aria-expanded') === 'true';
-  navToggle.setAttribute('aria-expanded', String(!open));
-  navDrawer.classList.toggle('open', !open);
-  navDrawer.setAttribute('aria-hidden', String(open));
-});
-
-navDrawer?.querySelectorAll('.drawer-link').forEach((link) => {
-  link.addEventListener('click', () => {
-    navToggle.setAttribute('aria-expanded', 'false');
-    navDrawer.classList.remove('open');
-    navDrawer.setAttribute('aria-hidden', 'true');
-  });
-});
-
-/* ── BANNER ── */
 const banner      = document.getElementById('banner');
 const bannerClose = document.getElementById('banner-close');
 
@@ -308,11 +286,10 @@ function buildSwipeCard(product) {
       </span>
       <h3 class="card-name">${product.name}</h3>
       <p class="card-desc">${product.desc}</p>
-      <div class="card-tags">${product.tags.map(t => `<span class="card-tag">${t}</span>`).join('')}</div>
       <div class="card-price-row">
         <span class="card-price">${formatPrice(product.price)}</span>
         <button class="card-view-btn" data-id="${product.id}" aria-label="View full details">
-          <span class="material-symbols-outlined">open_in_full</span> View
+          Details <span class="material-symbols-outlined">arrow_forward</span>
         </button>
       </div>
     </div>

@@ -80,6 +80,7 @@ CREATE POLICY "order_items_admin_all" ON public.order_items
 
 -- ADMINS — only active admins can read/manage the admin roster
 DROP POLICY IF EXISTS "admins_authenticated" ON public.admins;
+DROP POLICY IF EXISTS "admins_all" ON public.admins;
 CREATE POLICY "admins_all" ON public.admins
   FOR ALL USING (public.is_admin()) WITH CHECK (public.is_admin());
 
