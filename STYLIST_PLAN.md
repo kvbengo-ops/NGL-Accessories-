@@ -1,5 +1,7 @@
 # AI Stylist — Implementation Plan (Hybrid)
 
+> Superseded on 20 September 2026 by [NGL Stylist — conversational shopping design](STYLIST_CHAT_DESIGN.md). The new direction replaces the support-first floating chat with a stylist conversation, rather than a separate shop tab with a mandatory three-piece combo. Previous free-cost and stock guarantees are not implementation requirements.
+
 Add an "AI Stylist" to the shop page: the user describes their outfit, and we
 recommend a personalized 3-piece jewelry combo — at **$0 cost, with no API key
 exposed in the browser**.

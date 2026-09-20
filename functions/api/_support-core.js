@@ -4,12 +4,13 @@
  *   • the Vite dev middleware        (vite.config.js)           → `npm run dev`
  *
  * Runtime-agnostic: uses only fetch + crypto (Node 18+ and the Workers runtime).
- * LLM = Google Gemini REST (free tier). Answers are grounded in support_kb;
- * the model never invents orders/prices/policies.
+ * LLM = Groq if GROQ_API_KEY is set, otherwise Google Gemini. Answers are
+ * grounded in support_kb; the model never invents orders/prices/policies.
  *
  * env keys:
  *   SUPABASE_URL (or VITE_SUPABASE_URL), SUPABASE_SERVICE_ROLE_KEY,
- *   GEMINI_API_KEY, GEMINI_MODEL? (default 'gemini-2.0-flash'),
+ *   GROQ_API_KEY?, GROQ_MODEL? (default 'openai/gpt-oss-120b'),
+ *   GEMINI_API_KEY?, GEMINI_MODEL? (default 'gemini-2.5-flash'),
  *   RESEND_API_KEY?, ADMIN_EMAIL?, FROM_EMAIL?, STORE_URL?
  */
 
@@ -75,6 +76,37 @@ async function askGemini(env, systemText, history, userText) {
   return (data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') || '').trim();
 }
 
+// ── Groq (OpenAI-compatible chat completions) ──────────────
+async function askGroq(env, systemText, history, userText) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: env.GROQ_MODEL || 'openai/gpt-oss-120b',
+      temperature: 0.4,
+      max_tokens: 400,
+      messages: [
+        { role: 'system', content: systemText },
+        ...history
+          .filter((h) => h.role !== 'system')
+          .map((h) => ({ role: h.role === 'customer' ? 'user' : 'assistant', content: h.body })),
+        { role: 'user', content: userText },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`groq ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  return (data?.choices?.[0]?.message?.content || '').trim();
+}
+
+// ponytail: key presence picks the provider — no provider registry, no
+// cross-provider failover. Add failover only if Groq starts rate-limiting too.
+function askLLM(env, systemText, history, userText) {
+  return env.GROQ_API_KEY
+    ? askGroq(env, systemText, history, userText)
+    : askGemini(env, systemText, history, userText);
+}
+
 const ESCALATE_RE = /\b(human|agent|representative|real person|talk to (someone|a person|somebody)|speak (to|with))\b/i;
 const SENSITIVE_RE = /\b(refund|charge ?back|dispute|complain(t|ts)?|scam|fraud|legal|broken|damaged|defective|wrong item|never (arrived|received)|missing)\b/i;
 const ORDER_RE = /#?\b([A-Z]{0,4}-?\d{3,})\b/;
@@ -120,8 +152,8 @@ export async function processSupport(input, env) {
   if (!sbBase(env) || !env.SUPABASE_SERVICE_ROLE_KEY) {
     return { status: 500, body: { error: 'server missing Supabase config (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)', envKeys: Object.keys(env) } };
   }
-  if (!env.GEMINI_API_KEY) {
-    return { status: 500, body: { error: 'server missing GEMINI_API_KEY' } };
+  if (!env.GROQ_API_KEY && !env.GEMINI_API_KEY) {
+    return { status: 500, body: { error: 'server missing GROQ_API_KEY / GEMINI_API_KEY' } };
   }
 
   const text = message.trim().slice(0, 4000);
@@ -169,6 +201,23 @@ export async function processSupport(input, env) {
   const settings = await sbGet(env, `store_settings?key=eq.support_kb&select=value`);
   const kb = settings?.[0]?.value || '';
 
+  // The live catalogue. Without it the model has no product facts at all and
+  // invents pieces the store doesn't carry (chokers, chandelier earrings...).
+  // ponytail: whole active catalogue, one line each - fine at this store's size.
+  // If it outgrows the context window, switch to a keyword search on `text`.
+  const products = await sbGet(
+    env,
+    'products?is_active=eq.true&select=name,collection,category,price,inventory(stock)&order=name.asc&limit=200',
+  );
+  const catalog = (products || [])
+    .map((pr) => {
+      const inv = Array.isArray(pr.inventory) ? pr.inventory[0] : pr.inventory;
+      const tags = [pr.collection, pr.category].filter(Boolean).join(', ');
+      return `- ${pr.name}${tags ? ` (${tags})` : ''} - P${pr.price}` +
+        (inv && inv.stock === 0 ? ' - OUT OF STOCK' : '');
+    })
+    .join('\n');
+
   let orderCtx = '';
   const om = text.match(ORDER_RE);
   if (om && convo.customer_email) {
@@ -180,15 +229,18 @@ export async function processSupport(input, env) {
   const system =
     'You are the friendly customer-support assistant for NGL Accessories, a premium Philippines jewelry brand. ' +
     'Reply warmly and concisely (2–4 sentences). Use ONLY the facts below — never invent orders, prices, or policies. ' +
+    'CATALOGUE below is the complete list of what NGL sells. Recommend ONLY items named there, quoting the name exactly. ' +
+    "If the customer asks for something not in CATALOGUE, say plainly that we don't carry it, then offer the closest item that IS listed. " +
+    'Never describe a product, material, or feature that is not in CATALOGUE. ' +
     "If the customer needs a human (refunds, complaints, payment disputes, anything you're unsure of, or they ask for a person), " +
     "apologize briefly, say you'll connect them with a teammate, and end your reply with the token [[ESCALATE]].\n\n" +
-    `FACTS:\n${kb}${orderCtx}`;
+    `FACTS:\n${kb}\n\nCATALOGUE (everything NGL sells):\n${catalog || '(catalogue unavailable - do not recommend specific products)'}${orderCtx}`;
 
   // 7. Generate, with a graceful fallback that still escalates.
   let reply = '';
   let escalated = preEscalate;
   try {
-    reply = await askGemini(env, system, history, text);
+    reply = await askLLM(env, system, history, text);
     if (/\[\[ESCALATE\]\]/i.test(reply)) escalated = true;
     reply = reply.replace(/\[\[ESCALATE\]\]/gi, '').trim();
     if (!reply) reply = 'Thanks for reaching out! Let me connect you with a teammate so you get the best help.';

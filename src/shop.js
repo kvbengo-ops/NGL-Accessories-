@@ -1,4 +1,5 @@
 import './style.css';
+import { readCart, writeCart, addCatalogProduct } from './cart-store.js';
 import { getProducts, trackEngagement, cfImg } from './supabase.js';
 import { initSearch } from './search.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
@@ -84,16 +85,12 @@ let PRODUCTS = [];
 let cart = [];
 
 function loadCart() {
-  try {
-    cart = JSON.parse(localStorage.getItem('ngl_cart') || '[]');
-  } catch {
-    cart = [];
-  }
+  cart = readCart();
   updateCartCount();
 }
 
 function saveCart() {
-  localStorage.setItem('ngl_cart', JSON.stringify(cart));
+  writeCart(cart);
   updateCartCount();
 }
 
@@ -107,29 +104,14 @@ function updateCartCount() {
 }
 
 function addToCart(product) {
+  loadCart();
   if (product.stock <= 0) {
     showToast(`Sorry, ${product.name} is out of stock.`);
     return false;
   }
-  const existing = cart.find(item => item.id === product.id);
-  if (existing) {
-    if (existing.quantity >= product.stock) {
-      showToast(`Cannot add more. Only ${product.stock} in stock.`);
-      return false;
-    }
-    existing.quantity = Math.min(existing.quantity + 1, product.stock, 99);
-  } else {
-    cart.push({
-      id: product.id,
-      name: product.name,
-      collection: product.categoryLabel,
-      price: product.price, // Number
-      image_url: product.image, // raw URL; checkout sizes it with cfImg()
-      stock: product.stock,
-      quantity: 1
-    });
-  }
-  saveCart();
+  const result = addCatalogProduct({ ...product, collection: product.categoryLabel, image_url: product.image });
+  if (!result.ok) { showToast(result.message); return false; }
+  loadCart();
 
   // Animate cart badge
   const el = document.querySelector('.cart-count');
@@ -149,6 +131,9 @@ function isInBagFull(product) {
   const item = cart.find(i => i.id === product.id);
   return !!item && item.quantity >= product.stock;
 }
+
+window.addEventListener('ngl:cart-updated', () => { loadCart(); });
+window.addEventListener('storage', event => { if (event.key === 'ngl_cart') loadCart(); });
 
 /* ── LIKES ── */
 // ponytail: session-only dedupe (resets on reload) so one visitor can't pump

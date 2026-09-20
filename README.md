@@ -135,6 +135,8 @@ public/       # static images
 
 ## Going further
 
+The storefront includes **NGL Stylist**, a Groq-powered conversational jewelry guide grounded in retrieved live catalog data, with product cards and add-to-bag controls. Open `/shop.html?stylist=1` to try it. See [stylist implementation notes](STYLIST_IMPLEMENTATION.md) for retrieval, provider settings, error handling, and verification. Run its checks with `node --test test-stylist.mjs`.
+
 The one remaining gap, left intentionally for a small shop:
 
 - **Payments are manual** — customers submit a GCash/bank reference that an admin

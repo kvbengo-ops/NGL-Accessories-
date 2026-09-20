@@ -4,8 +4,9 @@
  * middleware so the chat works locally on `npm run dev`). See _support-core.js.
  *
  * Pages env (dashboard → Settings → Environment variables & secrets):
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Secret), GEMINI_API_KEY (Secret),
- *   and optionally RESEND_API_KEY (Secret), ADMIN_EMAIL, FROM_EMAIL.
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Secret), GROQ_API_KEY (Secret)
+ *   or GEMINI_API_KEY (Secret), and optionally RESEND_API_KEY (Secret),
+ *   ADMIN_EMAIL, FROM_EMAIL.
  */
 import { processSupport } from './_support-core.js';
 

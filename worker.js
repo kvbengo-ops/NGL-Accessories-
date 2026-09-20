@@ -7,8 +7,9 @@
  * runtime-agnostic core as the Vite dev middleware (see _support-core.js).
  *
  * Worker env (dashboard → the Worker → Settings → Variables and Secrets):
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Secret), GEMINI_API_KEY (Secret),
- *   GEMINI_MODEL? and optionally RESEND_API_KEY (Secret), ADMIN_EMAIL, FROM_EMAIL.
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Secret), GROQ_API_KEY (Secret)
+ *   or GEMINI_API_KEY (Secret) + GEMINI_MODEL?, and optionally
+ *   RESEND_API_KEY (Secret), ADMIN_EMAIL, FROM_EMAIL.
  *
  * Image caching proxy: GET /img/<path>
  *   Fetches the image from Supabase Storage and caches it at Cloudflare's edge
@@ -17,6 +18,7 @@
  *   from the nearest Cloudflare data-centre — no origin roundtrip needed.
  */
 import { processSupport } from './functions/api/_support-core.js';
+import { handleStylistRequest } from './functions/api/_stylist-core.js';
 
 /** Cache product images from Supabase Storage at Cloudflare's edge. */
 async function handleImageProxy(request, env) {
@@ -70,6 +72,8 @@ async function handleImageProxy(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === '/api/stylist') return handleStylistRequest(request, env);
 
     // Image caching proxy: /img/<supabase-storage-path>
     if (url.pathname.startsWith('/img/')) {

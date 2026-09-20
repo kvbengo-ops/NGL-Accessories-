@@ -1,5 +1,7 @@
 # NGL Admin Insights — Architecture Plan
 
+> Superseded on 20 September 2026 by [NGL Business Assistant — product and implementation plan](NGL_BUSINESS_ASSISTANT_PLAN.md). Retained as an earlier proposal; its metric definitions, model/quota assumptions, scope, and guarantees are not implementation requirements.
+
 **Status:** plan only, nothing built yet.
 **Goal:** an admin-side assistant that answers business questions about NGL from live store data, so the owner can make decisions without reading six dashboards.
 

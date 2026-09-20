@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import { resolve } from 'path'
 import { processSupport } from './functions/api/_support-core.js'
+import { handleStylistRequest } from './functions/api/_stylist-core.js'
 
 // Dev-only: make POST /api/support work under `npm run dev` (Vite), using the
 // same core logic as the Cloudflare Pages Function. Reads keys from .env.local.
@@ -8,6 +9,23 @@ function supportApiDev(env) {
   return {
     name: 'support-api-dev',
     configureServer(server) {
+      server.middlewares.use('/api/stylist', async (req, res) => {
+        // Local preview uses the real Groq RAG path too. Explicit false disables it.
+        const localEnv = { ...env, STYLIST_LIMITER: { limit: async () => ({ success: true }) }, STYLIST_AI_ENABLED: env.STYLIST_LOCAL_AI === 'false' ? 'false' : 'true' }
+        try {
+          let raw = '', size = 0
+          for await (const chunk of req) {
+            size += chunk.length
+            if (size > 12000) { res.statusCode = 413; res.end('Message too large'); return }
+            raw += chunk
+          }
+          const request = new Request(`http://${req.headers.host}/api/stylist`, { method: req.method, headers: { 'Content-Type': 'application/json' }, ...(req.method === 'POST' ? { body: raw } : {}) })
+          const response = await handleStylistRequest(request, localEnv)
+          res.statusCode = response.status
+          response.headers.forEach((value, name) => res.setHeader(name, value))
+          res.end(await response.text())
+        } catch { res.statusCode = 503; res.end(JSON.stringify({ error: 'Stylist unavailable' })) }
+      })
       server.middlewares.use('/api/support', (req, res, next) => {
         if (req.method !== 'POST') return next()
         let raw = ''
