@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Raw Supabase Storage URLs in <img src> skip the /img/ Cloudflare cache
+      # and serve full-size originals — that blew the Free-plan cached-egress
+      # quota in Sep 2026. Wrap image URLs in cfImg(url, size) instead.
+      - name: Images go through cfImg
+        run: |
+          if grep -rnE 'src="\$\{[A-Za-z_.]*(image_url|image|proof_url|publicUrl)\}"' src admin *.html; then
+            echo "::error::Raw storage image URL in src= above. Use cfImg(url, size) from src/supabase.js."
+            exit 1
+          fi
+
+      - run: node --test test-stylist.mjs
+      - run: npm run build
