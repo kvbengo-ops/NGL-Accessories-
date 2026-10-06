@@ -52,7 +52,12 @@ function supportApiDev(env) {
 export default defineConfig(({ mode }) => {
   // Load ALL env vars (no prefix filter) so server-side keys in .env.local are available.
   const env = loadEnv(mode, process.cwd(), '')
+  // Earring try-on switch (not a secret: VITE_ values are public in the bundle anyway).
+  // On for production builds; set VITE_TRY_ON_ENABLED=false (env or .env.local) to override.
+  // To hide the button everywhere: change 'true' below to 'false' and push.
+  const tryOnEnabled = env.VITE_TRY_ON_ENABLED || (mode === 'production' ? 'true' : 'false')
   return {
+    define: { 'import.meta.env.VITE_TRY_ON_ENABLED': JSON.stringify(tryOnEnabled) },
     plugins: [supportApiDev(env)],
     server: {
       host: true,
