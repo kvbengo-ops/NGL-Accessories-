@@ -2,6 +2,7 @@
    NGL Accessories — Supabase Client
    ============================================================ */
 import { createClient } from '@supabase/supabase-js';
+import { validateConfig } from './try-on/assets.js';
 
 const SUPABASE_URL  = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -244,18 +245,18 @@ export async function getSalesSummary(days = 7) {
 
 /* ── Storage helpers ─────────────────────────────────────── */
 // Every byte stored gets re-served on each cache miss (Supabase egress), so
-// re-encode to ≤1600px WebP before upload. WebP keeps PNG transparency.
+// re-encode to ≤maxEdge (default 1600px) WebP before upload. WebP keeps PNG transparency.
 // Falls back to the original if the browser can't encode WebP or it's no smaller.
-async function shrinkImage(file) {
+async function shrinkImage(file, maxEdge = 1600, quality = 0.82) {
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const scale  = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const scale  = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement('canvas');
     canvas.width  = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
     canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     bitmap.close();
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/webp', 0.82));
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/webp', quality));
     if (blob && blob.type === 'image/webp' && blob.size < file.size) return { body: blob, ext: 'webp' };
   } catch { /* undecodable here — upload as-is */ }
   return { body: file, ext: (file.name.split('.').pop() || 'jpg').toLowerCase() };
@@ -273,6 +274,92 @@ export async function uploadProductImage(file) {
   if (error) throw error;
   const { data } = supabase.storage.from('product-images').getPublicUrl(path);
   return data.publicUrl;
+}
+
+/* ── Try-on helpers ──────────────────────────────────────── */
+// Earring try-on placement settings (supabase/migrations/…_try-on.sql).
+// Config objects follow the contract in src/try-on/assets.js / plan.md.
+const TRY_ON_BUCKET = 'try-on-assets';
+const tryOnUrl = (path) =>
+  path ? cfImg(supabase.storage.from(TRY_ON_BUCKET).getPublicUrl(path).data.publicUrl) : null;
+// Works for both /img/try-on-assets/<path> and the dev-mode Supabase URL.
+const tryOnPath = (url) => (url ? url.split(`/${TRY_ON_BUCKET}/`)[1] ?? null : null);
+
+// DB row → contract-shaped config, unvalidated (admin drafts can be incomplete).
+const rowToRawConfig = (r) => ({
+  productId: r.product_id,
+  version: r.config_version,
+  enabled: r.enabled,
+  assets: { left: tryOnUrl(r.asset_left_path), right: tryOnUrl(r.asset_right_path) },
+  mirrorLeftForRight: r.mirror_left_for_right,
+  anchor: { left: r.anchor_left, right: r.anchor_right },
+  offset: { left: r.offset_left, right: r.offset_right },
+  rotationDeg: { left: r.rotation_left_deg, right: r.rotation_right_deg },
+  scaleRatio: r.scale_ratio,
+  lengthMm: r.product_length_mm,
+});
+
+// Published configs for the shop: one query per page load, never per frame.
+// Empty Map when the build flag is off or the query fails — the shop works without it.
+let tryOnConfigs = null;
+export function getTryOnConfigs() {
+  if (import.meta.env.VITE_TRY_ON_ENABLED !== 'true') return Promise.resolve(new Map());
+  tryOnConfigs ??= supabase.from('product_try_on_configs').select('*').eq('enabled', true)
+    .then(({ data, error }) => {
+      if (error) { tryOnConfigs = null; console.warn('Try-on configs unavailable:', error.message); return new Map(); }
+      const map = new Map();
+      for (const row of data) {
+        const { ok, config } = validateConfig(rowToRawConfig(row));
+        if (ok) map.set(config.productId, config);
+      }
+      return map;
+    });
+  return tryOnConfigs;
+}
+
+// Admin editor: the row as a raw config (drafts may be invalid), or null if none yet.
+export async function getTryOnConfigAdmin(productId) {
+  const { data, error } = await supabase
+    .from('product_try_on_configs').select('*').eq('product_id', productId).maybeSingle();
+  if (error) throw error;
+  return data ? rowToRawConfig(data) : null;
+}
+
+// Save a config. Publishing (enabled: true) must validate first; drafts may be
+// partial — the DB CHECKs/trigger/RLS are the real gate either way.
+export async function upsertTryOnConfig(config) {
+  if (config.enabled) {
+    const { ok, errors } = validateConfig(config);
+    if (!ok) throw Object.assign(new Error('Invalid try-on config'), { errors });
+  }
+  const { error } = await supabase.from('product_try_on_configs').upsert({
+    product_id: config.productId,
+    enabled: config.enabled === true,
+    asset_left_path: tryOnPath(config.assets?.left),
+    asset_right_path: tryOnPath(config.assets?.right),
+    mirror_left_for_right: config.mirrorLeftForRight === true,
+    anchor_left: config.anchor.left, anchor_right: config.anchor.right,
+    offset_left: config.offset.left, offset_right: config.offset.right,
+    rotation_left_deg: config.rotationDeg.left, rotation_right_deg: config.rotationDeg.right,
+    scale_ratio: config.scaleRatio,
+    product_length_mm: config.lengthMm ?? null,
+    config_version: config.version ?? 1,
+  }, { onConflict: 'product_id' });
+  if (error) throw error;
+}
+
+// Upload one earring cutout. Immutable path (never overwritten), pre-sized to
+// ≤1024px because Supabase image transforms aren't on the Free plan.
+// Returns the URL to store in config.assets[side].
+export async function uploadTryOnAsset(file, productId, side) {
+  if (side !== 'left' && side !== 'right') throw new Error('side must be "left" or "right"');
+  const { body, ext } = await shrinkImage(file, 1024, 0.9);
+  if (ext !== 'webp' && ext !== 'png') throw new Error('Use a transparent PNG or WebP image.');
+  const path = `${productId}/${side}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from(TRY_ON_BUCKET)
+    .upload(path, body, { cacheControl: ONE_YEAR, upsert: false, contentType: `image/${ext}` });
+  if (error) throw error;
+  return tryOnUrl(path);
 }
 
 // Upload a customer's proof-of-payment screenshot (anonymous checkout).

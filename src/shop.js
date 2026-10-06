@@ -1,6 +1,6 @@
 import './style.css';
 import { readCart, writeCart, addCatalogProduct } from './cart-store.js';
-import { getProducts, trackEngagement, cfImg } from './supabase.js';
+import { getProducts, getTryOnConfigs, trackEngagement, cfImg } from './supabase.js';
 import { initSearch } from './search.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
 import './cms-frontend.js';
@@ -80,6 +80,7 @@ const emojiMap = {
 };
 
 let PRODUCTS = [];
+let tryOnConfigs = new Map();
 
 /* ── CART ── */
 let cart = [];
@@ -174,6 +175,7 @@ const modalPrice    = document.getElementById('modal-price');
 const modalDesc     = document.getElementById('modal-desc');
 const modalTags     = document.getElementById('modal-tags');
 const modalCartBtn  = document.getElementById('modal-btn-cart');
+const modalTryOnBtn = document.getElementById('modal-btn-try-on');
 const modalClose    = document.getElementById('modal-close');
 
 let modalProduct = null;
@@ -200,6 +202,8 @@ function openModal(product) {
     modalCartBtn.disabled  = false;
   }
   modalCartBtn.classList.remove('added');
+  modalTryOnBtn.hidden = !(import.meta.env.VITE_TRY_ON_ENABLED === 'true' && product.itemCategory === 'Earrings' && tryOnConfigs.has(product.id));
+  modalTryOnBtn.style.display = modalTryOnBtn.hidden ? 'none' : '';
 
   modalBackdrop.removeAttribute('aria-hidden');
   modalBackdrop.classList.add('open');
@@ -235,6 +239,11 @@ modalCartBtn?.addEventListener('click', () => {
   modalCartBtn.classList.add('added');
   modalCartBtn.disabled = true;
   setTimeout(closeModal, 1200);
+});
+modalTryOnBtn?.addEventListener('click', async () => {
+  if (!modalProduct || modalTryOnBtn.hidden) return;
+  const { openTryOn } = await import('./try-on/controller.js');
+  if (modalProduct) openTryOn({ product: modalProduct, products: PRODUCTS, configs: tryOnConfigs, onAddToBag: addToCart, returnFocus: modalTryOnBtn });
 });
 
 /* ── SWIPE CARD BUILDER ── */
@@ -880,6 +889,10 @@ async function initShop() {
       stock: p.inventory?.stock || 0,
       likes: p.likes_count || 0
     }));
+    if (import.meta.env.VITE_TRY_ON_ENABLED === 'true') {
+      try { tryOnConfigs = await getTryOnConfigs(); }
+      catch (error) { console.error('Try-on configurations unavailable:', error); }
+    }
 
     // Inject Product Schema
     const schemaScript = document.createElement('script');

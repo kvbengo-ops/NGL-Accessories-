@@ -1,0 +1,24 @@
+{
+  "name": "WebAR.rocks.face (dedicated ear-model candidate)",
+  "origin": "https://github.com/WebAR-rocks/WebAR.rocks.face",
+  "revision": "819cdbad4e87a43635d5f9724e30f277a7e7964d",
+  "revisionDate": "2025-11-14",
+  "fetched": "2026-10-06",
+  "license": "MIT (Copyright (c) 2025 WebAR.rocks; see LICENSE). The LICENSE lists /dist, /helpers and /neuralNets as licensed property; per-file headers are kept intact. Not re-reviewed: any third-party code the upstream repo's demos pull in (none of it is copied here).",
+  "reference": "demos/earrings2D/main.js at the same revision (uses NN_EARS_4.json; ear point = mix(<side>EarBottom, <side>EarEarring, k=0.7), angleHide 5 deg)",
+  "files": [
+    { "path": "WebARRocksFace.module.js", "from": "dist/WebARRocksFace.module.js", "bytes": 175541, "sha256": "2c8b372188c02e4ae2bbaedaf02ddf14c2b6e3eb74312bf4d2e1809cfc3176d2" },
+    { "path": "WebARRocksLMStabilizer.js", "from": "helpers/landmarksStabilizers/WebARRocksLMStabilizer.js", "bytes": 13282, "sha256": "6201d8a82a9b9cd305ea1cf9e1f04bd96e937e2eb4676c18a02adce4f3fd863c" },
+    { "path": "NN_EARS_4.json", "from": "neuralNets/NN_EARS_4.json", "bytes": 1859648, "sha256": "ad94ec43ae20eada8ae9b9fff42f78634236932373fb1d801f267fbdb1c15827" },
+    { "path": "LICENSE", "from": "LICENSE", "bytes": 1716, "sha256": "a46e136019cb2881f35f2752134496e4544a45cf9a4c1fc811e6088dcb8841f4" }
+  ],
+  "reviewedNotCopied": [
+    "helpers/WebARRocksFaceCanvas2DHelper.js (draws the video into the engine canvas; our <video> + overlay replace it, its viewport->pixel conversion is re-implemented in src/try-on/engine-webar.js)",
+    "helpers/WebARRocksResizer.js (canvas sizing for the demo page)",
+    "dist/WebARRocksFace.js (classic-script build; the ES-module build is used instead)"
+  ],
+  "modelOutputs": {
+    "landmarksLabels": ["leftEyeCtr", "rightEyeCtr", "leftEarBottom", "leftEarEarring", "rightEarBottom", "rightEarEarring"],
+    "meanPositionsViewport": "leftEarBottom (0.835, 0.015), leftEarEarring (0.874, -0.130), rightEarBottom (-0.790, 0.020), rightEarEarring (-0.839, -0.126); x grows left->right, y bottom->top, so 'left' is the image-right, i.e. the wearer's left, in the unmirrored video"
+  }
+}

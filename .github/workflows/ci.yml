@@ -26,5 +26,17 @@ jobs:
             exit 1
           fi
 
+      # Same rule for `el.src = …` in JS: only blob previews, clears, and cfImg(...)
+      # and the pinned self-hosted WebAR.rocks script (WEBAR_BASE) are allowed. The try-on loader must keep using cfImg with no size.
+      - name: Image src assignments go through cfImg
+        run: |
+          if grep -rnE '\.src\s*=[^=]' src admin *.html | grep -vE "cfImg\(|createObjectURL\(|WEBAR_BASE|= *'';"; then
+            echo "::error::Raw .src assignment above. Use cfImg(url[, size]) from src/supabase.js."
+            exit 1
+          fi
+          grep -q 'img.src = cfImg(url)' src/try-on/assets.js \
+            || { echo "::error::src/try-on/assets.js must load images via cfImg(url) with no size."; exit 1; }
+
       - run: node --test test-stylist.mjs
+      - run: node --test test-try-on.mjs
       - run: npm run build

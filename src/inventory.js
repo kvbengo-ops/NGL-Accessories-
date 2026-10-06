@@ -71,6 +71,7 @@ function renderTable(products) {
         <td>${stockBadge(inv.stock, inv.low_stock_threshold)}</td>
         <td>
           <div class="action-btns">
+            ${p.category === 'Earrings' ? `<a class="action-btn action-btn--try-on" href="/admin/try-on.html?product=${encodeURIComponent(p.id)}" title="Try-on" aria-label="Try-on: ${p.name}"><span class="material-symbols-outlined">face</span></a>` : ''}
             <button class="action-btn action-btn--edit" data-id="${p.id}" title="Edit">
               <span class="material-symbols-outlined">edit</span>
             </button>

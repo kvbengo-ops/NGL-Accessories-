@@ -57,6 +57,9 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 5173,
+      // Lets `cloudflared tunnel --url http://localhost:5173` reach the dev server
+      // over HTTPS (phones only allow the camera on HTTPS or localhost).
+      allowedHosts: ['.trycloudflare.com'],
     },
     build: {
       rollupOptions: {
@@ -76,6 +79,7 @@ export default defineConfig(({ mode }) => {
           'admin-login': resolve(__dirname, 'admin/login.html'),
           'admin-dashboard': resolve(__dirname, 'admin/dashboard.html'),
           'admin-inventory': resolve(__dirname, 'admin/inventory.html'),
+          'admin-try-on': resolve(__dirname, 'admin/try-on.html'),
           'admin-orders': resolve(__dirname, 'admin/orders.html'),
           'admin-pos': resolve(__dirname, 'admin/pos.html'),
           'admin-admins': resolve(__dirname, 'admin/admins.html'),

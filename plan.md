@@ -3,6 +3,8 @@
 Status: Planned; no feature code implemented by this document.
 Created: 2026-10-06
 
+Tracking research update (2026-10-06): section 12 revises the engine-selection decision. Evaluate WebAR.rocks' dedicated ear model against the existing MediaPipe implementation before treating MediaPipe as the production choice. Existing implementation notes below remain a record of work completed.
+
 ## 1. Goal and scope
 
 Let shoppers open their camera from an earring's product modal, preview the design on their face, compare supported earrings, and add a chosen product to their bag.
@@ -45,7 +47,7 @@ Accessibility: named dialog, focus containment/restoration, Escape to close, key
 
 ## 4. Tracking and rendering approach
 
-Use a pinned version of `@mediapipe/tasks-vision` with a compatible Face Landmarker model, video mode, one face, and facial transformation matrices. Disable outputs the feature does not use. Browser face landmarks and transformations are documented by [Google](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js).
+The existing baseline uses a pinned version of `@mediapipe/tasks-vision` with a compatible Face Landmarker model, video mode, one face, and facial transformation matrices. Disable outputs the feature does not use. Browser face landmarks and transformations are documented by [Google](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js). Section 12 adds a dedicated ear-tracking candidate; benchmark it before selecting the release engine.
 
 Face tracking is the starting point, not a guaranteed earlobe detector. Treat ear attachment points as estimates derived from face geometry, product settings, and user adjustment. Validate this assumption on real people before committing to a full release.
 
@@ -181,3 +183,112 @@ Release criteria:
 Choose the pilot products and representative test phones; determine whether existing photography can produce clean cutouts; establish the supported head-angle range and acceptable manual adjustment. Revisit the custom tracker approach only if those trials fail the visual or performance criteria.
 
 The next implementation task is Phase 1: build and evaluate the isolated prototype before migrating production data or enabling the storefront feature.
+
+Work is split between agents in `TRY_ON_TASKS_CLAUDE.md` (data, security, placement math, CI) and `TRY_ON_TASKS_CODEX.md` (camera, tracking, rendering, UI), with a shared contract in both.
+
+## 10. Implementation status (updated 2026-10-06)
+
+**Done (data / placement / CI half):** pinned `@mediapipe/tasks-vision` 1.0.1 (Apache-2.0) with model + WASM in `public/try-on/v1/` (largest file 11.7 MB, under the 25 MiB limit; `public/_headers` sets immutable caching for `/try-on/*`); `placement.js`, `assets.js`, `fixtures.js` (placeholder shapes, not product designs); `test-try-on.mjs` (12 tests, in CI); migration `20260914001100_try-on.sql`; `supabase.js` try-on helpers; CI guard for `.src =` assignments.
+
+**Migration verification so far:** run against a local Postgres stand-in (PGlite with stubbed `auth`/`storage`/`is_admin`): CHECK bounds, the earrings-only trigger, enabled-needs-assets, path format, anon/non-admin write rejection, public read of enabled rows only (and none after the product is deactivated or re-categorised), storage upload rules, and a clean second run. **Not yet verified against the live project.** After applying the migration run `node --env-file=.env.local setup/verify-try-on-auth.mjs <earring-uuid> [adminEmail adminPassword]` and paste the output into the PR (C9). A signed-in non-admin check needs a non-admin account (public sign-ups should be off), so it is covered only by the stand-in run.
+
+### Prototype review (C6, static read of Codex's files)
+Checked against §4 and §6; passes: mirroring applied once (CSS on `<video>`, `mapToView` for the overlay), wearer-anatomical sides, `flipX`/`asset`/`aspect` consumed correctly, DPR cap 2, one inference in flight, stale results dropped by session/ts, transferred bitmaps closed, tracks stopped on close/hide/`pagehide`/`track.onended`, late-permission stream stopped, explicit Resume after backgrounding, no frame or landmark leaves the device (worker `postMessage` only). Build output: the controller, worker and `vision_bundle` are lazy chunks; `/shop` has no preload of them and fetches no model/WASM until Start camera.
+
+Open items for Codex / device testing:
+1. **Frame timestamps.** `processFrame` uses `metadata.mediaTime * 1000` and drops any frame with `ts <= lastSent`. If a browser reports a constant or non-advancing `mediaTime` for camera streams, tracking would stall silently on "no face". Verify on iPhone Safari; if it stalls, use `metadata.presentationTime` (or `performance.now()`).
+2. **Worker hang.** If the worker never answers, `inFlight` stays true and the last overlay stays on screen. Add a watchdog (~1 s) that clears the canvas and resets `inFlight`.
+3. **Model content type.** The `.task` fetch only checks `ok`; a missing file returns SPA HTML with status 200 and only fails later inside MediaPipe. Reject `text/html` up front, and avoid fetching the model twice (pre-check, then MediaPipe), e.g. a `HEAD`.
+4. `renderer.render()` returns `'no-face'` while artwork is still loading; show `loading`/`missing-asset` instead of "move into the frame".
+5. `setState` rewrites DOM text every frame; return early when the state is unchanged.
+6. The worker reports any per-frame exception as `unsupported-device`; use `model-failure` for a throw during detection if the device is otherwise working.
+7. (Resolved) `src/try-on-admin.js` has landed and uses the helpers per the contract; `npm run build` passes. Not yet exercised against a live database.
+
+### Go/no-go evidence (Phase 1) — pending device runs
+| Device / OS / browser | FPS | Inference ms | Cold / warm start | Notes |
+| --- | --- | --- | --- | --- |
+| _iPhone — to fill_ | | | | |
+| _Mid-range Android — to fill_ | | | | |
+| _Desktop Chrome — to fill_ | | | | |
+
+The lab page uses placeholder shapes; judge visual accuracy with real transparent cutouts of 3–5 pilot products (make them from `Desktop\NGL-image-backup\products\`).
+
+## 11. Rollout and rollback
+
+1. Apply `supabase/migrations/20260914001100_try-on.sql` in the Supabase SQL editor and run `setup/verify-try-on-auth.mjs`.
+2. **Egress gate (C13):** confirm Supabase daily cached egress is back under budget (grace period ends 2026-10-24) before enabling any row. After the first published row, request `/img/try-on-assets/<id>/left-….webp` twice and confirm the second response has `CF-Cache-Status: HIT`.
+3. Set `VITE_TRY_ON_ENABLED=true` in the **Cloudflare build variables** (Workers & Pages → `ngl-v1` → Settings → Variables, build section) and push/redeploy; it is read at build time. `.env.local` only affects local dev.
+4. Publish pilot rows one at a time from the admin editor (Publish sets `enabled`).
+5. **Rollback:** disable the rows (editor → Disable, or `update product_try_on_configs set enabled = false;`) — effective immediately for new page loads. To remove the button entirely, set `VITE_TRY_ON_ENABLED` to `false` (or remove it) and redeploy. Leave the additive table and bucket in place.
+
+## 12. Dedicated ear tracking: revised evaluation approach
+
+Research date: 2026-10-06. Findings are based on official documentation and inspected example code. No live camera accuracy comparison has been performed, so the recommendation is a prototype priority, not a claim of measured superiority.
+
+### Preferred next prototype: WebAR.rocks.face
+
+The official [2D earring example source](https://raw.githubusercontent.com/WebAR-rocks/WebAR.rocks.face/master/demos/earrings2D/main.js) uses `NN_EARS_4.json` and directly consumes `leftEarBottom`, `leftEarEarring`, `rightEarBottom`, and `rightEarEarring`. It blends those positions to place artwork, scales relative to face width, and hides sides according to head angle. This is more specific to the task than our current face-geometry attachment estimates, although it still predicts landmarks and cannot guarantee a customer's actual piercing position.
+
+The repository provides browser examples for [2D earrings](https://webar.rocks/demos/face/demos/earrings2D/) and [3D earrings](https://webar.rocks/demos/face/demos/earrings3D/). Its [license](https://github.com/WebAR-rocks/WebAR.rocks.face/blob/master/LICENSE) applies MIT terms to the distributed runtime, helpers, and neural models; preserve notices and review separately supplied assets/dependencies before redistribution. A paid API is not required for this self-hosted candidate.
+
+The [3D example](https://raw.githubusercontent.com/WebAR-rocks/WebAR.rocks.face/master/demos/earrings3D/main.js) loads GLB jewelry and uses geometric ear occluders. These occluders do not establish hair segmentation or physical fit accuracy. Begin with 2D product cutouts, and evaluate 3D only when real product models are available.
+
+### Commercial alternatives
+
+| Candidate | Verified capability | Evaluation role |
+| --- | --- | --- |
+| [Camweara](https://camweara.com/virtual-jewelry-try-on/) | Jewelry product-image workflows, earrings, and custom website integration through its [JavaScript API](https://camweara.com/integrations/camweara_api.html). | Paid alternative if custom tracking needs too much refinement. Its [pricing page](https://camweara.com/pricing/) currently lists Starter at USD 990/year, 300 products, and video/photo modes for businesses with fewer than 10 people; additional image-editing charges may apply. Verify terms before purchase. |
+| [Banuba jewelry try-on](https://www.banuba.com/virtual-try-on-jewelry) | Vendor offers browser jewelry try-on including earrings, 3D rendering, motion simulation, and product digitization. | Evaluate a trial with actual NGL designs if richer rendering and vendor support are priorities. Confirm plan, browser support, data processing, and asset costs directly; marketing claims are not independent benchmarks. |
+| [Perfect Corp AI earrings](https://docs.perfectcorp.com/reference/ai_earrings) | Documents an AI earring workflow with guided selfie capture. | Consider separately for a captured-photo experience. A capture-and-generate API does not by itself satisfy the requested continuously moving camera filter. Validate any separate live AR offering explicitly. |
+
+### Implementation changes if the ear-model prototype passes
+
+1. Add an engine adapter alongside the current implementation. Normalize output into wearer-left/right attachment coordinates, head pose, tracking state, and timestamp. Do not assume that both engines expose equivalent per-ear confidence scores.
+2. Pin a tested WebAR.rocks commit, self-host its compatible runtime/helper/model files, and retain license notices. Reuse the existing camera consent, UI, assets, cart, and admin work.
+3. Integrate the ear model through its documented WebGL/callback flow. Do not force the MediaPipe worker protocol or WASM packaging onto this runtime. Validate pause, resize, context loss, and destroy behavior for the new adapter.
+4. Update placement logic to consume predicted ear anchors. Retain product-specific image anchors and a small optional user adjustment. Keep the schema engine-independent wherever possible.
+5. Compare the candidates one at a time in the lab; do not run two trackers continuously on shoppers' phones. Compare placement with the same products, framing, people, and lighting.
+6. Measure attachment drift relative to visible earlobes, jitter while still, reacquisition after a turn, incorrect drawing over hair, supported pose range, FPS, startup, and memory. Include current iPhone Safari and a mid-range Android Chrome device, plus the existing lifecycle and network privacy checks.
+7. Select WebAR.rocks only if it materially improves placement and passes the performance/lifecycle gates. Keep the baseline available during evaluation. If neither meets the visual gate, trial a commercial jewelry SDK before undertaking custom ear-model training.
+
+The recommended immediate task is to adapt the dedicated 2D ear demo into the existing lab and compare it with the current baseline using actual NGL cutouts. No engine replacement or paid integration is implemented by this research update.
+
+## 13. Claude handoff — implement the ear-tracking comparison
+
+Owner for this next task: Claude. This handoff supersedes the earlier Claude/Codex file split only for changes necessary to implement this comparison. Preserve unrelated edits and existing completed work; check the current working tree and coordinate any files actively being edited elsewhere before modifying them. This assignment does not authorize deployment, live database changes, paid service enrollment, or enabling the feature for shoppers.
+
+### Deliverables in order
+
+- [x] **E1 — Baseline audit.** Read this plan, both task files, the current try-on modules, lab, tests, and asset headers. Record the existing behavior and unresolved lifecycle problems relevant to the comparison. Keep the current MediaPipe path operational.
+- [x] **E2 — Pin the candidate.** Inspect the official WebAR.rocks 2D demo and matching model/runtime/helpers. Pin an exact commit and record origin URLs, revision, license notices, file hashes, and sizes in a dependency manifest. Copy only needed files into a new versioned `public/try-on/` directory; preserve existing immutable assets.
+- [x] **E3 — Engine boundary.** Implement a small adapter interface for start, pause/stop, resize, destroy, and results. Normalize wearer-left/right ear anchors, face-relative scale, head pose, detection state, and timestamps. Derive fields only from documented outputs and clearly identify any estimates. Give one component ownership of the camera stream to prevent duplicate acquisition.
+- [x] **E4 — Working lab.** Add a MediaPipe/WebAR.rocks selector to `try-on-lab.html`. Run exactly one engine at a time. Switching must tear down the prior engine before starting another and handle late async results safely. Keep engine selection confined to the lab until the visual gate passes.
+- [~] **E5 — (engine wired; still placeholder cutouts, product-accuracy validation incomplete) Artwork and placement.** Load the same pilot product cutouts in both modes. Use predicted ear landmarks for the candidate, retaining per-product anchors, adjustment, mirroring, and smoothing. Preserve the existing database configuration contract. If actual cutouts cannot be prepared from available source images, retain clearly labeled placeholders and mark product-accuracy validation incomplete.
+- [~] **E6 — (lifecycle verified with the real library on a synthetic video; no camera, device or WebGL-context-loss run) Lifecycle and performance.** Test close, background/resume, navigation, resize, lost tracking, model failure, WebGL context loss, repeated opening, and engine switching. Stop tracks, release graphics resources, and prevent frozen overlays. Expose lightweight lab measurements for FPS, inference time when available, and cold/warm startup. Load only the selected engine's resources.
+- [~] **E7 — (21 automated tests, build, browser load and lazy-load checks; no hardware runs) Verification.** Add targeted automated coverage for the new coordinate mapping and adapter cancellation/cleanup where the existing test setup supports it. Run `node --test test-try-on.mjs` and `npm run build`, plus applicable required project checks. Perform browser checks where available and inspect network requests for camera-data leakage. Do not claim hardware checks that could not be run.
+- [~] **E8 — (documented here; device evidence and the engine decision are pending) Evidence and plan update.** Update this checklist, the shared task contracts where changed, and the comparison table below. Report files changed, checks actually run, observed limitations, and exact remaining device checks. Recommend an engine only from measured evidence; if real-device evidence is missing, leave the production decision pending.
+
+### Comparison evidence
+
+Use the same product assets and test conditions for both candidates. Document browser/device versions and network conditions. Assess visible earlobe attachment drift, stationary jitter, head-turn recovery, unwanted drawing over hair, and required manual adjustment alongside timing measurements.
+
+| Engine | Device / browser | Assets / conditions | FPS / startup | Placement observations | Lifecycle / privacy | Decision |
+| --- | --- | --- | --- | --- | --- | --- |
+| MediaPipe baseline | Pending | Pending | Not measured | Not evaluated | Static review only (§10); code unchanged except the `renderEars` refactor | Superseded as default; kept in the lab selector |
+| WebAR.rocks ear model | Chrome (desktop), synthetic canvas video, no camera | Placeholder fixtures only | Init 0.4–0.7 s with a warm cache; ~80–200 tracking callbacks per 1.5 s with no face present; no face-detected FPS measured | Not evaluated (no face was ever tracked) | Verified: 4 start/stop cycles, abort mid-init, engine canvas released, tracks stopped, no requests beyond our own files. One unexplained `ALREADY_INITIALIZED` on a cancelled start, now retried once | **Chosen as the only engine by the owner on 2026-10-06, ahead of a measured comparison** |
+
+Completion means a runnable comparison with reproducible setup and honest verification evidence. Shipping the candidate requires the separate visual/device and rollout gates in this plan. A successful build alone does not establish better ear tracking.
+
+## 14. WebAR.rocks adopted as the engine (2026-10-06)
+
+The owner decided to use the WebAR.rocks ear model everywhere. It is the default in the shop dialog, the admin preview and the lab (`createPreviewSession` defaults to `engine: 'webar'`). §12's evidence gate was not run, so treat this as a decision made ahead of measurement. Still needed before enabling any pilot row:
+
+1. **Placement check on a real face** with the placeholder fixtures, then with real cutouts. Nothing here has tracked a face yet: the engine was exercised only on a synthetic video.
+2. **Device runs** (iPhone Safari, mid-range Android Chrome) for FPS, start time and WebGL behaviour. WebAR.rocks needs WebGL2, or WebGL1 with float-texture extensions, or it reports `unsupported-device`.
+3. **Scale and anchor calibration:** `FACE_WIDTH_FACTOR` (ear span → face width, currently 1) and the 0.7 ear-point mix are untuned, and `scaleRatio` values are relative to that width.
+4. **Dead weight to remove once the decision holds:** MediaPipe still ships in `dist` (`public/try-on/v1`, ~38 MB, the worker and the `@mediapipe/tasks-vision` chunk) and is reachable only from the lab selector. Deleting it is a separate, irreversible step.
+5. **Runtime facts to remember:** the library's `destroy()` also stops the tracks of the video it was given (harmless: `camera.js` stops them anyway); the library pauses itself when the window loses focus, so a backgrounded tab stops tracking until focus returns; the 1.9 MB model and 175 KB runtime load only when the customer presses Start camera.
+
+### Device evidence (2026-10-06, owner-reported)
+
+iPhone 11, Safari, via an HTTPS Cloudflare quick tunnel to the local dev server: camera starts, WebAR.rocks tracking works, and the shop dialog functions (the owner reported "every function works well"). Not recorded: iOS version, FPS, start times, face shapes/lighting, hair or glasses cases, and no Android run. Treat this as a passing smoke test, not the §8 acceptance matrix. Remaining before enabling for shoppers: Android Chrome run, real product cutouts for the pilot earrings, the egress gate (§11), and the rollout steps in §11.

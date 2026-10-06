@@ -13,6 +13,7 @@
     "vite": "^8.0.16"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.0.1",
     "@supabase/supabase-js": "^2.107.0",
     "driver.js": "^1.4.0",
     "flatpickr": "^4.6.13",
