@@ -243,12 +243,33 @@ export async function getSalesSummary(days = 7) {
 }
 
 /* ── Storage helpers ─────────────────────────────────────── */
+// Every byte stored gets re-served on each cache miss (Supabase egress), so
+// re-encode to ≤1600px WebP before upload. WebP keeps PNG transparency.
+// Falls back to the original if the browser can't encode WebP or it's no smaller.
+async function shrinkImage(file) {
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const scale  = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width  = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/webp', 0.82));
+    if (blob && blob.type === 'image/webp' && blob.size < file.size) return { body: blob, ext: 'webp' };
+  } catch { /* undecodable here — upload as-is */ }
+  return { body: file, ext: (file.name.split('.').pop() || 'jpg').toLowerCase() };
+}
+
+// Filenames are random and never overwritten, so a 1-year cache is safe.
+const ONE_YEAR = '31536000';
+
 export async function uploadProductImage(file) {
-  const ext  = file.name.split('.').pop().toLowerCase();
+  const { body, ext } = await shrinkImage(file);
   const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await supabase.storage
     .from('product-images')
-    .upload(path, file, { cacheControl: '3600', upsert: false });
+    .upload(path, body, { cacheControl: ONE_YEAR, upsert: false });
   if (error) throw error;
   const { data } = supabase.storage.from('product-images').getPublicUrl(path);
   return data.publicUrl;
@@ -257,11 +278,11 @@ export async function uploadProductImage(file) {
 // Upload a customer's proof-of-payment screenshot (anonymous checkout).
 // Random filename → the public URL is unguessable.
 export async function uploadPaymentProof(file) {
-  const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const { body, ext } = await shrinkImage(file);
   const path = `proofs/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await supabase.storage
     .from('payment-proofs')
-    .upload(path, file, { cacheControl: '3600', upsert: false });
+    .upload(path, body, { cacheControl: ONE_YEAR, upsert: false });
   if (error) throw error;
   const { data } = supabase.storage.from('payment-proofs').getPublicUrl(path);
   return data.publicUrl;
