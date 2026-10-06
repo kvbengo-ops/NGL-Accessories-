@@ -41,12 +41,18 @@ async function handleImageProxy(request, env) {
   const endpoint = transform ? 'render/image' : 'object';
   const originUrl = `${supabaseUrl}/storage/v1/${endpoint}/public/${storagePath}${url.search}`;
 
-  const originResp = await fetch(originUrl, {
+  const fetchOpts = {
     // Supabase only converts to WebP when the request says it's accepted;
     // without this every resize comes back as a (much larger) PNG.
     headers: { Accept: 'image/webp,image/*' },
     cf: { cacheEverything: true, cacheTtl: 2592000 }, // 30 days at Cloudflare layer
-  });
+  };
+  let originResp = await fetch(originUrl, fetchOpts);
+  // Transformations aren't part of the Free plan; if Supabase turns them off,
+  // serve the original instead of breaking every product image.
+  if (!originResp.ok && transform) {
+    originResp = await fetch(`${supabaseUrl}/storage/v1/object/public/${storagePath}`, fetchOpts);
+  }
 
   if (!originResp.ok) {
     // Don't cache errors — let the browser retry.
