@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mapToView, earAnchors, computePlacement, createSmoother, EAR_DROP } from './src/try-on/placement.js';
-import { validateConfig, cropRect, cropAdjust, trimFromAlpha } from './src/try-on/assets.js';
+import { validateConfig, cropRect, cropAdjust, trimFromAlpha, autoAnchor, scaleFromLength } from './src/try-on/assets.js';
 import { FIXTURES } from './src/try-on/fixtures.js';
 import { normalizeDetectState, startWebarEngine, WEBAR_LIMITS, EAR_K } from './src/try-on/engine-webar.js';
 
@@ -304,4 +304,25 @@ test('crop: auto-trim hugs the visible pixels and rounds outward', () => {
   assert.equal(trimFromAlpha(data, W, H).l, 20);
   data[(0 * W + 0) * 4 + 3] = 255; // a visible corner pixel → nothing is trimmed on the left/top
   const t = trimFromAlpha(data, W, H); assert.equal(t.l, 0); assert.equal(t.t, 0);
+});
+
+function shape(W, H, on) { const d = new Uint8ClampedArray(W * H * 4); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (on(x, y)) d[(y * W + x) * 4 + 3] = 255; return d; }
+
+test('auto size: length in mm → scale ratio inside the config bounds', () => {
+  near(scaleFromLength(30), 0.2); near(scaleFromLength(15), 0.1);
+  assert.equal(scaleFromLength(0), null); assert.equal(scaleFromLength(''), null); assert.equal(scaleFromLength('abc'), null);
+  assert.equal(scaleFromLength(1), 0.02); assert.equal(scaleFromLength(900), 1);
+  assert.ok(validateConfig({ ...FIXTURES[0], scaleRatio: scaleFromLength(45) }).ok);
+});
+
+test('auto anchor: solid square → centre; hanging shapes → the hook at the top', () => {
+  const stud = shape(40, 40, (x, y) => Math.hypot(x - 19.5, y - 19.5) < 20);
+  assert.deepEqual(autoAnchor(stud, 40, 40), { x: 0.5, y: 0.5 });
+  const drop = shape(40, 100, (x, y) => (y < 20 && x >= 18 && x < 22) || (y >= 20 && Math.hypot(x - 19.5, y - 70) < 19));
+  const a = autoAnchor(drop, 40, 100); near(a.x, 0.5, 0.02); assert.ok(a.y <= 0.1);
+  const offCentreHook = shape(60, 100, (x, y) => (y < 10 && x >= 8 && x < 12) || (y >= 10 && x > 4 && x < 56 && y < 90));
+  assert.ok(autoAnchor(offCentreHook, 60, 100).x < 0.25, 'follows the hook, not the body');
+  const hoop = shape(100, 100, (x, y) => { const r = Math.hypot(x - 49.5, y - 49.5); return r < 49 && r > 41; });
+  const h = autoAnchor(hoop, 100, 100); near(h.x, 0.5, 0.02); assert.ok(h.y <= 0.1, 'a hoop hangs from its top');
+  assert.deepEqual(autoAnchor(new Uint8ClampedArray(4 * 4 * 4), 4, 4), { x: 0.5, y: 0.1 }, 'empty image falls back safely');
 });

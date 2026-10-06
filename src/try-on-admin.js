@@ -1,6 +1,6 @@
 import { requireAdmin, renderSidebar, showToast } from './admin.js';
 import { getAllProducts, getTryOnConfigAdmin, upsertTryOnConfig, uploadTryOnAsset, cfImg } from './supabase.js';
-import { validateConfig, loadAsset, cropRect, cropAdjust, trimFromAlpha } from './try-on/assets.js';
+import { validateConfig, loadAsset, cropRect, cropAdjust, trimFromAlpha, autoAnchor, scaleFromLength } from './try-on/assets.js';
 import { createPreviewSession } from './try-on/controller.js';
 
 const $ = id => document.getElementById(id);
@@ -80,18 +80,50 @@ async function transparent(file) {
     throw new Error('Image needs transparent pixels around one earring.');
   } finally { bitmap.close(); }
 }
-// `trusted`: the file came from cropping an already-validated image, so skip the transparency check.
+// On upload: trim the empty margin, guess the attachment point, and (if a length is known)
+// set the size, so the admin rarely has to adjust anything. Returns null if it can't.
+async function autoFit(file) {
+  const bitmap = await createImageBitmap(file);
+  try {
+    const W = bitmap.width, H = bitmap.height;
+    const ctx = Object.assign(document.createElement('canvas'), { width: W, height: H }).getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(bitmap, 0, 0);
+    const trims = trimFromAlpha(ctx.getImageData(0, 0, W, H).data, W, H);
+    if (!trims) return null;
+    const rect = cropRect(W, H, trims);
+    const out = Object.assign(document.createElement('canvas'), { width: rect.w, height: rect.h });
+    const octx = out.getContext('2d', { willReadFrequently: true });
+    octx.drawImage(ctx.canvas, rect.x0, rect.y0, rect.w, rect.h, 0, 0, rect.w, rect.h);
+    const anchor = autoAnchor(octx.getImageData(0, 0, rect.w, rect.h).data, rect.w, rect.h);
+    const blob = await new Promise(resolve => out.toBlob(resolve, 'image/png'));
+    return blob ? { file: new File([blob], file.name.replace(/\.\w+$/, '') + '-fit.png', { type: 'image/png' }), anchor } : null;
+  } finally { bitmap.close(); }
+}
+// `trusted`: the file came from cropping an already-validated image, so skip the transparency check and auto-fit.
 async function chooseFile(side, file, trusted = false) {
   if (!file) return false;
   const error = document.querySelector(`[data-error="assets.${side}"]`);
   const previous = pending[side];
   try {
-    if (!trusted) await transparent(file);
+    let fitted = null;
+    if (!trusted) {
+      await transparent(file);
+      fitted = await autoFit(file).catch(() => null); // best effort; the original is used if it fails
+      if (fitted) file = fitted.file;
+    }
     if (localUrls[side]) URL.revokeObjectURL(localUrls[side]);
     localUrls[side] = URL.createObjectURL(file);
     pending[side] = file;
     $(`${side}-anchor`).querySelector('img').src = cfImg(localUrls[side]); // blob: URLs pass through cfImg unchanged
     error.textContent = '';
+    if (fitted) {
+      config.anchor[side] = fitted.anchor;
+      if (config.mirrorLeftForRight) config.anchor.right = { x: 1 - config.anchor.left.x, y: config.anchor.left.y };
+      const auto = scaleFromLength(config.lengthMm);
+      if (auto && (side === 'left' || !config.mirrorLeftForRight)) config.scaleRatio = auto;
+      fill();
+      $('save-status').textContent = 'Image trimmed and attachment point set automatically. Check the preview.';
+    }
     refreshPreview();
     return true;
   } catch (cause) { pending[side] = previous; error.textContent = cause.message; return false; }
@@ -239,7 +271,7 @@ async function init() {
   }
   $('mirror').addEventListener('change', event => { config.mirrorLeftForRight = event.target.checked; if (event.target.checked) config.anchor.right = { x: 1 - config.anchor.left.x, y: config.anchor.left.y }; fill(); });
   for (const [id, update] of [
-    ['scale', value => { config.scaleRatio = value; }], ['length', value => { config.lengthMm = value || null; }],
+    ['scale', value => { config.scaleRatio = value; }], ['length', value => { config.lengthMm = value || null; const auto = scaleFromLength(value); if (auto) { config.scaleRatio = auto; $('scale').value = auto; $('scale-value').value = auto; } }],
     ['left-x', value => { config.offset.left.x = value; }], ['left-y', value => { config.offset.left.y = value; }],
     ['right-x', value => { config.offset.right.x = value; }], ['right-y', value => { config.offset.right.y = value; }],
     ['left-rot', value => { config.rotationDeg.left = value; }], ['right-rot', value => { config.rotationDeg.right = value; }],

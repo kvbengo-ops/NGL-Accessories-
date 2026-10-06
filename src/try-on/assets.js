@@ -148,3 +148,41 @@ export function trimFromAlpha(data, W, H, threshold = 8) {
   const pct = (px, total) => Math.min(95, Math.floor(px / total * 200) / 2);
   return { l: pct(x0, W), t: pct(y0, H), r: pct(W - 1 - x1, W), b: pct(H - 1 - y1, H) };
 }
+
+/* ---- Automatic placement defaults (pure; used by the admin editor on upload) ---- */
+
+// The engine measures face width as the span between the two ear points; ~150 mm
+// is a typical lobe-to-lobe distance. ponytail: one average for everyone — the
+// engine's FACE_WIDTH_FACTOR (engine-webar.js) is the calibration knob.
+export const FACE_WIDTH_MM = 150;
+
+/** Earring length in mm → scaleRatio (image height ÷ face width), kept inside the config bounds. */
+export function scaleFromLength(lengthMm) {
+  const n = Number(lengthMm);
+  if (!(n > 0)) return null;
+  return Math.min(BOUNDS.scaleRatio[1], Math.max(BOUNDS.scaleRatio[0], Math.round(n / FACE_WIDTH_MM * 1000) / 1000));
+}
+
+/**
+ * Guess where the earring attaches in a tightly trimmed RGBA image (0..1):
+ *  - a small, solid, roughly square shape is a stud → its centre;
+ *  - anything else (drops, hoops, dangles) hangs from the hook at the top →
+ *    the mean x of the visible pixels in the top 8% of rows, just inside the top edge.
+ * It is a guess for the admin to accept or nudge, never a measurement.
+ */
+export function autoAnchor(data, W, H, threshold = 8) {
+  let visible = 0, topSum = 0, topCount = 0;
+  const topRows = Math.max(1, Math.ceil(H * 0.08));
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (data[(y * W + x) * 4 + 3] > threshold) {
+        visible++;
+        if (y < topRows) { topSum += x; topCount++; }
+      }
+    }
+  }
+  if (!visible) return { x: 0.5, y: 0.1 };
+  const squarish = W / H > 0.75 && W / H < 1.33;
+  if (squarish && visible / (W * H) > 0.6) return { x: 0.5, y: 0.5 };
+  return { x: topCount ? (topSum / topCount + 0.5) / W : 0.5, y: Math.min(0.1, (topRows * 0.5) / H) };
+}

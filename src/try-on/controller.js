@@ -21,7 +21,6 @@ const MESSAGES = {
   'model-failure': 'Face tracking could not load. Check your connection and retry.',
   'unsupported-device': 'Face tracking is not supported on this device.',
 };
-const emptyUser = () => ({ offset: { left: { x: 0, y: 0 }, right: { x: 0, y: 0 } }, scale: 1 });
 const codeOf = error => error?.code || (error?.name === 'AbortError' ? 'paused' : 'model-failure');
 
 // Shared by the customer dialog, the admin editor and the isolated lab.
@@ -270,7 +269,6 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus 
   if (!available.length) return;
   let selected = product;
   let state = null;
-  let user = emptyUser();
   const priorOverflow = document.body.style.overflow;
   const sourceDialog = returnFocus?.closest?.('[role="dialog"]');
   const priorHidden = sourceDialog?.getAttribute('aria-hidden');
@@ -284,13 +282,7 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus 
       <div class="try-on-panel"><div><span class="try-on-eyebrow">STYLE PREVIEW</span><h3 class="try-on-name"></h3><p class="try-on-price"></p></div>
         <p class="try-on-status" role="status" aria-live="polite"></p>
         <button type="button" class="try-on-start">Start camera</button><button type="button" class="try-on-retry" hidden>Retry</button>
-        <div class="try-on-controls" hidden><label>Style<select class="try-on-select"></select></label>
-          <label>Left horizontal position <input type="range" class="try-on-left-x" min="-0.25" max="0.25" step="0.01" value="0"></label>
-          <label>Left vertical position <input type="range" class="try-on-left-y" min="-0.25" max="0.25" step="0.01" value="0"></label>
-          <label>Right horizontal position <input type="range" class="try-on-right-x" min="-0.25" max="0.25" step="0.01" value="0"></label>
-          <label>Right vertical position <input type="range" class="try-on-right-y" min="-0.25" max="0.25" step="0.01" value="0"></label>
-          <label>Size <input type="range" class="try-on-size" min="0.5" max="2" step="0.05" value="1"></label>
-          <button type="button" class="try-on-reset">Reset adjustments</button></div>
+        <div class="try-on-controls" hidden><label>Style<select class="try-on-select"></select></label></div>
         <button type="button" class="try-on-bag">Add to bag</button><p class="try-on-note">Style preview — size and placement are approximate.</p>
       </div></div></section>`;
   document.body.append(root);
@@ -311,18 +303,12 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus 
     $('.try-on-retry').textContent = next === 'paused' ? 'Resume camera' : 'Retry';
     $('.try-on-controls').hidden = ['intro', 'loading', 'permission'].includes(next);
   }
-  function resetControls() {
-    user = emptyUser();
-    for (const side of ['left', 'right']) for (const axis of ['x', 'y']) $(`.try-on-${side}-${axis}`).value = '0';
-    $('.try-on-size').value = '1';
-    preview.setUser(user);
-  }
+  // Shoppers get no placement controls: the tracking engine and the product's saved settings place the earring.
   function choose(item) {
     selected = item;
     select.value = item.id;
     $('.try-on-name').textContent = item.name;
     $('.try-on-price').textContent = `₱${Number(item.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
-    resetControls();
     preview.setProduct(configs.get(item.id));
   }
   function close() {
@@ -348,11 +334,6 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus 
   $('.try-on-start').addEventListener('click', () => preview.start());
   $('.try-on-retry').addEventListener('click', () => preview.start());
   select.addEventListener('change', () => choose(available.find(item => item.id === select.value)));
-  for (const side of ['left', 'right']) for (const axis of ['x', 'y']) {
-    $(`.try-on-${side}-${axis}`).addEventListener('input', event => { user.offset[side][axis] = Number(event.target.value); preview.setUser(user); });
-  }
-  $('.try-on-size').addEventListener('input', event => { user.scale = Number(event.target.value); preview.setUser(user); });
-  $('.try-on-reset').addEventListener('click', resetControls);
   $('.try-on-bag').addEventListener('click', () => { if (onAddToBag(selected)) close(); });
   document.addEventListener('keydown', keydown, true);
   window.addEventListener('pagehide', close, { once: true });
