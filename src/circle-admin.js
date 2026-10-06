@@ -5,7 +5,7 @@
    Backend: setup/community.sql (admin_* functions check is_admin()).
    ============================================================ */
 import { requireAdmin, renderSidebar, showToast, escapeHtml } from './admin.js';
-import { supabase } from './supabase.js';
+import { supabase, cfImg } from './supabase.js';
 
 const REACTION_EMOJI = { love: '❤️', sparkle: '✨', clap: '👏', hug: '🤗' };
 const EMPTY = {
@@ -27,7 +27,7 @@ let posts = [];
 let activeStatus = 'pending';
 
 function photoUrl(path) {
-  return supabase.storage.from('community-photos').getPublicUrl(path).data.publicUrl;
+  return cfImg(supabase.storage.from('community-photos').getPublicUrl(path).data.publicUrl);
 }
 
 function formatDate(iso) {

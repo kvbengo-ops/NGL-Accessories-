@@ -1,7 +1,7 @@
 /* ============================================================
    NGL Admin — Orders Management
    ============================================================ */
-import { supabase, getOrders, updateOrderStatus, updateOrderFulfilment } from '../src/supabase.js';
+import { supabase, getOrders, updateOrderStatus, updateOrderFulfilment, cfImg } from '../src/supabase.js';
 import { requireAuth, renderSidebar, showToast, formatPrice, formatDate, statusBadge, openModal, closeModal, escapeHtml } from '../src/admin.js';
 
 let allOrders = [];
@@ -167,8 +167,8 @@ function showOrderDetail(id) {
         <p>Status: ${statusBadge(o.status)}</p>
         <p>Date: ${formatDate(o.created_at)}</p>
         ${o.payment_proof_url ? `
-          <a href="${o.payment_proof_url}" target="_blank" rel="noopener" class="payment-proof-link" title="Open full receipt">
-            <img src="${o.payment_proof_url}" alt="Payment receipt" class="payment-proof-thumb" />
+          <a href="${cfImg(o.payment_proof_url)}" target="_blank" rel="noopener" class="payment-proof-link" title="Open full receipt">
+            <img src="${cfImg(o.payment_proof_url)}" loading="lazy" alt="Payment receipt" class="payment-proof-thumb" />
             <span>View payment receipt <span class="material-symbols-outlined">open_in_new</span></span>
           </a>` : (o.type === 'online' ? '<p class="payment-proof-missing"><span class="material-symbols-outlined">image_not_supported</span> No receipt uploaded</p>' : '')}
         ${o.type === 'online' && o.status === 'pending' ? `

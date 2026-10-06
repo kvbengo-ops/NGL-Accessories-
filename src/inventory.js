@@ -1,7 +1,7 @@
 /* ============================================================
    NGL Admin — Inventory Management
    ============================================================ */
-import { supabase, getAllProducts, upsertProduct, updateStock, deleteProduct, uploadProductImage } from '../src/supabase.js';
+import { supabase, getAllProducts, upsertProduct, updateStock, deleteProduct, uploadProductImage, cfImg } from '../src/supabase.js';
 import { requireAuth, renderSidebar, showToast, formatPrice, openModal, closeModal } from '../src/admin.js';
 
 let allProducts = [];
@@ -50,7 +50,7 @@ function renderTable(products) {
         </td>
         <td>
           <div class="product-cell">
-            ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="product-thumb" />` : '<div class="product-thumb-empty"><span class="material-symbols-outlined">diamond</span></div>'}
+            ${p.image_url ? `<img src="${cfImg(p.image_url, 120)}" loading="lazy" alt="${p.name}" class="product-thumb" />` : '<div class="product-thumb-empty"><span class="material-symbols-outlined">diamond</span></div>'}
             <div>
               <span class="product-cell-name">${p.name}</span>
               ${!p.is_active ? '<span class="badge-archived">Archived</span>' : ''}
@@ -407,7 +407,7 @@ function setImagePreview(url) {
   if (!url) { resetImageUpload(); return; }
   const zone    = document.getElementById('img-upload-zone');
   const preview = document.getElementById('img-upload-preview');
-  preview.src = url;
+  preview.src = cfImg(url, 600);
   zone.classList.add('has-image');
   document.getElementById('p-image-existing').value = url;
 }
