@@ -276,6 +276,7 @@ export function createPreviewSession({ view, canvas, onState = () => {}, onMetri
 }
 
 export function openTryOn({ product, products, configs, onAddToBag, returnFocus, autoStart = false, onClose, embed }) {
+  const mobile = window.matchMedia('(max-width: 700px)').matches;
   const available = products.filter(p => p.itemCategory === 'Earrings' && configs.has(p.id));
   if (!available.length) return;
   let selected = product;
@@ -379,5 +380,8 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus,
   choose(selected);
   setState('intro');
   if (!embed) $('.try-on-close').focus();
-  if (autoStart) preview.start();
+  if (autoStart || mobile) {
+    setState('permission');
+    preview.start();
+  }
 }

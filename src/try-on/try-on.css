@@ -87,3 +87,28 @@
 .try-on-row-check{width:20px;height:20px;color:#7a8c6c;opacity:0}
 .try-on-catalog-item[aria-pressed="true"] .try-on-row-check{opacity:1}
 @media(max-width:700px){.try-on-list{max-height:260px}.try-on-list .try-on-catalog-item{gap:10px;min-height:74px}.try-on-embed .try-on-dialog{height:auto}}
+/* On phones, keep the collection immediately beneath the mirror. Native
+   horizontal scrolling browses the cards; tapping keeps the existing selection. */
+@media(max-width:700px){
+  .try-on-main{display:flex;flex-direction:column;gap:12px;padding-bottom:calc(20px + env(safe-area-inset-bottom));min-width:0}
+  .try-on-mirror-stage{order:0;position:relative;top:auto;align-self:stretch;padding-bottom:6px}
+  .try-on-view.try-on-mirror{width:100%;max-width:480px}
+  /* The site navbar already occupies space and sticks to the top. Embedded
+     try-on needs neither a second navbar-sized gap nor another sticky header. */
+  .tryon-page{padding:0 4px 24px}
+  .try-on-embed .try-on-header{position:static;padding-top:13px}
+  .try-on-panel{display:contents}
+  .try-on-panel > *{order:2;margin-inline:20px}
+  .try-on-panel > .try-on-panel-intro{display:none}
+  .try-on-panel > .try-on-controls{order:1;gap:8px;margin-inline:0}
+  .try-on-controls > .try-on-product-label{padding-inline:20px}
+  .try-on-list{display:flex;gap:10px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:4px 20px 10px;scroll-padding-inline:20px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;overscroll-behavior-y:auto}
+  .try-on-list li{flex:0 0 124px;scroll-snap-align:start}
+  .try-on-list .try-on-catalog-item{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:7px;min-height:148px;height:100%;padding:10px;touch-action:auto}
+  .try-on-thumb{width:100%;height:70px;flex:none}
+  .try-on-row-copy{gap:3px}
+  .try-on-row-name{font-size:11px;line-height:1.35}
+  .try-on-row-price{font-size:10px}
+  .try-on-row-check{position:absolute;right:7px;top:7px}
+  .try-on-panel h3{font-size:23px;margin-block:5px}
+}
