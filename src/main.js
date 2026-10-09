@@ -18,23 +18,40 @@ const navToggle = document.getElementById('nav-toggle');
 const navDrawer = document.getElementById('nav-drawer');
 
 window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 50);
+  navbar?.classList.toggle('scrolled', window.scrollY > 50);
 }, { passive: true });
+
+function setNavOpen(open) {
+  if (!navToggle || !navDrawer) return;
+  navToggle.setAttribute('aria-expanded', String(open));
+  navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  navToggle.setAttribute('aria-controls', navDrawer.id);
+  navDrawer.classList.toggle('open', open);
+  navDrawer.setAttribute('aria-hidden', String(!open));
+  navDrawer.inert = !open;
+}
+setNavOpen(false);
 
 navToggle?.addEventListener('click', () => {
   const open = navToggle.getAttribute('aria-expanded') === 'true';
-  navToggle.setAttribute('aria-expanded', String(!open));
-  navDrawer.classList.toggle('open', !open);
-  navDrawer.setAttribute('aria-hidden', String(open));
+  setNavOpen(!open);
 });
 
 navDrawer?.querySelectorAll('.drawer-link').forEach((link) => {
   link.addEventListener('click', () => {
-    navToggle.setAttribute('aria-expanded', 'false');
-    navDrawer.classList.remove('open');
-    navDrawer.setAttribute('aria-hidden', 'true');
+    setNavOpen(false);
   });
 });
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && navToggle?.getAttribute('aria-expanded') === 'true') {
+    setNavOpen(false);
+    navToggle.focus();
+  }
+});
+document.addEventListener('click', (event) => {
+  if (navbar && !navbar.contains(event.target)) setNavOpen(false);
+});
+window.matchMedia('(max-width: 1200px)').addEventListener('change', () => setNavOpen(false));
 
 /* ──────────────────────────────────────────────────────────
    3. BANNER — auto-dismiss + session persist

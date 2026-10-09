@@ -240,32 +240,19 @@ modalCartBtn?.addEventListener('click', () => {
   modalCartBtn.disabled = true;
   setTimeout(closeModal, 1200);
 });
-modalTryOnBtn?.addEventListener('click', async () => {
-  if (!modalProduct || modalTryOnBtn.hidden) return;
-  const { openTryOn } = await import('./try-on/controller.js');
-  if (modalProduct) openTryOn({ product: modalProduct, products: PRODUCTS, configs: tryOnConfigs, onAddToBag: addToCart, returnFocus: modalTryOnBtn });
+modalTryOnBtn?.addEventListener('click', () => {
+  if (modalProduct && !modalTryOnBtn.hidden) location.href = tryOnUrl(modalProduct);
 });
 
 const canTryOn = (p) => import.meta.env.VITE_TRY_ON_ENABLED === 'true' && p.itemCategory === 'Earrings' && tryOnConfigs.has(p.id);
+const tryOnUrl = (p) => `/try-on.html?product=${encodeURIComponent(p.id)}`;
 const tryOnBadge = (product) => canTryOn(product) ? `<button class="card-tryon-badge" type="button" aria-label="Try on with your camera" title="Try on with your camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 5c-1.3-1.1-2.8-1.7-4.5-1.7C6.9 3.3 4 6.6 4 10.7s2.9 7.4 6.5 7.4S17 14.8 17 10.7M10.5 18.1V21M7 21h7M18.5 2l.8 2.7L22 5.5l-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8Z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : '';
 
 function attachCardTryOn(card, product) {
   const button = card.querySelector('.card-tryon-badge');
-  button?.addEventListener('click', async event => {
+  button?.addEventListener('click', event => {
     event.stopPropagation();
-    if (!canTryOn(product) || button.disabled) return;
-    button.disabled = true;
-    button.setAttribute('aria-busy', 'true');
-    try {
-      const { openTryOn } = await import('./try-on/controller.js');
-      if (!button.isConnected || !canTryOn(product)) return;
-      openTryOn({ product, products: PRODUCTS, configs: tryOnConfigs, onAddToBag: addToCart, returnFocus: button, autoStart: true });
-    } catch {
-      showToast('The mirror could not open. Please tap try-on again.');
-    } finally {
-      button.disabled = false;
-      button.removeAttribute('aria-busy');
-    }
+    if (canTryOn(product)) location.href = tryOnUrl(product);
   });
 }
 
