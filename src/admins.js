@@ -225,6 +225,10 @@ async function handleAddAdmin(e) {
 
     if (rpcError) throw rpcError;
 
+    // 5. New sign-ups start inactive (handle_new_user); only a superadmin can switch them on.
+    const { error: activateError } = await supabase.from('admins').update({ is_active: true }).eq('id', newUserId);
+    if (activateError) throw activateError;
+
     showToast(`Admin ${name} created successfully!`);
     closeModal('add-admin-modal');
     document.getElementById('add-admin-form').reset();

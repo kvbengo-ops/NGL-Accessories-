@@ -20,10 +20,9 @@ export async function onRequestPost({ request, env }) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    // Surface the real reason instead of an opaque Cloudflare 500 so the cause
-    // (missing env, bad Supabase key, etc.) is visible in the Network response.
+    // Real reason stays in the logs; the response must not echo Supabase error bodies.
     console.error('support function error', err);
-    return new Response(JSON.stringify({ error: String(err?.message || err) }), {
+    return new Response(JSON.stringify({ error: 'Support is unavailable right now.' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

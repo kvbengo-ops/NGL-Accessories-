@@ -15,6 +15,14 @@
         "limit": 10,
         "period": 60
       }
+    },
+    {
+      "name": "SUPPORT_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
     }
   ],
   // Non-secret config (the Supabase URL is already public in the client bundle).

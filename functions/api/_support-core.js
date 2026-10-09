@@ -107,6 +107,7 @@ function askLLM(env, systemText, history, userText) {
     : askGemini(env, systemText, history, userText);
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ESCALATE_RE = /\b(human|agent|representative|real person|talk to (someone|a person|somebody)|speak (to|with))\b/i;
 const SENSITIVE_RE = /\b(refund|charge ?back|dispute|complain(t|ts)?|scam|fraud|legal|broken|damaged|defective|wrong item|never (arrived|received)|missing)\b/i;
 const ORDER_RE = /#?\b([A-Z]{0,4}-?\d{3,})\b/;
@@ -149,11 +150,17 @@ export async function processSupport(input, env) {
   if (!conversation_id || !access_token || typeof message !== 'string') {
     return { status: 400, body: { error: 'conversation_id, access_token and message are required' } };
   }
+  // Both go straight into PostgREST URLs and comparisons: accept only real UUIDs.
+  if (!UUID_RE.test(conversation_id) || !UUID_RE.test(access_token)) {
+    return { status: 400, body: { error: 'invalid conversation' } };
+  }
   if (!sbBase(env) || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    return { status: 500, body: { error: 'server missing Supabase config (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)', envKeys: Object.keys(env) } };
+    console.error('support: missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
+    return { status: 500, body: { error: 'Support is unavailable right now.' } };
   }
   if (!env.GROQ_API_KEY && !env.GEMINI_API_KEY) {
-    return { status: 500, body: { error: 'server missing GROQ_API_KEY / GEMINI_API_KEY' } };
+    console.error('support: missing GROQ_API_KEY / GEMINI_API_KEY');
+    return { status: 500, body: { error: 'Support is unavailable right now.' } };
   }
 
   const text = message.trim().slice(0, 4000);

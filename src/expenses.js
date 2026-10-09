@@ -1,4 +1,4 @@
-import { getExpenses, upsertExpense, deleteExpense, getAdmins } from './supabase.js';
+import { getExpenses, upsertExpense, deleteExpense, getAdmins, escapeHtml } from './supabase.js';
 import { requireAuth, renderSidebar, showToast, formatDate, formatPrice, openModal, closeModal } from './admin.js';
 
 let allExpenses = [];
@@ -139,10 +139,10 @@ function renderExpenses() {
     return `
       <tr>
         <td class="date-cell">${e.expense_date ? formatDate(e.expense_date).split(',')[0] : '—'}</td>
-        <td style="font-weight:500;">${e.title}</td>
-        <td><span class="type-badge" style="background:rgba(201,168,76,0.1); color:var(--adm-gold); border-color:rgba(201,168,76,0.3)">${e.category}</span></td>
+        <td style="font-weight:500;">${escapeHtml(e.title)}</td>
+        <td><span class="type-badge" style="background:rgba(201,168,76,0.1); color:var(--adm-gold); border-color:rgba(201,168,76,0.3)">${escapeHtml(e.category)}</span></td>
         <td style="font-family:monospace; color:rgb(var(--adm-red));">-${formatPrice(e.amount)}</td>
-        <td style="font-size:12px; color:var(--adm-text-muted);">${adminName}</td>
+        <td style="font-size:12px; color:var(--adm-text-muted);">${escapeHtml(adminName)}</td>
         <td class="actions-cell" style="text-align:right;">
           <button class="action-btn edit-expense" data-id="${e.id}" title="Edit"><span class="material-symbols-outlined">edit</span></button>
           <button class="action-btn delete-expense" data-id="${e.id}" title="Delete" style="color:rgb(var(--adm-red));"><span class="material-symbols-outlined">delete</span></button>

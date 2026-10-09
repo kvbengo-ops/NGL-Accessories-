@@ -49,4 +49,12 @@
     <priority>0.3</priority>
   </url>
 
+  <!-- Virtual try-on -->
+  <url>
+    <loc>https://www.ngluxaries.store/try-on.html</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 </urlset>

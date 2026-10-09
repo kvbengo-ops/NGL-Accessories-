@@ -1,7 +1,7 @@
 /* ============================================================
    NGL Admin — Inventory Management
    ============================================================ */
-import { supabase, getAllProducts, upsertProduct, updateStock, deleteProduct, uploadProductImage, cfImg } from '../src/supabase.js';
+import { supabase, getAllProducts, upsertProduct, updateStock, deleteProduct, uploadProductImage, cfImg, escapeHtml } from '../src/supabase.js';
 import { requireAuth, renderSidebar, showToast, formatPrice, openModal, closeModal } from '../src/admin.js';
 
 let allProducts = [];
@@ -52,13 +52,13 @@ function renderTable(products) {
           <div class="product-cell">
             ${p.image_url ? `<img src="${cfImg(p.image_url, 120)}" loading="lazy" alt="${p.name}" class="product-thumb" />` : '<div class="product-thumb-empty"><span class="material-symbols-outlined">diamond</span></div>'}
             <div>
-              <span class="product-cell-name">${p.name}</span>
+              <span class="product-cell-name">${escapeHtml(p.name)}</span>
               ${!p.is_active ? '<span class="badge-archived">Archived</span>' : ''}
             </div>
           </div>
         </td>
-        <td><span class="collection-badge collection--${p.collection.toLowerCase()}">${p.collection}</span></td>
-        <td>${p.category}</td>
+        <td><span class="collection-badge collection--${escapeHtml(p.collection.toLowerCase())}">${escapeHtml(p.collection)}</span></td>
+        <td>${escapeHtml(p.category)}</td>
         <td>${formatPrice(p.price)}</td>
         <td>
           <div class="stock-edit-wrap">
@@ -71,14 +71,14 @@ function renderTable(products) {
         <td>${stockBadge(inv.stock, inv.low_stock_threshold)}</td>
         <td>
           <div class="action-btns">
-            ${p.category === 'Earrings' ? `<a class="action-btn action-btn--try-on" href="/admin/try-on.html?product=${encodeURIComponent(p.id)}" title="Try-on" aria-label="Try-on: ${p.name}"><span class="material-symbols-outlined">face</span></a>` : ''}
+            ${p.category === 'Earrings' ? `<a class="action-btn action-btn--try-on" href="/admin/try-on.html?product=${encodeURIComponent(p.id)}" title="Try-on" aria-label="Try-on: ${escapeHtml(p.name)}"><span class="material-symbols-outlined">face</span></a>` : ''}
             <button class="action-btn action-btn--edit" data-id="${p.id}" title="Edit">
               <span class="material-symbols-outlined">edit</span>
             </button>
             <button class="action-btn action-btn--archive" data-id="${p.id}" title="${p.is_active ? 'Archive' : 'Restore'}" data-active="${p.is_active}">
               <span class="material-symbols-outlined">${p.is_active ? 'archive' : 'unarchive'}</span>
             </button>
-            <button class="action-btn action-btn--delete" data-delete-id="${p.id}" data-delete-name="${p.name}" title="Delete Product">
+            <button class="action-btn action-btn--delete" data-delete-id="${p.id}" data-delete-name="${escapeHtml(p.name)}" title="Delete Product">
               <span class="material-symbols-outlined" style="color:rgb(var(--adm-red));">delete</span>
             </button>
           </div>

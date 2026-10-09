@@ -22,6 +22,16 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 const SUPABASE_BASE = (SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_STORAGE_PREFIX = `${SUPABASE_BASE}/storage/v1/object/public/`;
 
+export function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function cfImg(url, size) {
   // Not a Supabase Storage URL (or already rewritten) — return as-is.
   if (!url || !url.startsWith(SUPABASE_STORAGE_PREFIX)) return url || '';
