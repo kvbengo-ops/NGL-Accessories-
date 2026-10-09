@@ -1,7 +1,7 @@
 /* ============================================================
    NGL Admin — Tasks Logic
    ============================================================ */
-import { getTasks, createTask, updateTask, deleteTask, getAdmins } from './supabase.js';
+import { getTasks, createTask, updateTask, deleteTask, getAdmins, escapeHtml } from './supabase.js';
 import { requireAuth, renderSidebar, showToast, formatDate, openModal, closeModal } from './admin.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
 
@@ -94,18 +94,18 @@ async function loadAdmins() {
     const filterSelect = document.getElementById('tasks-filter-assignee');
     const formSelect = document.getElementById('task-assignee');
     
-    const optionsHtml = allAdmins.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    const optionsHtml = allAdmins.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
     
     // Add "Me" option for current user in filter
     filterSelect.innerHTML = `
       <option value="">All Assignees</option>
-      <option value="${currentUser.id}">Me (${currentUser.name})</option>
+      <option value="${currentUser.id}">Me (${escapeHtml(currentUser.name)})</option>
       ${optionsHtml}
     `;
     
     formSelect.innerHTML = `
       <option value="">Unassigned</option>
-      <option value="${currentUser.id}">Me (${currentUser.name})</option>
+      <option value="${currentUser.id}">Me (${escapeHtml(currentUser.name)})</option>
       ${optionsHtml}
     `;
   } catch (err) {
@@ -149,7 +149,7 @@ function renderTasks() {
 
   const pColor = { low: 'var(--adm-text-muted)', medium: 'var(--adm-gold)', high: 'rgb(var(--adm-red))' };
   
-  const adminsOptions = allAdmins.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  const adminsOptions = allAdmins.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
 
   ['pending', 'in_progress', 'completed'].forEach(s => {
     const colEl = document.getElementById(`col-${s}`);
@@ -172,15 +172,15 @@ function renderTasks() {
                 <button class="action-btn delete-task" data-id="${t.id}" title="Delete"><span class="material-symbols-outlined">delete</span></button>
               </div>
             </div>
-            <h4 class="kanban-card-title">${t.title}</h4>
-            ${t.description ? `<p class="kanban-card-desc">${t.description}</p>` : ''}
+            <h4 class="kanban-card-title">${escapeHtml(t.title)}</h4>
+            ${t.description ? `<p class="kanban-card-desc">${escapeHtml(t.description)}</p>` : ''}
             
             <div class="kanban-card-footer">
               <div class="kanban-assignee-wrap">
                 <span class="material-symbols-outlined" style="font-size:16px; color:var(--adm-text-muted);">person</span>
                 <select class="admin-select kanban-assignee-select" data-id="${t.id}" style="border:none; padding:0; background:transparent; font-size:12px; font-weight:500;">
                   <option value="">Unassigned</option>
-                  ${allAdmins.map(a => `<option value="${a.id}" ${t.assigned_to === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
+                  ${allAdmins.map(a => `<option value="${a.id}" ${t.assigned_to === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
                 </select>
               </div>
               ${t.due_date ? `<span class="kanban-due ${isOverdue ? 'overdue' : ''}"><span class="material-symbols-outlined">calendar_today</span> ${formatDate(t.due_date).split(',')[0]}</span>` : ''}

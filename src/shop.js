@@ -1,6 +1,6 @@
 import './style.css';
 import { readCart, writeCart, addCatalogProduct } from './cart-store.js';
-import { getProducts, getTryOnConfigs, trackEngagement, cfImg } from './supabase.js';
+import { getProducts, getTryOnConfigs, trackEngagement, cfImg, escapeHtml } from './supabase.js';
 import { initSearch } from './search.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
 import './cms-frontend.js';
@@ -160,7 +160,7 @@ function showToast(msg) {
     toast.setAttribute('aria-live', 'polite');
     document.body.appendChild(toast);
   }
-  toast.innerHTML = `<span class="material-symbols-outlined" style="color:var(--gold-300)">check_circle</span>${msg}`;
+  toast.innerHTML = `<span class="material-symbols-outlined" style="color:var(--gold-300)">check_circle</span>${escapeHtml(msg)}`;
   toast.classList.add('visible');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 3200);
@@ -185,12 +185,12 @@ function openModal(product) {
   modalImg.src        = cfImg(product.image, 1000);
   modalImg.alt        = product.name;
   modalBadge.className = `modal-category-badge modal-badge--${product.category}`;
-  modalBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:10px">${product.emoji}</span>${product.categoryLabel}`;
+  modalBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:10px">${escapeHtml(product.emoji)}</span>${escapeHtml(product.categoryLabel)}`;
   modalName.textContent  = product.name;
   modalPrice.className   = `modal-price modal-price--${product.category}`;
   modalPrice.textContent = formatPrice(product.price);
   modalDesc.textContent  = product.desc;
-  modalTags.innerHTML    = product.tags.map(t => `<span class="modal-tag">${t}</span>`).join('');
+  modalTags.innerHTML    = product.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join('');
   if (product.stock <= 0) {
     modalCartBtn.innerHTML = `<span class="material-symbols-outlined">block</span> Out of Stock`;
     modalCartBtn.disabled  = true;
@@ -277,7 +277,7 @@ function buildSwipeCard(product) {
       </div>
     </div>
     ${product.image ? `<div class="card-image" style="position:relative;">
-      <img src="${cfImg(product.image, 800)}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <img src="${cfImg(product.image, 800)}" alt="${escapeHtml(product.name)}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>
@@ -286,11 +286,11 @@ function buildSwipeCard(product) {
     </div>` : ''}
     <div class="card-body">
       <span class="card-category-badge">
-        <span class="material-symbols-outlined">${product.emoji}</span>
-        ${product.categoryLabel}
+        <span class="material-symbols-outlined">${escapeHtml(product.emoji)}</span>
+        ${escapeHtml(product.categoryLabel)}
       </span>
-      <h3 class="card-name">${product.name}</h3>
-      <p class="card-desc">${product.desc}</p>
+      <h3 class="card-name">${escapeHtml(product.name)}</h3>
+      <p class="card-desc">${escapeHtml(product.desc)}</p>
       <div class="card-price-row">
         <span class="card-price">${formatPrice(product.price)}</span>
         <button class="card-view-btn" data-id="${product.id}" aria-label="View full details">
@@ -532,20 +532,20 @@ function buildProductCard(product) {
   card.innerHTML = `
     <div class="product-card-image" style="position:relative;">
       ${tryOnBadge(product)}
-      <img src="${cfImg(product.image, 600)}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <img src="${cfImg(product.image, 600)}" alt="${escapeHtml(product.name)}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>
         <span class="pc-like-n">${product.likes}</span>
       </div>
       <button class="product-photo-open" type="button" tabindex="-1" aria-hidden="true"></button>
-      <button class="grid-like-btn product-like-action" type="button" aria-label="Like ${product.name}">
+      <button class="grid-like-btn product-like-action" type="button" aria-label="Like ${escapeHtml(product.name)}">
         <span class="material-symbols-outlined">favorite</span>
       </button>
     </div>
     <div class="product-card-body">
-      <span class="product-card-badge badge--${product.category}">${product.categoryLabel}</span>
-      <h3 class="product-card-name"><button class="product-name-link grid-view-btn" type="button">${product.name}</button></h3>
+      <span class="product-card-badge badge--${product.category}">${escapeHtml(product.categoryLabel)}</span>
+      <h3 class="product-card-name"><button class="product-name-link grid-view-btn" type="button">${escapeHtml(product.name)}</button></h3>
       <div class="product-card-footer">
         <span class="product-card-price">${formatPrice(product.price)}</span>
         <div class="product-card-actions">
@@ -637,7 +637,7 @@ function renderGrid() {
     grid.innerHTML = `
       <div class="shop-no-results" style="grid-column:1/-1;text-align:center;padding:48px 16px;opacity:0.7;">
         <span class="material-symbols-outlined" style="font-size:40px;opacity:0.5;">search_off</span>
-        <p style="margin-top:12px;font-family:var(--font-sans);">${msg}</p>
+        <p style="margin-top:12px;font-family:var(--font-sans);">${escapeHtml(msg)}</p>
       </div>`;
     return;
   }
