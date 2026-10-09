@@ -247,6 +247,27 @@ modalTryOnBtn?.addEventListener('click', async () => {
 });
 
 const canTryOn = (p) => import.meta.env.VITE_TRY_ON_ENABLED === 'true' && p.itemCategory === 'Earrings' && tryOnConfigs.has(p.id);
+const tryOnBadge = (product) => canTryOn(product) ? `<button class="card-tryon-badge" type="button" aria-label="Try on with your camera" title="Try on with your camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 5c-1.3-1.1-2.8-1.7-4.5-1.7C6.9 3.3 4 6.6 4 10.7s2.9 7.4 6.5 7.4S17 14.8 17 10.7M10.5 18.1V21M7 21h7M18.5 2l.8 2.7L22 5.5l-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8Z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : '';
+
+function attachCardTryOn(card, product) {
+  const button = card.querySelector('.card-tryon-badge');
+  button?.addEventListener('click', async event => {
+    event.stopPropagation();
+    if (!canTryOn(product) || button.disabled) return;
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    try {
+      const { openTryOn } = await import('./try-on/controller.js');
+      if (!button.isConnected || !canTryOn(product)) return;
+      openTryOn({ product, products: PRODUCTS, configs: tryOnConfigs, onAddToBag: addToCart, returnFocus: button, autoStart: true });
+    } catch {
+      showToast('The mirror could not open. Please tap try-on again.');
+    } finally {
+      button.disabled = false;
+      button.removeAttribute('aria-busy');
+    }
+  });
+}
 
 /* ── SWIPE CARD BUILDER ── */
 function buildSwipeCard(product) {
@@ -257,6 +278,7 @@ function buildSwipeCard(product) {
   card.setAttribute('aria-label', `${product.name} — ${formatPrice(product.price)}`);
 
   card.innerHTML = `
+    ${tryOnBadge(product)}
     <div class="card-overlay card-overlay--like" aria-hidden="true">
       <div class="overlay-stamp">
         <span class="material-symbols-outlined">favorite</span> Add
@@ -280,7 +302,6 @@ function buildSwipeCard(product) {
         <span class="material-symbols-outlined">${product.emoji}</span>
         ${product.categoryLabel}
       </span>
-      ${canTryOn(product) ? '<span class="card-tryon-badge"><span class="material-symbols-outlined">face_retouching_natural</span>Try on available</span>' : ''}
       <h3 class="card-name">${product.name}</h3>
       <p class="card-desc">${product.desc}</p>
       <div class="card-price-row">
@@ -291,6 +312,8 @@ function buildSwipeCard(product) {
       </div>
     </div>
   `;
+
+  attachCardTryOn(card, product);
 
   // View button opens modal
   card.querySelector('.card-view-btn')?.addEventListener('click', (e) => {
@@ -375,10 +398,11 @@ class SwipeStack {
 
   _attachDrag(card) {
     card.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || e.target.closest('button, a, input, select')) return;
       this._dragStart(card, e.clientX, e.clientY);
     });
     card.addEventListener('touchstart', (e) => {
+      if (e.target.closest('button, a, input, select')) return;
       const t = e.touches[0];
       this._dragStart(card, t.clientX, t.clientY);
     }, { passive: true });
@@ -520,6 +544,7 @@ function buildProductCard(product) {
   card.dataset.id = product.id;
   card.innerHTML = `
     <div class="product-card-image" style="position:relative;">
+      ${tryOnBadge(product)}
       <img src="${cfImg(product.image, 600)}" alt="${product.name}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
@@ -542,6 +567,8 @@ function buildProductCard(product) {
       </div>
     </div>
   `;
+
+  attachCardTryOn(card, product);
 
   const likeNumEl = card.querySelector('.pc-like-n');
   const heart     = card.querySelector('.like-heart-burst');

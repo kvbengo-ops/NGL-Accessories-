@@ -2170,8 +2170,11 @@ strong { font-weight: 600; }
   width: fit-content;
 }
 .card-category-badge .material-symbols-outlined { font-size: 8px; }
-.card-tryon-badge { display:inline-flex; align-items:center; gap:5px; align-self:flex-start; font:600 10px/1.4 var(--font-sans); letter-spacing:.1em; color:var(--gold-500); }
-.card-tryon-badge .material-symbols-outlined { font-size:14px; }
+.card-tryon-badge { position:absolute; top:12px; right:12px; z-index:3; display:grid; place-items:center; width:44px; height:44px; padding:0; border-radius:50%; background:rgba(255,253,246,.94); border:1px solid rgba(117,91,0,.16); color:#52664b; box-shadow:0 2px 10px #292d2420; backdrop-filter:blur(6px); cursor:pointer; touch-action:manipulation; transition:background .2s,box-shadow .2s; }
+.card-tryon-badge:hover { background:#edf1e4; box-shadow:0 3px 14px #292d2430; }
+.card-tryon-badge:focus-visible { outline:3px solid #aa6979; outline-offset:3px; }
+.card-tryon-badge:disabled { cursor:wait; opacity:.7; }
+.card-tryon-badge svg { width:22px; height:22px; }
 .swipe-card--natural .card-category-badge { color: var(--sage); background: rgba(164,180,164,0.12); border: 1px solid rgba(164,180,164,0.3); }
 .swipe-card--grace   .card-category-badge { color: var(--gold-300); background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); }
 .swipe-card--lush    .card-category-badge { color: #4ecdc4; background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.25); }

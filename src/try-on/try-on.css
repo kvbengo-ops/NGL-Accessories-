@@ -24,6 +24,11 @@
 .try-on-mirror-art{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;filter:drop-shadow(0 9px 8px #59614a26);overflow:visible}
 .try-on-mirror-welcome{z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20%;color:#687760;pointer-events:none}
 .try-on-mirror-welcome[hidden]{display:none}
+.try-on-countdown{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;background:#33453638;clip-path:url(#try-on-mirror-aperture);color:#fffdf5;text-align:center;pointer-events:none}
+.try-on-countdown[hidden]{display:none}
+.try-on-countdown-label{font:italic 24px var(--font-serif,Georgia,serif);text-shadow:0 1px 8px #22302160}
+.try-on-countdown-number{display:grid;place-items:center;width:100px;height:100px;border:1px solid #fffdf580;border-radius:50%;background:#fffdf525;backdrop-filter:blur(4px);font:500 76px/1 var(--font-serif,Georgia,serif);box-shadow:0 6px 30px #33453620}
+.try-on-countdown-hint{font-size:10px;letter-spacing:.05em;text-shadow:0 1px 5px #22302180}
 .try-on-welcome-icon{width:34px;height:34px;margin-bottom:17px;stroke-width:1.1;opacity:.65}
 .try-on-mirror-welcome p{font:500 clamp(24px,3.5vw,38px)/1.05 var(--font-serif,Georgia,serif);margin:0;letter-spacing:-.035em}
 .try-on-mirror-welcome p em{font-weight:400;color:#9b6773}
