@@ -22,7 +22,7 @@ export async function requireAuth() {
   return admin;
 }
 
-// Any active admin may use the support console (see SUPPORT_BOT_PLAN.md).
+// Any active admin may use the support console (see docs/SUPPORT_BOT_PLAN.md).
 export const requireAdmin = requireAuth;
 
 export async function requireSuperadmin() {

@@ -181,7 +181,7 @@ export async function updateStoreSettings(settings) {
 
 /* ── Support chat (AI customer support) ──────────────────────
    Anonymous customers reach the chat only through these token-gated
-   RPCs (defined in setup/support-chat.sql). See SUPPORT_BOT_PLAN.md. */
+   RPCs (defined in setup/support-chat.sql). See docs/SUPPORT_BOT_PLAN.md. */
 export async function startSupportChat(pageUrl) {
   const { data, error } = await supabase.rpc('support_start', { p_page_url: pageUrl || null });
   if (error) throw error;
@@ -278,7 +278,7 @@ export async function uploadProductImage(file) {
 
 /* ── Try-on helpers ──────────────────────────────────────── */
 // Earring try-on placement settings (supabase/migrations/…_try-on.sql).
-// Config objects follow the contract in src/try-on/assets.js / plan.md.
+// Config objects follow the contract in src/try-on/assets.js / docs/plan.md.
 const TRY_ON_BUCKET = 'try-on-assets';
 const tryOnUrl = (path) =>
   path ? cfImg(supabase.storage.from(TRY_ON_BUCKET).getPublicUrl(path).data.publicUrl) : null;

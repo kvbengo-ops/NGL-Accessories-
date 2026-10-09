@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mapToView, earAnchors, computePlacement, createSmoother, EAR_DROP } from './src/try-on/placement.js';
-import { validateConfig, cropRect, cropAdjust, trimFromAlpha, autoAnchor, scaleFromLength } from './src/try-on/assets.js';
-import { FIXTURES } from './src/try-on/fixtures.js';
-import { normalizeDetectState, startWebarEngine, WEBAR_LIMITS, EAR_K } from './src/try-on/engine-webar.js';
-import { runCountdown } from './src/try-on/countdown.js';
+import { mapToView, earAnchors, computePlacement, createSmoother, EAR_DROP } from '../src/try-on/placement.js';
+import { validateConfig, cropRect, cropAdjust, trimFromAlpha, autoAnchor, scaleFromLength } from '../src/try-on/assets.js';
+import { FIXTURES } from '../src/try-on/fixtures.js';
+import { normalizeDetectState, startWebarEngine, WEBAR_LIMITS, EAR_K } from '../src/try-on/engine-webar.js';
+import { runCountdown } from '../src/try-on/countdown.js';
 
 test('camera countdown emits 3, 2, 1 before allowing the filter', async () => {
   const ticks = [];
