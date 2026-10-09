@@ -275,7 +275,7 @@ export function createPreviewSession({ view, canvas, onState = () => {}, onMetri
   return { start, stop, setProduct, setUser, setEngine, setDebug, get engine() { return engine; }, get video() { return camera?.video || null; } };
 }
 
-export function openTryOn({ product, products, configs, onAddToBag, returnFocus, autoStart = false, onClose, embed }) {
+export function openTryOn({ product, products, configs, onAddToBag, returnFocus, autoStart = false, onClose, onSelect, embed }) {
   const mobile = window.matchMedia('(max-width: 700px)').matches;
   const available = products.filter(p => p.itemCategory === 'Earrings' && configs.has(p.id));
   if (!available.length) return;
@@ -301,6 +301,11 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus,
   if (!embed) document.body.style.overflow = 'hidden';
   const $ = selector => root.querySelector(selector);
   const view = $('.try-on-view');
+  const mirrorResume = document.createElement('button');
+  mirrorResume.type = 'button';
+  mirrorResume.className = 'try-on-mirror-resume';
+  mirrorResume.hidden = true;
+  view.append(mirrorResume);
   const preview = createPreviewSession({ view, canvas: $('.try-on-canvas'), onState: setState, countdownSeconds: 3 });
   const list = $('.try-on-list');
   const price = item => `₱${Number(item.price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
@@ -339,6 +344,8 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus,
     $('.try-on-start').hidden = next !== 'intro';
     $('.try-on-retry').hidden = !['paused', 'permission-denied', 'camera-busy', 'model-failure', 'unsupported-device', 'no-camera'].includes(next);
     $('.try-on-retry').textContent = next === 'paused' ? 'Resume camera' : 'Retry';
+    mirrorResume.hidden = !['paused', 'permission-denied', 'camera-busy', 'model-failure', 'unsupported-device', 'no-camera'].includes(next);
+    mirrorResume.textContent = next === 'paused' || next === 'camera-busy' ? 'Resume camera' : 'Retry camera';
   }
   // Shoppers get no placement controls: the tracking engine and the product's saved settings place the earring.
   function choose(item) {
@@ -347,6 +354,7 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus,
     $('.try-on-name').textContent = item.name;
     $('.try-on-price').textContent = price(item);
     preview.setProduct(configs.get(item.id));
+    onSelect?.(item);
   }
   function close() {
     preview.stop();
@@ -369,8 +377,10 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus,
   }
   $('.try-on-close').addEventListener('click', close);
   root.addEventListener('click', event => { if (!embed && event.target === root) close(); });
-  $('.try-on-start').addEventListener('click', () => preview.start());
-  $('.try-on-retry').addEventListener('click', () => preview.start());
+  const restartCamera = () => { setState('permission'); preview.start(); };
+  $('.try-on-start').addEventListener('click', restartCamera);
+  $('.try-on-retry').addEventListener('click', restartCamera);
+  mirrorResume.addEventListener('click', restartCamera);
   $('.try-on-bag').addEventListener('click', () => {
     if (!onAddToBag(selected)) return;
     if (embed) $('.try-on-status').textContent = `${selected.name} was added to your bag.`; else close();
@@ -384,4 +394,12 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus,
     setState('permission');
     preview.start();
   }
+  return {
+    selectProduct(id) {
+      const item = available.find(p => String(p.id) === String(id));
+      if (!item || !root.isConnected) return false;
+      choose(item);
+      return true;
+    },
+  };
 }

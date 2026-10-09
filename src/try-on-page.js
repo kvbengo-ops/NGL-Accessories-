@@ -2,6 +2,7 @@ import './style.css';
 import { getProducts, getTryOnConfigs } from './supabase.js';
 import { addCatalogProduct, readCart } from './cart-store.js';
 import { openTryOn } from './try-on/controller.js';
+import { initStylist } from './stylist-widget.js';
 
 // Standalone try-on page: /try-on.html (optionally ?product=<id>). The shared navbar comes from main.js.
 const host = document.getElementById('tryon-page');
@@ -27,10 +28,23 @@ try {
   const earrings = products.filter(p => p.itemCategory === 'Earrings' && configs.has(p.id));
   const product = earrings.find(p => String(p.id) === wanted) || earrings[0];
   if (!product) unavailable();
-  else openTryOn({
-    product, products, configs, embed: host,
-    onAddToBag: p => addCatalogProduct({ ...p, collection: p.categoryLabel, image_url: p.image }).ok,
-  });
+  else {
+    let selected = product;
+    const mirror = openTryOn({
+      product, products, configs, embed: host,
+      onSelect: p => {
+        selected = p;
+        window.dispatchEvent(new CustomEvent('ngl:try-on-selected'));
+      },
+      onAddToBag: p => addCatalogProduct({ ...p, collection: p.categoryLabel, image_url: p.image }).ok,
+    });
+    initStylist({
+      tryOn: true,
+      getTryOnProduct: () => selected,
+      canTryOnProduct: id => earrings.some(p => String(p.id) === String(id)),
+      onTryOnProduct: id => mirror.selectProduct(id),
+    });
+  }
 } catch (error) {
   console.error('Try-on unavailable:', error);
   unavailable();

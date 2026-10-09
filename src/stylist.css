@@ -10,3 +10,33 @@
 @media(max-width:600px){.stylist-launch{right:16px;bottom:calc(17px + env(safe-area-inset-bottom));padding:13px 17px}.stylist-panel{inset:0;max-width:none;width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0}.stylist-header{padding-top:calc(16px + env(safe-area-inset-top))}.stylist-footer{padding-bottom:calc(13px + env(safe-area-inset-bottom))}.stylist-form textarea{font-size:16px}.stylist-editorial{height:140px}.stylist-intro h3{font-size:46px}.stylist-icon{width:40px;min-height:44px}.stylist-product-bottom button{min-height:44px}.stylist-refinements button{min-height:44px}.stylist-starters button{font-size:11px;min-height:48px}.stylist-footnote{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.stylist-root *{transition:none!important;scroll-behavior:auto!important}}
 .stylist-source{margin-top:9px;border-top:1px solid var(--st-line);padding-top:7px;color:var(--st-muted);font-size:9px}.stylist-source summary{cursor:pointer}.stylist-source p{font-size:10px;line-height:1.5;margin:7px 0 0}.stylist-browse-link{font-size:12px;color:var(--st-gold);text-decoration:underline}
+/* Try-on chat stays nonmodal so shoppers can keep browsing the mirror. */
+.stylist-root--try-on .stylist-panel{z-index:1000;height:min(620px,65dvh);box-sizing:border-box}
+.stylist-root--try-on .stylist-panel:not([hidden]){display:flex;flex-direction:column}
+.stylist-root--try-on[data-open="true"] .stylist-launch{visibility:hidden}
+.stylist-root--try-on .stylist-editorial{display:none}
+.stylist-root--try-on .stylist-intro{padding:16px 20px 12px}
+.stylist-root--try-on .stylist-intro h3{font-size:30px;margin:8px 0}
+.stylist-root--try-on .stylist-starters{display:flex;flex-wrap:wrap;gap:6px;padding:0 20px 16px}
+.stylist-root--try-on .stylist-starters button{border-radius:999px;justify-content:center;min-height:44px;padding:10px 12px}
+.stylist-try-on-context{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:10px 18px;border-bottom:1px solid var(--st-line);background:#f6efdf;flex-shrink:0}
+.stylist-try-on-context span{font-size:8px;letter-spacing:.1em;color:var(--st-gold)}
+.stylist-try-on-context strong{font-size:11px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stylist-try-on-context button,.stylist-product-info .stylist-try-on-button{border:1px solid #c4aa76;background:#fffcf6;color:var(--st-gold);border-radius:8px;padding:9px 10px;min-height:44px;font-size:11px}
+.stylist-product-info .stylist-try-on-button{margin-top:9px}
+@media(max-width:700px){
+  .stylist-root--try-on .stylist-launch{right:12px;bottom:calc(12px + env(safe-area-inset-bottom));padding:12px 15px}
+  .stylist-root--try-on .stylist-panel{inset:auto 8px calc(12px + env(safe-area-inset-bottom)) 8px;width:auto;max-width:none;height:52dvh;max-height:calc(100dvh - 24px);border:1px solid var(--st-line);border-radius:18px}
+  .stylist-root--try-on .stylist-header{padding:10px 12px;gap:7px}
+  .stylist-root--try-on .stylist-monogram,.stylist-root--try-on .stylist-heading p,.stylist-root--try-on .stylist-footnote,.stylist-root--try-on .stylist-brief{display:none}
+  .stylist-root--try-on .stylist-heading h2{font-size:21px}
+  .stylist-root--try-on .stylist-footer{padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+  .stylist-root--try-on .stylist-form textarea{font-size:16px}
+  .stylist-root--try-on .stylist-icon,.stylist-root--try-on .stylist-form button{width:44px;height:44px;flex-shrink:0}
+  .stylist-root--try-on .stylist-intro{padding:12px 16px}
+  .stylist-root--try-on .stylist-starters{padding:0 16px 12px}
+  .stylist-root--try-on .stylist-thread{padding-inline:16px}
+  .stylist-root--try-on .stylist-product-photo{width:64px;min-height:90px}
+  .stylist-root--try-on .stylist-product-bottom{flex-wrap:wrap}
+  .stylist-root--try-on .stylist-status{max-height:48px;overflow:auto}
+}

@@ -89,7 +89,11 @@
 @media(max-width:700px){.try-on-list{max-height:260px}.try-on-list .try-on-catalog-item{gap:10px;min-height:74px}.try-on-embed .try-on-dialog{height:auto}}
 /* On phones, keep the collection immediately beneath the mirror. Native
    horizontal scrolling browses the cards; tapping keeps the existing selection. */
+.try-on-mirror-resume{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;min-height:48px;max-width:65%;padding:12px 20px;border:1px solid #fffdf580;border-radius:999px;background:#52664b;color:#fffdf5;font:500 13px var(--font-sans,system-ui);box-shadow:0 4px 18px #22302140;cursor:pointer;touch-action:manipulation}
+.try-on-mirror-resume[hidden]{display:none}
+@media(min-width:701px){.try-on-mirror-resume{display:none}}
 @media(max-width:700px){
+  .try-on-panel > .try-on-retry{display:none}
   .try-on-main{display:flex;flex-direction:column;gap:12px;padding-bottom:calc(20px + env(safe-area-inset-bottom));min-width:0}
   .try-on-mirror-stage{order:0;position:relative;top:auto;align-self:stretch;padding-bottom:6px}
   .try-on-view.try-on-mirror{width:100%;max-width:480px}
