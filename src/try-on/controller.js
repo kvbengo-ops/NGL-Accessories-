@@ -1,4 +1,5 @@
 import './try-on.css';
+import { mirrorFrame } from './mirror-frame.js';
 import { startCamera } from './camera.js';
 import { createRenderer } from './renderer.js';
 import { loadAsset } from './assets.js';
@@ -277,13 +278,13 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus 
   const root = document.createElement('div');
   root.className = 'try-on-backdrop';
   root.innerHTML = `<section class="try-on-dialog" role="dialog" aria-modal="true" aria-labelledby="try-on-title" tabindex="-1">
-    <header class="try-on-header"><div><span class="try-on-eyebrow">NGL ACCESSORIES</span><h2 id="try-on-title">Virtual try-on</h2></div><button type="button" class="try-on-close" aria-label="Close try-on">×</button></header>
-    <div class="try-on-main"><div class="try-on-view"><canvas class="try-on-canvas" aria-hidden="true"></canvas><div class="try-on-view-message" aria-hidden="true"></div></div>
-      <div class="try-on-panel"><div><span class="try-on-eyebrow">STYLE PREVIEW</span><h3 class="try-on-name"></h3><p class="try-on-price"></p></div>
+    <header class="try-on-header"><div class="try-on-heading"><svg class="try-on-brand-flower" viewBox="0 0 32 40" fill="none" aria-hidden="true"><path d="M16 24v13M16 34C6 32 6 27 5 25c8 0 11 5 11 9M16 31c8-2 9-6 10-9-6 1-9 5-10 9" stroke="#819176" stroke-width="1.3" stroke-linecap="round"/><path d="M16 24C6 22 6 12 8 5l8 6 8-6c3 10 1 17-8 19Z" fill="#ead0d3" stroke="currentColor" stroke-width="1.2"/><path d="M16 24c-5-8-3-15 0-21 4 7 6 14 0 21Z" stroke="currentColor" stroke-width="1"/></svg><div><span class="try-on-eyebrow">NGL ACCESSORIES · VIRTUAL TRY-ON</span><h2 id="try-on-title">The tulip mirror</h2></div></div><button type="button" class="try-on-close" aria-label="Close try-on">×</button></header>
+    <div class="try-on-main"><div class="try-on-mirror-stage"><p class="try-on-mirror-label">A moment, just for you.</p><div class="try-on-view try-on-mirror"><div class="try-on-mirror-glass" aria-hidden="true"></div><canvas class="try-on-canvas" aria-hidden="true"></canvas><div class="try-on-mirror-welcome" aria-hidden="true"><svg class="try-on-welcome-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor"><path d="M6 10h5l2-3h6l2 3h5v15H6Z"/><circle cx="16" cy="17" r="5"/><path d="M22 13h1"/></svg><p>Meet your next<br><em>favourite pair.</em></p><span>Turn on your camera<br>and let the mirror work its magic.</span></div><div class="try-on-view-message" aria-hidden="true"></div>${mirrorFrame}</div><p class="try-on-mirror-caption"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M5 8V6a5 5 0 0 1 10 0v2M4 8h12v10H4Z"/><circle cx="10" cy="12" r="1"/><path d="M10 13v2"/></svg>Your camera stays private. Always.</p></div>
+      <div class="try-on-panel"><div class="try-on-panel-intro"><span class="try-on-eyebrow">YOUR LITTLE DRESSING ROOM</span><p class="try-on-panel-title">A little <br><em>mirror magic.</em></p><p class="try-on-panel-description">Find the pair that feels like you. Try a little sparkle, right where you are.</p></div><div><span class="try-on-product-label">In your reflection</span><h3 class="try-on-name"></h3><p class="try-on-price"></p></div>
         <p class="try-on-status" role="status" aria-live="polite"></p>
-        <button type="button" class="try-on-start">Start camera</button><button type="button" class="try-on-retry" hidden>Retry</button>
-        <div class="try-on-controls" hidden><label>Style<select class="try-on-select"></select></label></div>
-        <button type="button" class="try-on-bag">Add to bag</button><p class="try-on-note">Style preview — size and placement are approximate.</p>
+        <button type="button" class="try-on-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 7h5l2-3h4l2 3h5v13H3Z"/><circle cx="12" cy="13" r="4"/></svg>Start camera</button><button type="button" class="try-on-retry" hidden>Retry</button>
+        <div class="try-on-controls"><label>Explore another pair<select class="try-on-select"></select></label></div>
+        <button type="button" class="try-on-bag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5 7h14l1 14H4ZM8 8V6a4 4 0 0 1 8 0v2"/></svg>Add to bag</button><p class="try-on-note">A little preview of your look.<br>Size and placement are approximate.</p>
       </div></div></section>`;
   document.body.append(root);
   document.body.style.overflow = 'hidden';
@@ -296,12 +297,13 @@ export function openTryOn({ product, products, configs, onAddToBag, returnFocus 
     if (!root.isConnected) return;
     if (state === next) return;
     state = next;
+    root.dataset.state = next;
+    $('.try-on-mirror-welcome').hidden = next !== 'intro';
     $('.try-on-status').textContent = MESSAGES[next] || MESSAGES['model-failure'];
     $('.try-on-view-message').textContent = ['tracking', 'intro'].includes(next) ? '' : $('.try-on-status').textContent;
     $('.try-on-start').hidden = next !== 'intro';
     $('.try-on-retry').hidden = !['paused', 'permission-denied', 'camera-busy', 'model-failure', 'unsupported-device', 'no-camera'].includes(next);
     $('.try-on-retry').textContent = next === 'paused' ? 'Resume camera' : 'Retry';
-    $('.try-on-controls').hidden = ['intro', 'loading', 'permission'].includes(next);
   }
   // Shoppers get no placement controls: the tracking engine and the product's saved settings place the earring.
   function choose(item) {

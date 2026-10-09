@@ -2170,6 +2170,8 @@ strong { font-weight: 600; }
   width: fit-content;
 }
 .card-category-badge .material-symbols-outlined { font-size: 8px; }
+.card-tryon-badge { display:inline-flex; align-items:center; gap:5px; align-self:flex-start; font:600 10px/1.4 var(--font-sans); letter-spacing:.1em; color:var(--gold-500); }
+.card-tryon-badge .material-symbols-outlined { font-size:14px; }
 .swipe-card--natural .card-category-badge { color: var(--sage); background: rgba(164,180,164,0.12); border: 1px solid rgba(164,180,164,0.3); }
 .swipe-card--grace   .card-category-badge { color: var(--gold-300); background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); }
 .swipe-card--lush    .card-category-badge { color: #4ecdc4; background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.25); }

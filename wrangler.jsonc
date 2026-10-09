@@ -8,7 +8,14 @@
     "enabled": true
   },
   "ratelimits": [
-    { "name": "STYLIST_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }
+    {
+      "name": "STYLIST_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
   ],
   // Non-secret config (the Supabase URL is already public in the client bundle).
   // The service-role key and the LLM key (GROQ_API_KEY, else GEMINI_API_KEY)

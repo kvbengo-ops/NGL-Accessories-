@@ -202,7 +202,7 @@ function openModal(product) {
     modalCartBtn.disabled  = false;
   }
   modalCartBtn.classList.remove('added');
-  modalTryOnBtn.hidden = !(import.meta.env.VITE_TRY_ON_ENABLED === 'true' && product.itemCategory === 'Earrings' && tryOnConfigs.has(product.id));
+  modalTryOnBtn.hidden = !canTryOn(product);
   modalTryOnBtn.style.display = modalTryOnBtn.hidden ? 'none' : '';
 
   modalBackdrop.removeAttribute('aria-hidden');
@@ -246,6 +246,8 @@ modalTryOnBtn?.addEventListener('click', async () => {
   if (modalProduct) openTryOn({ product: modalProduct, products: PRODUCTS, configs: tryOnConfigs, onAddToBag: addToCart, returnFocus: modalTryOnBtn });
 });
 
+const canTryOn = (p) => import.meta.env.VITE_TRY_ON_ENABLED === 'true' && p.itemCategory === 'Earrings' && tryOnConfigs.has(p.id);
+
 /* ── SWIPE CARD BUILDER ── */
 function buildSwipeCard(product) {
   const card = document.createElement('div');
@@ -278,6 +280,7 @@ function buildSwipeCard(product) {
         <span class="material-symbols-outlined">${product.emoji}</span>
         ${product.categoryLabel}
       </span>
+      ${canTryOn(product) ? '<span class="card-tryon-badge"><span class="material-symbols-outlined">face_retouching_natural</span>Try on available</span>' : ''}
       <h3 class="card-name">${product.name}</h3>
       <p class="card-desc">${product.desc}</p>
       <div class="card-price-row">
