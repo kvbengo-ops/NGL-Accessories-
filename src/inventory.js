@@ -507,7 +507,7 @@ async function handleSaveProduct(e) {
         const totalCost = costPrice * newStock;
         await supabase.from('expenses').insert({
           title:        `Inventory purchase: ${productName} (×${newStock})`,
-          category:     'Packaging Supplies',
+          category:     'Inventory Purchase',
           amount:       totalCost,
           expense_date: new Date().toISOString().slice(0, 10),
           created_by:   adminRow?.id ?? null,
@@ -521,7 +521,7 @@ async function handleSaveProduct(e) {
         const restockCost = effectiveCost * addedStock;
         await supabase.from('expenses').insert({
           title:        `Restock: ${productName} (+${addedStock} units)`,
-          category:     'Packaging Supplies',
+          category:     'Inventory Purchase',
           amount:       restockCost,
           expense_date: new Date().toISOString().slice(0, 10),
           created_by:   adminRow?.id ?? null,
@@ -778,7 +778,7 @@ async function handleBatchImport() {
       if (row.cost_price > 0 && row.stock > 0) {
         await supabase.from('expenses').insert({
           title: `Inventory purchase: ${row.name} (\u00d7${row.stock})`,
-          category: 'Packaging Supplies',
+          category: 'Inventory Purchase',
           amount: row.cost_price * row.stock,
           expense_date: new Date().toISOString().slice(0, 10),
           created_by: adminRow?.id ?? null,

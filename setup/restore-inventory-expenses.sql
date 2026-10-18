@@ -20,7 +20,7 @@
 INSERT INTO public.expenses (title, category, amount, expense_date, created_by)
 SELECT
   'Inventory purchase: ' || p.name || ' (x' || i.stock || ')'  AS title,
-  'Packaging Supplies'                                           AS category,
+  'Inventory Purchase'                                           AS category,
   p.cost_price * i.stock                                        AS amount,
   CURRENT_DATE                                                   AS expense_date,
   NULL                                                           AS created_by

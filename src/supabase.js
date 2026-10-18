@@ -179,6 +179,18 @@ export async function updateStoreSettings(settings) {
   if (error) throw error;
 }
 
+/* Admin-only key/value settings (owner finances). Not store_settings: that table is public-read. */
+export async function getAdminSetting(key) {
+  const { data, error } = await supabase.from('admin_settings').select('value').eq('key', key).maybeSingle();
+  if (error) throw error;
+  return data?.value ?? null;
+}
+
+export async function setAdminSetting(key, value) {
+  const { error } = await supabase.from('admin_settings').upsert({ key, value: String(value), updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+
 /* ── Support chat (AI customer support) ──────────────────────
    Anonymous customers reach the chat only through these token-gated
    RPCs (defined in setup/support-chat.sql). See SUPPORT_BOT_PLAN.md. */
@@ -232,17 +244,6 @@ export async function getShippingConfig() {
 }
 
 /* ── Sales summary ───────────────────────────────────────── */
-export async function getSalesSummary(days = 7) {
-  const since = new Date();
-  since.setDate(since.getDate() - days);
-  const { data, error } = await supabase
-    .from('sales_summary')
-    .select('*')
-    .gte('sale_date', since.toISOString());
-  if (error) throw error;
-  return data;
-}
-
 /* ── Storage helpers ─────────────────────────────────────── */
 // Every byte stored gets re-served on each cache miss (Supabase egress), so
 // re-encode to ≤maxEdge (default 1600px) WebP before upload. WebP keeps PNG transparency.

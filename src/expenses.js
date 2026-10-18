@@ -1,5 +1,5 @@
 import { getExpenses, upsertExpense, deleteExpense, getAdmins } from './supabase.js';
-import { requireAuth, renderSidebar, showToast, formatDate, formatPrice, openModal, closeModal } from './admin.js';
+import { requireAuth, renderSidebar, showToast, formatDate, formatPrice, openModal, closeModal, escapeHtml, isStockPurchase } from './admin.js';
 
 let allExpenses = [];
 let allAdmins = [];
@@ -117,14 +117,29 @@ function getFilteredExpenses() {
 
   return allExpenses.filter(e => {
     if (search && !e.title.toLowerCase().includes(search)) return false;
-    if (category && e.category !== category) return false;
+    if (category === '__opex') { if (isStockPurchase(e)) return false; }
+    else if (category === '__stock') { if (!isStockPurchase(e)) return false; }
+    else if (category && e.category !== category) return false;
     if (month && !e.expense_date?.startsWith(month)) return false;
     return true;
   });
 }
 
+function renderSummary(rows) {
+  const sum = list => list.reduce((s, e) => s + Number(e.amount), 0);
+  const stock = rows.filter(isStockPurchase);
+  document.getElementById('expense-summary').innerHTML = `
+    <div><span>Total spent</span><strong>${formatPrice(sum(rows))}</strong>
+      <small>${rows.length} record${rows.length === 1 ? '' : 's'} matching your filters.</small></div>
+    <div><span>Operating expenses</span><strong>${formatPrice(sum(rows.filter(e => !isStockPurchase(e))))}</strong>
+      <small>Counted against profit on the dashboard.</small></div>
+    <div><span>Stock purchases</span><strong>${formatPrice(sum(stock))}</strong>
+      <small>Not a loss: this became your inventory. Each item's cost counts once, when it sells.</small></div>`;
+}
+
 function renderExpenses() {
   const filtered = getFilteredExpenses();
+  renderSummary(filtered);
 
   const tbody = document.getElementById('expenses-body');
   if (filtered.length === 0) {
@@ -135,14 +150,15 @@ function renderExpenses() {
   tbody.innerHTML = filtered.map(e => {
     const admin = allAdmins.find(a => a.id === e.created_by);
     const adminName = admin ? admin.name : 'Unknown';
+    const stock = isStockPurchase(e);
 
     return `
       <tr>
         <td class="date-cell">${e.expense_date ? formatDate(e.expense_date).split(',')[0] : '—'}</td>
-        <td style="font-weight:500;">${e.title}</td>
-        <td><span class="type-badge" style="background:rgba(201,168,76,0.1); color:var(--adm-gold); border-color:rgba(201,168,76,0.3)">${e.category}</span></td>
-        <td style="font-family:monospace; color:rgb(var(--adm-red));">-${formatPrice(e.amount)}</td>
-        <td style="font-size:12px; color:var(--adm-text-muted);">${adminName}</td>
+        <td style="font-weight:500;">${escapeHtml(e.title)}${stock ? '<span class="expense-stock-note">Stock · not counted in profit</span>' : ''}</td>
+        <td><span class="type-badge" style="background:rgba(201,168,76,0.1); color:var(--adm-gold); border-color:rgba(201,168,76,0.3)">${escapeHtml(e.category)}</span></td>
+        <td style="font-family:monospace; color:${stock ? 'rgb(var(--adm-fg) / .6)' : 'rgb(var(--adm-red))'};">-${formatPrice(e.amount)}</td>
+        <td style="font-size:12px; color:var(--adm-text-muted);">${escapeHtml(adminName)}</td>
         <td class="actions-cell" style="text-align:right;">
           <button class="action-btn edit-expense" data-id="${e.id}" title="Edit"><span class="material-symbols-outlined">edit</span></button>
           <button class="action-btn delete-expense" data-id="${e.id}" title="Delete" style="color:rgb(var(--adm-red));"><span class="material-symbols-outlined">delete</span></button>

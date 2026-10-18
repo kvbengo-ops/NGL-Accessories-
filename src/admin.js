@@ -243,6 +243,12 @@ export function closeModal(id) {
   document.body.style.overflow = '';
 }
 
+/* Stock purchases are cash → inventory, not a cost: their cost reaches the P&L as
+   COGS when the item sells, so counting them as an expense too would double it.
+   ponytail: title match covers rows logged before the 'Inventory Purchase' migration ran. */
+export const isStockPurchase = e =>
+  e.category === 'Inventory Purchase' || /^(Inventory purchase|Restock):/.test(e.title);
+
 export function escapeHtml(unsafe) {
   if (!unsafe) return '';
   return String(unsafe)

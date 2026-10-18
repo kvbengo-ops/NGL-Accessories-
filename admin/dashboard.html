@@ -19,79 +19,128 @@
   <main class="admin-main dashboard-workspace">
     <header class="dashboard-heading" id="tour-welcome">
       <div><p class="dashboard-eyebrow">NGL / STORE OVERVIEW</p><h1>Dashboard</h1><p id="dashboard-greeting" class="dashboard-greeting">Your store at a glance.</p></div>
-      <div class="dashboard-heading-actions"><button id="btn-start-tour" class="btn-admin-ghost">Dashboard guide</button><a href="/admin/pos.html" class="admin-header-btn" id="tour-pos">New sale <span aria-hidden="true">?</span></a></div>
+      <div class="dashboard-heading-actions"><button id="btn-start-tour" class="btn-admin-ghost">Dashboard guide</button><button class="btn-admin-ghost" id="tour-cash" popovertarget="cash-calc">Cash calculator</button><a href="/admin/pos.html" class="admin-header-btn" id="tour-pos">New sale <span aria-hidden="true">→</span></a></div>
     </header>
-    <section class="dashboard-metrics" id="tour-kpis" aria-label="Revenue and profit">
-      <div class="dashboard-metric"><span>Today's revenue</span><strong id="kpi-today">?</strong><small>Today</small></div>
-      <div class="dashboard-metric"><span>Today's profit</span><strong id="kpi-profit-today">?</strong><small>Before operating expenses</small></div>
-      <div class="dashboard-metric"><span>7-day revenue</span><strong id="kpi-week">?</strong><small>Rolling last 7 days</small></div>
-      <div class="dashboard-metric"><span>7-day profit</span><strong id="kpi-profit-week">?</strong><small>Before operating expenses</small></div>
-    </section>
+    <div id="cash-calc" class="cash-calc" popover role="dialog" aria-labelledby="cash-calc-title">
+      <div class="card-header">
+        <div><h2 class="card-title" id="cash-calc-title">Cash calculator</h2><p class="dashboard-period">Estimate, all time · cash + GCash + bank</p></div>
+        <button class="cash-calc-close" popovertarget="cash-calc" popovertargetaction="hide" aria-label="Close cash calculator">×</button>
+      </div>
+      <dl class="dashboard-ledger">
+        <div><dt><label for="cash-start">Money you started with</label></dt><dd><input id="cash-start" type="number" min="0" step="any" inputmode="decimal" class="admin-search cash-start-input" placeholder="₱0" /></dd></div>
+        <div><dt>+ Paid sales</dt><dd id="cash-in">—</dd></div>
+        <div><dt>− Spent on stock</dt><dd id="cash-stock">—</dd></div>
+        <div><dt>− Other expenses</dt><dd id="cash-exp">—</dd></div>
+        <div class="ledger-total"><dt>You should have</dt><dd id="cash-total">—</dd></div>
+      </dl>
+      <p class="cash-note" id="cash-note"></p>
+    </div>
     <nav class="dashboard-attention" aria-label="Store actions">
-      <a href="/admin/orders.html"><span><strong id="kpi-pending">?</strong> pending orders</span><span class="dashboard-action-label">Review orders <span aria-hidden="true">?</span></span></a>
-      <a href="/admin/inventory.html"><span><strong id="kpi-lowstock">?</strong> products at or below stock alert</span><span class="dashboard-action-label">Open inventory <span aria-hidden="true">?</span></span></a>
+      <a href="/admin/orders.html"><span><strong id="kpi-pending">—</strong> pending orders</span><span class="dashboard-action-label">Review orders <span aria-hidden="true">→</span></span></a>
+      <a href="/admin/inventory.html"><span><strong id="kpi-lowstock">—</strong> products at or below stock alert</span><span class="dashboard-action-label">Open inventory <span aria-hidden="true">→</span></span></a>
     </nav>
-    <div class="dashboard-analysis">
-      <section class="admin-card chart-card" id="tour-chart">
-          <div class="card-header">
-            <h2 class="card-title">Sales over the last 7 days</h2>
-          </div>
+    <div class="dashboard-filter">
+      <label for="dash-period">Showing</label>
+      <select id="dash-period" class="admin-select">
+        <option value="1" data-prev="yesterday">Today</option><option value="7" data-prev="previous 7 days">Last 7 days</option><option value="30" data-prev="previous 30 days" selected>Last 30 days</option><option value="90" data-prev="previous 90 days">Last 90 days</option><option value="365" data-prev="previous 12 months">Last 12 months</option><option value="all">All time</option>
+      </select>
+      <span>Applies to the numbers, sales chart, profit &amp; loss and best sellers below</span>
+    </div>
+    <section class="dashboard-metrics" id="tour-kpis" aria-label="Sales for the selected period" aria-live="polite">
+      <div class="dashboard-metric"><span>Revenue</span><strong id="kpi-revenue">—</strong><small id="kpi-revenue-delta"></small></div>
+      <div class="dashboard-metric"><span>Gross profit</span><strong id="kpi-profit">—</strong><small id="kpi-profit-delta"></small></div>
+      <div class="dashboard-metric"><span>Orders</span><strong id="kpi-orders">—</strong><small id="kpi-orders-delta"></small></div>
+      <div class="dashboard-metric"><span>Average order</span><strong id="kpi-aov">—</strong><small id="kpi-aov-delta"></small></div>
+    </section>
+    <section class="admin-card chart-card" id="tour-chart">
+      <div class="card-header">
+        <div><h2 class="card-title">Sales</h2><p class="dashboard-period" id="chart-summary">—</p></div>
+        <div class="chart-switch" role="tablist" aria-label="Sales view">
+          <button role="tab" id="tab-trend" aria-controls="slide-trend" aria-selected="true" data-slide="0">Over time</button>
+          <button role="tab" id="tab-category" aria-controls="slide-category" aria-selected="false" data-slide="1" tabindex="-1">By category</button>
+        </div>
+      </div>
+      <!-- Swipe = native horizontal scroll-snap; the tabs above scroll to the same slides. -->
+      <div class="chart-slides" id="chart-slides">
+        <div class="chart-slide" id="slide-trend" role="tabpanel" aria-labelledby="tab-trend">
+          <ul class="chart-legend">
+            <li><span class="legend-line"></span>Revenue</li>
+            <li><span class="legend-line legend-line--profit"></span>Gross profit</li>
+          </ul>
           <div class="chart-wrap">
-            <canvas id="sales-chart" height="220" role="img" aria-label="Daily sales revenue for the last seven days"></canvas>
+            <canvas id="sales-chart" tabindex="0" role="img" aria-label="Revenue and gross profit over time. Use the left and right arrow keys to read each point."></canvas>
+            <div class="chart-tooltip" id="chart-tooltip" hidden></div>
           </div>
-        </section>
-      <section class="admin-card dashboard-pnl" id="tour-pnl">
-        <div class="card-header"><div><h2 class="card-title">Profit &amp; loss</h2><p class="dashboard-period">Rolling last 30 days</p></div><a href="/admin/expenses.html" class="card-link">Expenses ?</a></div>
+          <table class="sr-only" id="sales-table"></table>
+        </div>
+        <div class="chart-slide" id="slide-category" role="tabpanel" aria-labelledby="tab-category">
+          <p class="category-caption">Item sales per category, before order discounts</p>
+          <ul class="category-bars" id="category-bars"></ul>
+        </div>
+      </div>
+      <div class="chart-dots" aria-hidden="true"><span class="is-active"></span><span></span></div>
+    </section>
+    <div class="dashboard-grid">
+      <section class="admin-card receipt dashboard-pnl" id="tour-pnl">
+        <div class="card-header"><div><h2 class="card-title">Profit &amp; loss</h2><p class="dashboard-period" id="pnl-period-label">—</p></div><a href="/admin/expenses.html" class="card-link">Expenses →</a></div>
         <dl class="dashboard-ledger">
-          <div><dt>Revenue</dt><dd id="pnl-rev">?</dd></div>
-          <div><dt>Cost of goods</dt><dd id="pnl-cogs">?</dd></div>
-          <div class="ledger-subtotal"><dt>Gross profit</dt><dd id="pnl-gross">?</dd></div>
-          <div><dt>Operating expenses</dt><dd id="pnl-exp">?</dd></div>
-          <div class="ledger-total"><dt>Net profit</dt><dd id="pnl-net">?</dd></div>
+          <div><dt>Revenue</dt><dd id="pnl-rev">—</dd></div>
+          <div><dt>Cost of goods</dt><dd id="pnl-cogs">—</dd></div>
+          <div class="ledger-subtotal"><dt>Gross profit</dt><dd id="pnl-gross">—</dd></div>
+          <div><dt>Operating expenses</dt><dd id="pnl-exp">—</dd></div>
+          <div class="ledger-total"><dt>Net profit</dt><dd id="pnl-net">—</dd></div>
+          <div><dt>Spent on new stock <small class="ledger-note">Not a loss: it's now Stock on hand. Its cost counts above once each item sells.</small></dt><dd id="pnl-stock">—</dd></div>
         </dl>
       </section>
+      <section class="admin-card receipt" id="tour-trending">
+        <div class="card-header"><div><h2 class="card-title">Best sellers</h2><p class="dashboard-period" id="top-period-label">—</p></div></div>
+        <div class="top-products-list" id="top-products">
+          <div class="table-loading">Loading…</div>
+        </div>
+      </section>
+      <section class="admin-card receipt" id="tour-stock">
+        <div class="card-header"><div><h2 class="card-title">Stock on hand</h2><p class="dashboard-period">Right now, whatever period is selected</p></div><a href="/admin/inventory.html" class="card-link">Inventory →</a></div>
+        <dl class="dashboard-ledger">
+          <div><dt>Items in stock</dt><dd id="stock-units">—</dd></div>
+          <div class="ledger-subtotal"><dt>Value at cost <small class="ledger-note">What you paid — your inventory asset</small></dt><dd id="stock-cost">—</dd></div>
+          <div><dt>Value at selling price</dt><dd id="stock-retail">—</dd></div>
+          <div class="ledger-total"><dt>Profit if all sold</dt><dd id="stock-margin">—</dd></div>
+        </dl>
+        <p id="stock-missing-cost" hidden style="margin:0;padding:0 20px 16px;font-size:11px;color:var(--adm-gold);"></p>
+      </section>
     </div>
-    <div class="dashboard-operations"><section class="recent-orders" id="tour-recent-orders" aria-labelledby="recent-orders-title">
-  <header class="recent-orders-heading"><div><h2 id="recent-orders-title">Recent orders</h2><p>The latest 10 orders from your store.</p></div><a href="/admin/orders.html">All orders <span aria-hidden="true">?</span></a></header>
-  <table id="recent-orders-table">
-    <thead><tr><th scope="col">Customer / order</th><th scope="col">Status</th><th scope="col">Amount</th></tr></thead>
-    <tbody id="recent-orders-body"><tr><td colspan="3" class="recent-orders-empty">Loading orders?</td></tr></tbody>
-  </table>
-</section><section class="admin-card" id="tour-tasks">
-          <div class="card-header">
-            <h2 class="card-title">Your tasks</h2>
-            <a href="/admin/todo.html" class="card-link">View tasks</a>
-          </div>
-          <div class="table-wrap">
-            <table class="admin-table" id="pending-tasks-table">
-              <thead>
-                <tr>
-                  <th>Task</th>
-                  <th>Priority</th>
-                  <th>Open</th>
-                </tr>
-              </thead>
-              <tbody id="pending-tasks-body">
-                <tr><td colspan="3" class="table-loading">Loading tasks…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section></div>
-    <div class="dashboard-products"><section class="admin-card" id="tour-trending">
-          <div class="card-header">
-            <h2 class="card-title">Best sellers</h2><span class="dashboard-period">All recorded sales</span>
-          </div>
-          <div class="top-products-list" id="top-products">
-            <div class="table-loading">Loading…</div>
-          </div>
-        </section><section class="admin-card">
-          <div class="card-header">
-            <h2 class="card-title">Most liked</h2>
-          </div>
-          <div class="top-products-list" id="trending-products">
-            <div class="table-loading">Loading…</div>
-          </div>
-        </section></div>
+    <div class="dashboard-grid">
+      <section class="admin-card" id="tour-tasks">
+        <div class="card-header">
+          <h2 class="card-title">Your tasks</h2>
+          <a href="/admin/todo.html" class="card-link">View tasks</a>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table" id="pending-tasks-table">
+            <thead><tr><th>Task</th><th>Priority</th><th>Open</th></tr></thead>
+            <tbody id="pending-tasks-body">
+              <tr><td colspan="3" class="table-loading">Loading tasks…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="admin-card">
+        <div class="card-header"><h2 class="card-title">Most liked</h2></div>
+        <div class="top-products-list" id="trending-products">
+          <div class="table-loading">Loading…</div>
+        </div>
+      </section>
+    </div>
+    <section class="recent-orders" id="tour-recent-orders" aria-labelledby="recent-orders-title">
+      <details class="recent-orders-details" id="recent-orders-details" open>
+        <summary class="recent-orders-heading"><div><h2 id="recent-orders-title">Recent orders</h2><p>The latest 10 orders from your store.</p></div><span class="recent-orders-chevron" aria-hidden="true"></span></summary>
+        <table id="recent-orders-table">
+          <thead><tr><th scope="col">Customer / order</th><th scope="col">Status</th><th scope="col">Amount</th></tr></thead>
+          <tbody id="recent-orders-body"><tr><td colspan="3" class="recent-orders-empty">Loading orders…</td></tr></tbody>
+        </table>
+        <a class="recent-orders-all" href="/admin/orders.html">All orders <span aria-hidden="true">→</span></a>
+      </details>
+    </section>
   </main>
 
   <script type="module" src="/src/dashboard.js"></script>
