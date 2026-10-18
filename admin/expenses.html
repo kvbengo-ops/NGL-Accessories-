@@ -17,6 +17,14 @@
     .expense-summary strong { display: block; margin: 6px 0 4px; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; color: rgb(var(--adm-fg)); }
     .expense-summary small { font-size: 11px; line-height: 1.5; color: rgb(var(--adm-fg) / .6); }
     .expense-stock-note { display: block; margin-top: 2px; font-size: 11px; font-weight: 400; color: rgb(var(--adm-fg) / .6); }
+    .expense-breakdown { display: grid; gap: 4px; margin: 0; padding: 8px 20px 18px; list-style: none; }
+    .expense-breakdown-row { display: grid; grid-template-columns: minmax(100px, 160px) minmax(40px, 1fr) auto; align-items: center; gap: 14px; padding: 8px 0; font-size: 12px; }
+    .expense-breakdown-name { color: rgb(var(--adm-fg) / .85); overflow-wrap: anywhere; }
+    .expense-breakdown-track { height: 12px; background: rgb(var(--adm-fg) / .08); }
+    .expense-breakdown-bar { display: block; height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--adm-gold); }
+    .expense-breakdown-value { text-align: right; font-variant-numeric: tabular-nums; color: rgb(var(--adm-fg)); white-space: nowrap; }
+    .expense-breakdown-value small { display: block; font-size: 10px; color: rgb(var(--adm-fg) / .6); }
+    @media (max-width: 600px) { .expense-breakdown { padding-inline: 16px; } .expense-breakdown-row { grid-template-columns: minmax(80px, 110px) minmax(30px, 1fr) auto; gap: 10px; } }
   </style>
   <script>try{var d=document.documentElement.dataset;d.theme=localStorage.getItem('ngl_admin_theme')||'dark';d.mode=localStorage.getItem('ngl_admin_mode')||'dark'}catch(e){}</script>
 </head>
@@ -66,6 +74,13 @@
 
     <!-- Totals for whatever the filters show: what counts in profit vs what became stock -->
     <div class="expense-summary" id="expense-summary" aria-live="polite"></div>
+
+    <section class="admin-card" aria-labelledby="expense-breakdown-title" style="margin-bottom:16px;">
+      <div class="card-header">
+        <div><h2 class="card-title" id="expense-breakdown-title">Spending by category</h2><p class="admin-page-subtitle" id="expense-breakdown-caption">Based on the current filters.</p></div>
+      </div>
+      <ul class="expense-breakdown" id="expense-breakdown" aria-live="polite"></ul>
+    </section>
 
     <!-- Table -->
     <section class="admin-card">

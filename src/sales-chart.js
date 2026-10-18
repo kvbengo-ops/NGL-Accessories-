@@ -5,6 +5,26 @@
 
 const DAY_MS = 864e5;
 
+export function shippingOf(o) {
+  return Math.max(0, Number(o.total) - Math.max(0, Number(o.subtotal) - Number(o.discount || 0)));
+}
+
+export function grossOf(o) {
+  return Number(o.profit || 0) + shippingOf(o);
+}
+
+export function itemNet(order, item) {
+  const subtotal = Number(order.subtotal);
+  return subtotal > 0 ? Number(item.subtotal) * Math.max(0, subtotal - Number(order.discount || 0)) / subtotal : 0;
+}
+
+export function cashStateOf(o) {
+  const cod = String(o.payment_method || '').toLowerCase().startsWith('cod');
+  if (['completed', 'delivered'].includes(o.status) || (o.status === 'shipped' && !cod)) return 'received';
+  if (['pending', 'processing'].includes(o.status) || (o.status === 'shipped' && cod)) return 'unpaid';
+  return null;
+}
+
 /* Bucket orders into daily or weekly (Monday-start) totals from `from` to now. */
 export function buildSeries(orders, from, daily, now = new Date()) {
   const start = new Date(from); start.setHours(0, 0, 0, 0);
@@ -19,7 +39,7 @@ export function buildSeries(orders, from, daily, now = new Date()) {
     const b = buckets[Math.floor((new Date(o.created_at) - start) / (stepDays * DAY_MS))];
     if (!b) return;
     b.revenue += Number(o.total);
-    b.profit += Number(o.profit || 0);
+    b.profit += grossOf(o);
     b.orders++;
   });
   return { buckets, daily };
@@ -33,7 +53,7 @@ export function salesByCategory(orders, products) {
   orders.forEach(o => (o.order_items || []).forEach(i => {
     const c = catOf[i.product_id] || 'Other';
     rows[c] ??= { category: c, revenue: 0, qty: 0 };
-    rows[c].revenue += Number(i.subtotal);
+    rows[c].revenue += itemNet(o, i);
     rows[c].qty += Number(i.quantity);
   }));
   return Object.values(rows).sort((a, b) => b.revenue - a.revenue || a.category.localeCompare(b.category));

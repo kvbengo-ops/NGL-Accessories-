@@ -6,7 +6,7 @@ import {
   getAllProducts, getTasks, getExpenses, getAdminSetting, setAdminSetting
 } from '../src/supabase.js';
 import { requireAuth, renderSidebar, formatPrice, formatDate, statusBadge, escapeHtml, showToast, isStockPurchase } from '../src/admin.js';
-import { buildSeries, drawChart, salesByCategory, pctChange } from './sales-chart.js';
+import { buildSeries, drawChart, salesByCategory, pctChange, shippingOf, grossOf, itemNet, cashStateOf } from './sales-chart.js';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
@@ -149,7 +149,10 @@ function startTour() {
   function renderPnl(periodOrders, since, label) {
     const revenue = periodOrders.reduce((s, o) => s + Number(o.total), 0);
     const cost = periodOrders.reduce((s, o) => s + Number(o.total_cost || 0), 0);
-    const gross = periodOrders.reduce((s, o) => s + Number(o.profit || 0), 0);
+    const shipping = periodOrders.reduce((s, o) => s + shippingOf(o), 0);
+    const gross = periodOrders.reduce((s, o) => s + grossOf(o), 0);
+    const missingCost = periodOrders.reduce((s, o) => s + (o.order_items || []).reduce((n, item) =>
+      n + (Number(item.cost_price) <= 0 ? Number(item.quantity) : 0), 0), 0);
 
     // expense_date is a plain date; parse it as local midnight, not UTC.
     const periodExpenses = expenses.filter(e => e.expense_date && new Date(e.expense_date + 'T00:00:00') >= since);
@@ -159,6 +162,8 @@ function startTour() {
 
     document.getElementById('pnl-period-label').textContent = label;
     document.getElementById('pnl-rev').textContent = formatPrice(revenue);
+    document.getElementById('pnl-product-sales').textContent = formatPrice(revenue - shipping);
+    document.getElementById('pnl-shipping').textContent = formatPrice(shipping);
     document.getElementById('pnl-cogs').textContent = `-${formatPrice(cost)}`;
     document.getElementById('pnl-gross').textContent = formatPrice(gross);
     document.getElementById('pnl-exp').textContent = `-${formatPrice(opex)}`;
@@ -166,6 +171,9 @@ function startTour() {
     netEl.textContent = (net < 0 ? '-' : '') + formatPrice(Math.abs(net));
     netEl.style.color = net < 0 ? 'rgb(var(--adm-red))' : '';
     document.getElementById('pnl-stock').textContent = formatPrice(stockSpend);
+    const missingCostNote = document.getElementById('pnl-missing-cost');
+    missingCostNote.textContent = `${missingCost} items sold in this period had no cost price, so profit is overstated. Add costs in Inventory.`;
+    missingCostNote.hidden = missingCost === 0;
   }
 
   function renderTop(periodOrders, label) {
@@ -173,7 +181,7 @@ function startTour() {
     periodOrders.forEach(o => (o.order_items || []).forEach(item => {
       if (!salesMap[item.product_name]) salesMap[item.product_name] = { qty: 0, rev: 0 };
       salesMap[item.product_name].qty += item.quantity;
-      salesMap[item.product_name].rev += Number(item.subtotal);
+      salesMap[item.product_name].rev += itemNet(o, item);
     }));
     const top = Object.entries(salesMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5);
 
@@ -200,7 +208,7 @@ function startTour() {
   function renderChartText(periodOrders) {
     const sum = f => periodOrders.reduce((s, o) => s + Number(f(o) || 0), 0);
     document.getElementById('chart-summary').textContent =
-      `${formatPrice(sum(o => o.total))} revenue · ${formatPrice(sum(o => o.profit))} gross profit · ` +
+      `${formatPrice(sum(o => o.total))} revenue · ${formatPrice(sum(grossOf))} gross profit · ` +
       `${periodOrders.length} order${periodOrders.length === 1 ? '' : 's'} · ${series.daily ? 'per day' : 'per week'}`;
     document.getElementById('sales-table').innerHTML =
       `<caption>Sales ${series.daily ? 'per day' : 'per week'}</caption>
@@ -286,7 +294,7 @@ function startTour() {
       const revenue = list.reduce((s, o) => s + Number(o.total), 0);
       return {
         revenue,
-        profit: list.reduce((s, o) => s + Number(o.profit || 0), 0),
+        profit: list.reduce((s, o) => s + grossOf(o), 0),
         orders: list.length,
         aov: list.length ? revenue / list.length : 0,
       };
@@ -363,10 +371,10 @@ function startTour() {
   // ── Cash on hand (estimate) ──────────────────────────────
   // Starting money + paid sales − everything spent (stock included: here we follow
   // the cash, not profit). Can't see owner withdrawals or later top-ups.
-  const PAID = ['completed', 'delivered'];
   const peso = n => (n < 0 ? '-' : '') + formatPrice(Math.abs(n));
-  const cashIn = orders.filter(o => PAID.includes(o.status)).reduce((s, o) => s + Number(o.total), 0);
-  const unpaid = orders.filter(o => ['pending', 'processing'].includes(o.status));
+  const cashIn = orders.filter(o => cashStateOf(o) === 'received')
+    .reduce((s, o) => s + Number(o.total), 0);
+  const unpaid = orders.filter(o => cashStateOf(o) === 'unpaid');
   const unpaidTotal = unpaid.reduce((s, o) => s + Number(o.total), 0);
   const cashStock = expenses.filter(isStockPurchase).reduce((s, e) => s + Number(e.amount), 0);
   const cashExp = expenses.filter(e => !isStockPurchase(e)).reduce((s, e) => s + Number(e.amount), 0);
@@ -390,7 +398,7 @@ function startTour() {
       notes.push('Below zero means you started with more, or added money later. Update the starting amount.');
     }
     if (unpaid.length) {
-      notes.push(`Not counted yet: <strong>${formatPrice(unpaidTotal)}</strong> from ${unpaid.length} order${unpaid.length > 1 ? 's' : ''} still pending or processing.`);
+      notes.push(`Not counted yet: <strong>${formatPrice(unpaidTotal)}</strong> from ${unpaid.length} unpaid order${unpaid.length > 1 ? 's' : ''} (pending, processing or shipped COD).`);
     }
     notes.push("If your real balance is lower, the gap is usually money you took out for yourself or a cost you didn't log.");
     document.getElementById('cash-note').innerHTML = notes.join(' ');

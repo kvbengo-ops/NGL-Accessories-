@@ -137,9 +137,25 @@ function renderSummary(rows) {
       <small>Not a loss: this became your inventory. Each item's cost counts once, when it sells.</small></div>`;
 }
 
+function renderBreakdown(rows) {
+  const totals = {};
+  rows.forEach(e => { totals[e.category || 'Other'] = (totals[e.category || 'Other'] || 0) + Number(e.amount); });
+  const categories = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  const total = categories.reduce((s, [, amount]) => s + amount, 0);
+  const max = Math.max(1, ...categories.map(([, amount]) => amount));
+  document.getElementById('expense-breakdown-caption').textContent = `${rows.length} record${rows.length === 1 ? '' : 's'} matching your filters.`;
+  document.getElementById('expense-breakdown').innerHTML = categories.length ? categories.map(([category, amount]) => `
+    <li class="expense-breakdown-row">
+      <span class="expense-breakdown-name">${escapeHtml(category)}</span>
+      <span class="expense-breakdown-track"><span class="expense-breakdown-bar" style="width:${(amount / max * 100).toFixed(1)}%"></span></span>
+      <span class="expense-breakdown-value">${formatPrice(amount)}<small>${total ? Math.round(amount / total * 100) : 0}% of total</small></span>
+    </li>`).join('') : '<li class="table-empty">No expenses to chart.</li>';
+}
+
 function renderExpenses() {
   const filtered = getFilteredExpenses();
   renderSummary(filtered);
+  renderBreakdown(filtered);
 
   const tbody = document.getElementById('expenses-body');
   if (filtered.length === 0) {

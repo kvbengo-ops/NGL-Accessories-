@@ -74,7 +74,7 @@
           <table class="sr-only" id="sales-table"></table>
         </div>
         <div class="chart-slide" id="slide-category" role="tabpanel" aria-labelledby="tab-category">
-          <p class="category-caption">Item sales per category, before order discounts</p>
+          <p class="category-caption">Item sales per category, after order discounts</p>
           <ul class="category-bars" id="category-bars"></ul>
         </div>
       </div>
@@ -85,12 +85,15 @@
         <div class="card-header"><div><h2 class="card-title">Profit &amp; loss</h2><p class="dashboard-period" id="pnl-period-label">—</p></div><a href="/admin/expenses.html" class="card-link">Expenses →</a></div>
         <dl class="dashboard-ledger">
           <div><dt>Revenue</dt><dd id="pnl-rev">—</dd></div>
+          <div><dt>Product sales</dt><dd id="pnl-product-sales">—</dd></div>
+          <div><dt>Shipping charged</dt><dd id="pnl-shipping">—</dd></div>
           <div><dt>Cost of goods</dt><dd id="pnl-cogs">—</dd></div>
           <div class="ledger-subtotal"><dt>Gross profit</dt><dd id="pnl-gross">—</dd></div>
           <div><dt>Operating expenses</dt><dd id="pnl-exp">—</dd></div>
           <div class="ledger-total"><dt>Net profit</dt><dd id="pnl-net">—</dd></div>
           <div><dt>Spent on new stock <small class="ledger-note">Not a loss: it's now Stock on hand. Its cost counts above once each item sells.</small></dt><dd id="pnl-stock">—</dd></div>
         </dl>
+        <p id="pnl-missing-cost" hidden style="margin:0;padding:0 20px 16px;font-size:11px;color:var(--adm-gold);"></p>
       </section>
       <section class="admin-card receipt" id="tour-trending">
         <div class="card-header"><div><h2 class="card-title">Best sellers</h2><p class="dashboard-period" id="top-period-label">—</p></div></div>
