@@ -1,30 +1,118 @@
-.try-on-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:rgba(20,18,13,.72);padding:16px;color:#29241b}
-.try-on-dialog{width:min(1040px,100%);max-height:min(92dvh,900px);overflow:auto;background:#fffdf7;box-shadow:0 24px 80px #0005;outline:none}
-.try-on-header{display:flex;align-items:center;justify-content:space-between;padding:18px 26px;border-bottom:1px solid #e8dfca}
-.try-on-header h2{font-family:var(--font-serif);font-size:clamp(30px,4vw,45px);font-weight:500;margin:0}
-.try-on-eyebrow{font:600 10px var(--font-sans);letter-spacing:.24em;color:var(--gold-500)}
-.try-on-close{border:0;background:transparent;color:#30291b;font-size:34px;line-height:1;cursor:pointer;padding:4px 10px}
-.try-on-main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr)}
-.try-on-view{position:relative;min-height:500px;background:#201d19;overflow:hidden}
+.try-on-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:rgba(35,39,31,.62);backdrop-filter:blur(9px);padding:24px;color:#393d32;font-family:var(--font-sans,system-ui)}
+.try-on-dialog{--mirror-green:#52664b;--mirror-rose:#aa6979;width:min(1080px,100%);max-height:94dvh;overflow:auto;background:#faf7ef;border:1px solid #fffaf1;border-radius:24px;box-shadow:0 28px 100px #1e241c4d;outline:none}
+.try-on-header{display:flex;align-items:center;justify-content:space-between;padding:22px 34px;border-bottom:1px solid #dfdfd233;gap:16px}
+.try-on-heading{display:flex;align-items:center;gap:13px}
+.try-on-brand-flower{width:32px;height:40px;color:var(--mirror-rose);flex:none}
+.try-on-header h2{font-family:var(--font-serif,Georgia,serif);font-size:clamp(27px,3vw,36px);font-weight:500;letter-spacing:-.035em;line-height:1.05;margin:3px 0 0}
+.try-on-eyebrow{display:block;font:600 9px var(--font-sans,system-ui);letter-spacing:.2em;color:#737963}
+.try-on-close{display:grid;place-items:center;border:1px solid #deded1;border-radius:50%;background:#ffffff70;color:#626954;width:38px;height:38px;font-size:26px;line-height:1;cursor:pointer;flex:none;transition:background .2s}
+.try-on-close:hover{background:#ecebdf}
+.try-on-main{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr)}
+.try-on-mirror-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 14px 22px;background:radial-gradient(ellipse at 45% 48%,#e1e5d6 0,#edf0e5 40%,#f2f2e9 70%);border-radius:0 0 0 24px;overflow:hidden}
+.try-on-mirror-stage::before{content:'';position:absolute;width:85%;height:20px;bottom:49px;border-radius:50%;background:#59624526;filter:blur(17px)}
+.try-on-mirror-label{position:relative;font-family:var(--font-serif,Georgia,serif);font-style:italic;color:#78816a;font-size:18px;letter-spacing:.02em;margin:9px 0 1px}
+.try-on-view.try-on-mirror{position:relative;width:100%;max-width:530px;aspect-ratio:600/760;min-height:0;background:transparent;overflow:visible;isolation:isolate}
+.try-on-mirror-glass,.try-on-mirror .try-on-video,.try-on-mirror .try-on-canvas,.try-on-mirror-welcome{position:absolute;inset:0;width:100%;height:100%;clip-path:url(#try-on-mirror-aperture)}
+.try-on-mirror-glass{z-index:0;background:linear-gradient(130deg,#f8faf4 3%,#dce4d8 31%,#c4d0c6 54%,#e4e9de 76%,#f3f5ec)}
+.try-on-mirror-glass::after{content:'';position:absolute;inset:0;background:linear-gradient(120deg,transparent 28%,#ffffff42 29%,#ffffff42 33%,transparent 34%,transparent 40%,#ffffff26 41%,#ffffff26 44%,transparent 45%)}
 .try-on-video,.try-on-canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .try-on-video{transform:scaleX(-1)}
-.try-on-canvas{pointer-events:none}
-.try-on-view-message{position:absolute;left:18px;right:18px;bottom:18px;text-align:center;color:white;background:#17130eb8;padding:10px;font-size:13px;pointer-events:none}
+/* Reflect the aperture before reflecting the video: its organic edges then
+   align exactly with the untransformed jewellery canvas and decorative frame. */
+.try-on-mirror .try-on-video{z-index:1;clip-path:url(#try-on-mirror-reflected-aperture)}
+.try-on-canvas{pointer-events:none;z-index:2}
+.try-on-mirror-art{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;filter:drop-shadow(0 9px 8px #59614a26);overflow:visible}
+.try-on-mirror-welcome{z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20%;color:#687760;pointer-events:none}
+.try-on-mirror-welcome[hidden]{display:none}
+.try-on-countdown{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;background:#33453638;clip-path:url(#try-on-mirror-aperture);color:#fffdf5;text-align:center;pointer-events:none}
+.try-on-countdown[hidden]{display:none}
+.try-on-countdown-label{font:italic 24px var(--font-serif,Georgia,serif);text-shadow:0 1px 8px #22302160}
+.try-on-countdown-number{display:grid;place-items:center;width:100px;height:100px;border:1px solid #fffdf580;border-radius:50%;background:#fffdf525;backdrop-filter:blur(4px);font:500 76px/1 var(--font-serif,Georgia,serif);box-shadow:0 6px 30px #33453620}
+.try-on-countdown-hint{font-size:10px;letter-spacing:.05em;text-shadow:0 1px 5px #22302180}
+.try-on-welcome-icon{width:34px;height:34px;margin-bottom:17px;stroke-width:1.1;opacity:.65}
+.try-on-mirror-welcome p{font:500 clamp(24px,3.5vw,38px)/1.05 var(--font-serif,Georgia,serif);margin:0;letter-spacing:-.035em}
+.try-on-mirror-welcome p em{font-weight:400;color:#9b6773}
+.try-on-mirror-welcome span{max-width:200px;font-size:10px;line-height:1.8;letter-spacing:.035em;margin-top:15px;color:#64755f}
+.try-on-view-message{position:absolute;left:22%;right:22%;bottom:18%;z-index:3;text-align:center;color:#fffdf5;background:#334536c9;border:1px solid #ffffff30;border-radius:14px;padding:10px 12px;font-size:11px;line-height:1.6;pointer-events:none}
 .try-on-view-message:empty{display:none}
-.try-on-panel{padding:30px;display:flex;flex-direction:column;gap:18px}
-.try-on-panel h3{font-family:var(--font-serif);font-size:35px;font-weight:500;margin:4px 0 0}
-.try-on-price{color:var(--gold-500);font-size:17px;margin:0}
-.try-on-status{min-height:3em;line-height:1.5;font-size:14px;margin:0}
-.try-on-panel button:not(.try-on-reset){border:1px solid var(--gold-500);background:var(--gold-500);color:white;padding:12px 18px;cursor:pointer;font:500 13px var(--font-sans)}
-.try-on-panel button.try-on-retry{background:transparent;color:var(--gold-500)}
+.try-on-mirror-caption{position:relative;display:flex;align-items:center;gap:7px;margin:3px 0 0;color:#707c66;font-size:10px;letter-spacing:.045em}
+.try-on-mirror-caption svg{width:13px;height:13px}
+.try-on-panel{padding:48px 36px 30px;display:flex;flex-direction:column;gap:19px;justify-content:center}
+.try-on-panel-intro{border-bottom:1px solid #daddce;padding-bottom:24px}
+.try-on-panel-title{font:400 clamp(36px,4vw,49px)/1 var(--font-serif,Georgia,serif);letter-spacing:-.04em;margin:12px 0}
+.try-on-panel-title em{color:var(--mirror-rose);font-weight:400}
+.try-on-panel-description{font-size:12px;line-height:1.8;color:#747966;max-width:260px;margin:0}
+.try-on-product-label{color:#838573;font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase}
+.try-on-panel h3{font-family:var(--font-serif,Georgia,serif);font-size:30px;line-height:1.05;font-weight:500;letter-spacing:-.02em;margin:8px 0}
+.try-on-price{color:#737b60;font-size:13px;margin:0;font-weight:500}
+.try-on-status{min-height:3em;line-height:1.7;font-size:12px;margin:0;color:#747966}
+.try-on-panel > button:not(.try-on-reset){display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid var(--mirror-green);border-radius:999px;background:var(--mirror-green);color:#fffdf5;padding:14px 18px;min-height:46px;cursor:pointer;font:500 12px var(--font-sans,system-ui);transition:background .2s,box-shadow .2s}
+.try-on-panel > button:not(.try-on-reset):hover{background:#40553a;box-shadow:0 4px 16px #52664b20}
+.try-on-panel button svg{width:17px;height:17px;flex:none}
+.try-on-panel button.try-on-bag{background:transparent;border-color:#cbd0bc;color:#53634b}
+.try-on-panel button.try-on-bag:hover{background:#eaeedf}
+.try-on-panel button.try-on-retry{background:#52664b;color:#fffdf5}
 .try-on-controls{display:grid;gap:12px}
 .try-on-controls[hidden],.try-on-panel button[hidden]{display:none}
-.try-on-controls label{display:grid;gap:5px;font-size:12px;font-weight:600}
-.try-on-controls select{padding:9px;border:1px solid #b9ab89;background:white;color:#29241b}
-.try-on-controls input{width:100%;accent-color:var(--gold-500)}
-.try-on-reset{justify-self:start;border:0;background:transparent;color:var(--gold-500);text-decoration:underline;cursor:pointer;padding:4px 0}
-.try-on-note{font-size:11px;color:#6c6456;line-height:1.5;margin:0}
-.try-on-dialog :focus-visible{outline:3px solid var(--gold-300);outline-offset:3px}
-@media(max-width:700px){.try-on-backdrop{padding:0}.try-on-dialog{width:100%;height:100dvh;max-height:none}.try-on-header{padding:calc(12px + env(safe-area-inset-top)) 16px 12px}.try-on-main{display:flex;flex-direction:column}.try-on-view{min-height:0;height:min(52dvh,500px);flex:none}.try-on-panel{padding:18px 20px calc(20px + env(safe-area-inset-bottom));gap:12px}.try-on-panel h3{font-size:28px}.try-on-status{min-height:0}}
-@media(max-width:700px) and (orientation:landscape){.try-on-main{display:grid;grid-template-columns:1fr 1fr}.try-on-view{height:calc(100dvh - 70px)}.try-on-panel{overflow:auto;max-height:calc(100dvh - 70px)}}
+.try-on-controls label{display:grid;gap:8px;font-size:10px;letter-spacing:.035em;font-weight:500;color:#777e68}
+.try-on-controls select{width:100%;padding:12px 34px 12px 15px;border:1px solid #daddce;border-radius:12px;background:#fffdf6;color:#444f3c;font:12px var(--font-sans,system-ui);cursor:pointer}
+.try-on-controls input{width:100%;accent-color:var(--mirror-green)}
+.try-on-reset{justify-self:start;border:0;background:transparent;color:var(--mirror-green);text-decoration:underline;cursor:pointer;padding:4px 0}
+.try-on-note{text-align:center;font-size:10px;color:#858878;line-height:1.7;margin:0}
+.try-on-dialog :focus-visible{outline:3px solid #b78894;outline-offset:4px}
+@media(min-width:701px) and (max-height:760px){.try-on-header{padding-block:15px}.try-on-view.try-on-mirror{max-width:min(490px,66dvh)}.try-on-panel{padding-block:24px;gap:13px}.try-on-panel-intro{padding-bottom:16px}.try-on-panel-title{font-size:40px}.try-on-mirror-label{margin-top:0}}
+@media(max-width:700px){.try-on-backdrop{padding:0}.try-on-dialog{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.try-on-header{padding:calc(13px + env(safe-area-inset-top)) 20px 13px}.try-on-header h2{font-size:28px}.try-on-eyebrow{font-size:8px}.try-on-brand-flower{width:25px;height:31px}.try-on-main{display:flex;flex-direction:column}.try-on-mirror-stage{padding:6px 0 12px;border-radius:0}.try-on-mirror-label{display:none}.try-on-view.try-on-mirror{width:100%;max-width:480px;flex:none}.try-on-mirror-welcome p{font-size:28px}.try-on-welcome-icon{width:26px;height:26px;margin-bottom:10px}.try-on-mirror-welcome span{font-size:9px;margin-top:10px}.try-on-view-message{font-size:10px;padding:7px 9px;bottom:16%}.try-on-mirror-caption{font-size:9px}.try-on-panel{padding:25px 26px calc(25px + env(safe-area-inset-bottom));gap:14px}.try-on-panel-intro{padding-bottom:17px}.try-on-panel-title{font-size:38px;margin:8px 0}.try-on-panel-title br{display:none}.try-on-panel-description{max-width:none}.try-on-panel h3{font-size:28px}.try-on-status{min-height:0}.try-on-panel > button:not(.try-on-reset){min-height:44px;padding:12px 16px}}
+@media(max-width:700px) and (orientation:landscape){.try-on-main{display:grid;grid-template-columns:1fr 1fr}.try-on-mirror-stage{position:sticky;top:0;align-self:start}.try-on-view.try-on-mirror{width:min(100%,62dvh)}.try-on-panel{padding:20px}.try-on-panel-title{font-size:32px}.try-on-mirror-label{font-size:13px}.try-on-mirror-caption{font-size:8px}}
+@media(max-width:700px){.try-on-header{position:sticky;top:0;z-index:6;background:#faf7ef}.try-on-panel-intro{display:none}.try-on-panel{padding-top:20px;gap:12px}}
 @media(prefers-reduced-motion:reduce){.try-on-dialog *{animation:none!important;transition:none!important}}
+/* Embedded in a normal page (try-on.html): no overlay, no close button. */
+.try-on-embed{position:static;z-index:auto;background:none;backdrop-filter:none;padding:0}
+.try-on-embed .try-on-dialog{max-height:none;overflow:visible;margin:0 auto}
+.try-on-embed .try-on-close{display:none}
+.tryon-page{padding:112px 24px 56px}
+@media(max-width:700px){.tryon-page{padding:88px 4px 40px}}
+/* Catalog rows: every earring available for try-on. */
+.try-on-panel,.try-on-controls,.try-on-list,.try-on-row-copy{min-width:0}
+.try-on-list{list-style:none;margin:0;padding:4px;display:grid;gap:8px;max-height:280px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c8cdbd transparent;scroll-padding:4px}
+.try-on-list li{min-width:0}
+.try-on-list .try-on-catalog-item{display:grid;grid-template-columns:56px minmax(0,1fr) 20px;align-items:center;gap:12px;width:100%;min-height:76px;padding:9px;text-align:left;background:#fffdf8;border:1px solid #dfdfd2;border-radius:14px;color:#444f3c;font:inherit;cursor:pointer;transition:background .2s,border-color .2s;touch-action:manipulation}
+.try-on-list .try-on-catalog-item:hover{background:#f1f4e9;border-color:#aebba2}
+.try-on-list .try-on-catalog-item[aria-pressed="true"]{border-color:#b78894;background:#f8ecee;box-shadow:inset 0 0 0 1px #b7889440}
+.try-on-thumb{position:relative;display:grid;place-items:center;width:56px;height:56px;overflow:hidden;border-radius:10px;background:#f1eee4;color:#97a28b}
+.try-on-thumb > svg{width:30px;height:30px}
+.try-on-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#f1eee4;border-radius:inherit}
+.try-on-row-copy{display:grid;gap:5px}
+.try-on-row-name{font-size:13px;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
+.try-on-row-price{font-size:11px;line-height:1.4;color:#737963;font-weight:500}
+.try-on-row-check{width:20px;height:20px;color:#7a8c6c;opacity:0}
+.try-on-catalog-item[aria-pressed="true"] .try-on-row-check{opacity:1}
+@media(max-width:700px){.try-on-list{max-height:260px}.try-on-list .try-on-catalog-item{gap:10px;min-height:74px}.try-on-embed .try-on-dialog{height:auto}}
+/* On phones, keep the collection immediately beneath the mirror. Native
+   horizontal scrolling browses the cards; tapping keeps the existing selection. */
+.try-on-mirror-resume{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;min-height:48px;max-width:65%;padding:12px 20px;border:1px solid #fffdf580;border-radius:999px;background:#52664b;color:#fffdf5;font:500 13px var(--font-sans,system-ui);box-shadow:0 4px 18px #22302140;cursor:pointer;touch-action:manipulation}
+.try-on-mirror-resume[hidden]{display:none}
+@media(min-width:701px){.try-on-mirror-resume{display:none}}
+@media(max-width:700px){
+  .try-on-panel > .try-on-retry{display:none}
+  .try-on-main{display:flex;flex-direction:column;gap:12px;padding-bottom:calc(20px + env(safe-area-inset-bottom));min-width:0}
+  .try-on-mirror-stage{order:0;position:relative;top:auto;align-self:stretch;padding-bottom:6px}
+  .try-on-view.try-on-mirror{width:100%;max-width:480px}
+  /* The site navbar already occupies space and sticks to the top. Embedded
+     try-on needs neither a second navbar-sized gap nor another sticky header. */
+  .tryon-page{padding:0 4px 24px}
+  .try-on-embed .try-on-header{position:static;padding-top:13px}
+  .try-on-panel{display:contents}
+  .try-on-panel > *{order:2;margin-inline:20px}
+  .try-on-panel > .try-on-panel-intro{display:none}
+  .try-on-panel > .try-on-controls{order:1;gap:8px;margin-inline:0}
+  .try-on-controls > .try-on-product-label{padding-inline:20px}
+  .try-on-list{display:flex;gap:10px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:4px 20px 10px;scroll-padding-inline:20px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;overscroll-behavior-y:auto}
+  .try-on-list li{flex:0 0 124px;scroll-snap-align:start}
+  .try-on-list .try-on-catalog-item{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:7px;min-height:148px;height:100%;padding:10px;touch-action:auto}
+  .try-on-thumb{width:100%;height:70px;flex:none}
+  .try-on-row-copy{gap:3px}
+  .try-on-row-name{font-size:11px;line-height:1.35}
+  .try-on-row-price{font-size:10px}
+  .try-on-row-check{position:absolute;right:7px;top:7px}
+  .try-on-panel h3{font-size:23px;margin-block:5px}
+}

@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseBrief, cleanBrief, publicProduct } from './src/stylist-engine.js';
-import { processStylist, handleStylistRequest } from './functions/api/_stylist-core.js';
-import { retrieveProducts, validateAnswer, cleanHistory, fetchCatalog } from './functions/api/_stylist-rag.js';
+import { parseBrief, cleanBrief, publicProduct } from '../src/stylist-engine.js';
+import { processStylist, handleStylistRequest } from '../functions/api/_stylist-core.js';
+import { retrieveProducts, validateAnswer, cleanHistory, fetchCatalog } from '../functions/api/_stylist-rag.js';
 
 const p = (id, category, price, extra = {}) => ({ id, name: `${id} gold ${category}`, category, price, collection: 'Natural', description: 'Simple slim design', tags: ['minimal'], inventory: { stock: 2 }, is_active: true, ...extra });
 const catalog = [p('ear', 'Earrings', 300), p('ear2', 'Earrings', 150), p('neck', 'Necklaces', 450), p('brace', 'Bracelets', 250), p('ring', 'Rings', 200), p('sold', 'Earrings', 50, { inventory: { stock: 0 } }), p('hidden', 'Earrings', 20, { is_active: false }), p('invalid', 'Earrings', 'not-a-price')];
@@ -119,7 +119,7 @@ test('shared cart preserves other items and enforces available quantity', async 
   let stored = '[]'; let events = 0;
   globalThis.localStorage = { getItem: () => stored, setItem: (_, value) => { stored = value; } };
   globalThis.window = { dispatchEvent: () => events++ };
-  const { addCatalogProduct, readCart } = await import('./src/cart-store.js');
+  const { addCatalogProduct, readCart } = await import('../src/cart-store.js');
   assert.equal(addCatalogProduct(publicProduct(catalog[0])).ok, true);
   assert.equal(addCatalogProduct(publicProduct(catalog[2])).ok, true);
   assert.equal(addCatalogProduct(publicProduct(catalog[0])).ok, true);

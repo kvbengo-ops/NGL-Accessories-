@@ -1,5 +1,5 @@
-import { getExpenses, upsertExpense, deleteExpense, getAdmins } from './supabase.js';
-import { requireAuth, renderSidebar, showToast, formatDate, formatPrice, openModal, closeModal, escapeHtml, isStockPurchase } from './admin.js';
+import { getExpenses, upsertExpense, deleteExpense, getAdmins, escapeHtml } from './supabase.js';
+import { requireAuth, renderSidebar, showToast, formatDate, formatPrice, openModal, closeModal, isStockPurchase } from './admin.js';
 
 let allExpenses = [];
 let allAdmins = [];

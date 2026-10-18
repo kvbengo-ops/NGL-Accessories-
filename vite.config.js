@@ -72,6 +72,7 @@ export default defineConfig(({ mode }) => {
           main: resolve(__dirname, 'index.html'),
           home: resolve(__dirname, 'home.html'),
           shop: resolve(__dirname, 'shop.html'),
+          'try-on': resolve(__dirname, 'try-on.html'),
           checkout: resolve(__dirname, 'checkout.html'),
           'order-confirm': resolve(__dirname, 'order-confirm.html'),
           'track-order': resolve(__dirname, 'track-order.html'),

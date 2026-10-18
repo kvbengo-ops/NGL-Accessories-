@@ -2,12 +2,28 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ngl-v1",
   "main": "worker.js",
+  "keep_vars": true,
   "compatibility_date": "2026-06-13",
   "observability": {
     "enabled": true
   },
   "ratelimits": [
-    { "name": "STYLIST_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }
+    {
+      "name": "STYLIST_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    },
+    {
+      "name": "SUPPORT_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    }
   ],
   // Non-secret config (the Supabase URL is already public in the client bundle).
   // The service-role key and the LLM key (GROQ_API_KEY, else GEMINI_API_KEY)

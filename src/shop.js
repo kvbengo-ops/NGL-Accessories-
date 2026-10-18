@@ -1,6 +1,6 @@
 import './style.css';
 import { readCart, writeCart, addCatalogProduct } from './cart-store.js';
-import { getProducts, getTryOnConfigs, trackEngagement, cfImg } from './supabase.js';
+import { getProducts, getTryOnConfigs, trackEngagement, cfImg, escapeHtml } from './supabase.js';
 import { initSearch } from './search.js';
 import { startTour, maybeAutoStartTour } from './tour.js';
 import './cms-frontend.js';
@@ -160,7 +160,7 @@ function showToast(msg) {
     toast.setAttribute('aria-live', 'polite');
     document.body.appendChild(toast);
   }
-  toast.innerHTML = `<span class="material-symbols-outlined" style="color:var(--gold-300)">check_circle</span>${msg}`;
+  toast.innerHTML = `<span class="material-symbols-outlined" style="color:var(--gold-300)">check_circle</span>${escapeHtml(msg)}`;
   toast.classList.add('visible');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 3200);
@@ -185,12 +185,12 @@ function openModal(product) {
   modalImg.src        = cfImg(product.image, 1000);
   modalImg.alt        = product.name;
   modalBadge.className = `modal-category-badge modal-badge--${product.category}`;
-  modalBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:10px">${product.emoji}</span>${product.categoryLabel}`;
+  modalBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:10px">${escapeHtml(product.emoji)}</span>${escapeHtml(product.categoryLabel)}`;
   modalName.textContent  = product.name;
   modalPrice.className   = `modal-price modal-price--${product.category}`;
   modalPrice.textContent = formatPrice(product.price);
   modalDesc.textContent  = product.desc;
-  modalTags.innerHTML    = product.tags.map(t => `<span class="modal-tag">${t}</span>`).join('');
+  modalTags.innerHTML    = product.tags.map(t => `<span class="modal-tag">${escapeHtml(t)}</span>`).join('');
   if (product.stock <= 0) {
     modalCartBtn.innerHTML = `<span class="material-symbols-outlined">block</span> Out of Stock`;
     modalCartBtn.disabled  = true;
@@ -202,7 +202,7 @@ function openModal(product) {
     modalCartBtn.disabled  = false;
   }
   modalCartBtn.classList.remove('added');
-  modalTryOnBtn.hidden = !(import.meta.env.VITE_TRY_ON_ENABLED === 'true' && product.itemCategory === 'Earrings' && tryOnConfigs.has(product.id));
+  modalTryOnBtn.hidden = !canTryOn(product);
   modalTryOnBtn.style.display = modalTryOnBtn.hidden ? 'none' : '';
 
   modalBackdrop.removeAttribute('aria-hidden');
@@ -240,11 +240,21 @@ modalCartBtn?.addEventListener('click', () => {
   modalCartBtn.disabled = true;
   setTimeout(closeModal, 1200);
 });
-modalTryOnBtn?.addEventListener('click', async () => {
-  if (!modalProduct || modalTryOnBtn.hidden) return;
-  const { openTryOn } = await import('./try-on/controller.js');
-  if (modalProduct) openTryOn({ product: modalProduct, products: PRODUCTS, configs: tryOnConfigs, onAddToBag: addToCart, returnFocus: modalTryOnBtn });
+modalTryOnBtn?.addEventListener('click', () => {
+  if (modalProduct && !modalTryOnBtn.hidden) location.href = tryOnUrl(modalProduct);
 });
+
+const canTryOn = (p) => import.meta.env.VITE_TRY_ON_ENABLED === 'true' && p.itemCategory === 'Earrings' && tryOnConfigs.has(p.id);
+const tryOnUrl = (p) => `/try-on.html?product=${encodeURIComponent(p.id)}`;
+const tryOnBadge = (product) => canTryOn(product) ? `<button class="card-tryon-badge" type="button" aria-label="Try on with your camera" title="Try on with your camera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M15 5c-1.3-1.1-2.8-1.7-4.5-1.7C6.9 3.3 4 6.6 4 10.7s2.9 7.4 6.5 7.4S17 14.8 17 10.7M10.5 18.1V21M7 21h7M18.5 2l.8 2.7L22 5.5l-2.7.8-.8 2.7-.8-2.7-2.7-.8 2.7-.8Z" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : '';
+
+function attachCardTryOn(card, product) {
+  const button = card.querySelector('.card-tryon-badge');
+  button?.addEventListener('click', event => {
+    event.stopPropagation();
+    if (canTryOn(product)) location.href = tryOnUrl(product);
+  });
+}
 
 /* ── SWIPE CARD BUILDER ── */
 function buildSwipeCard(product) {
@@ -255,6 +265,7 @@ function buildSwipeCard(product) {
   card.setAttribute('aria-label', `${product.name} — ${formatPrice(product.price)}`);
 
   card.innerHTML = `
+    ${tryOnBadge(product)}
     <div class="card-overlay card-overlay--like" aria-hidden="true">
       <div class="overlay-stamp">
         <span class="material-symbols-outlined">favorite</span> Add
@@ -266,7 +277,7 @@ function buildSwipeCard(product) {
       </div>
     </div>
     ${product.image ? `<div class="card-image" style="position:relative;">
-      <img src="${cfImg(product.image, 800)}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      <img src="${cfImg(product.image, 800)}" alt="${escapeHtml(product.name)}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>
@@ -275,11 +286,11 @@ function buildSwipeCard(product) {
     </div>` : ''}
     <div class="card-body">
       <span class="card-category-badge">
-        <span class="material-symbols-outlined">${product.emoji}</span>
-        ${product.categoryLabel}
+        <span class="material-symbols-outlined">${escapeHtml(product.emoji)}</span>
+        ${escapeHtml(product.categoryLabel)}
       </span>
-      <h3 class="card-name">${product.name}</h3>
-      <p class="card-desc">${product.desc}</p>
+      <h3 class="card-name">${escapeHtml(product.name)}</h3>
+      <p class="card-desc">${escapeHtml(product.desc)}</p>
       <div class="card-price-row">
         <span class="card-price">${formatPrice(product.price)}</span>
         <button class="card-view-btn" data-id="${product.id}" aria-label="View full details">
@@ -288,6 +299,8 @@ function buildSwipeCard(product) {
       </div>
     </div>
   `;
+
+  attachCardTryOn(card, product);
 
   // View button opens modal
   card.querySelector('.card-view-btn')?.addEventListener('click', (e) => {
@@ -372,10 +385,11 @@ class SwipeStack {
 
   _attachDrag(card) {
     card.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;
+      if (e.button !== 0 || e.target.closest('button, a, input, select')) return;
       this._dragStart(card, e.clientX, e.clientY);
     });
     card.addEventListener('touchstart', (e) => {
+      if (e.target.closest('button, a, input, select')) return;
       const t = e.touches[0];
       this._dragStart(card, t.clientX, t.clientY);
     }, { passive: true });
@@ -517,20 +531,21 @@ function buildProductCard(product) {
   card.dataset.id = product.id;
   card.innerHTML = `
     <div class="product-card-image" style="position:relative;">
-      <img src="${cfImg(product.image, 600)}" alt="${product.name}" loading="lazy" width="400" height="400" />
+      ${tryOnBadge(product)}
+      <img src="${cfImg(product.image, 600)}" alt="${escapeHtml(product.name)}" loading="lazy" width="400" height="400" />
       <span class="material-symbols-outlined like-heart-burst">favorite</span>
       <div class="product-card-likes" aria-label="${product.likes} likes">
         <span class="material-symbols-outlined">favorite</span>
         <span class="pc-like-n">${product.likes}</span>
       </div>
       <button class="product-photo-open" type="button" tabindex="-1" aria-hidden="true"></button>
-      <button class="grid-like-btn product-like-action" type="button" aria-label="Like ${product.name}">
+      <button class="grid-like-btn product-like-action" type="button" aria-label="Like ${escapeHtml(product.name)}">
         <span class="material-symbols-outlined">favorite</span>
       </button>
     </div>
     <div class="product-card-body">
-      <span class="product-card-badge badge--${product.category}">${product.categoryLabel}</span>
-      <h3 class="product-card-name"><button class="product-name-link grid-view-btn" type="button">${product.name}</button></h3>
+      <span class="product-card-badge badge--${product.category}">${escapeHtml(product.categoryLabel)}</span>
+      <h3 class="product-card-name"><button class="product-name-link grid-view-btn" type="button">${escapeHtml(product.name)}</button></h3>
       <div class="product-card-footer">
         <span class="product-card-price">${formatPrice(product.price)}</span>
         <div class="product-card-actions">
@@ -539,6 +554,8 @@ function buildProductCard(product) {
       </div>
     </div>
   `;
+
+  attachCardTryOn(card, product);
 
   const likeNumEl = card.querySelector('.pc-like-n');
   const heart     = card.querySelector('.like-heart-burst');
@@ -620,7 +637,7 @@ function renderGrid() {
     grid.innerHTML = `
       <div class="shop-no-results" style="grid-column:1/-1;text-align:center;padding:48px 16px;opacity:0.7;">
         <span class="material-symbols-outlined" style="font-size:40px;opacity:0.5;">search_off</span>
-        <p style="margin-top:12px;font-family:var(--font-sans);">${msg}</p>
+        <p style="margin-top:12px;font-family:var(--font-sans);">${escapeHtml(msg)}</p>
       </div>`;
     return;
   }

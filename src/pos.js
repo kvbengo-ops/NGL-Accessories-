@@ -1,7 +1,7 @@
 /* ============================================================
    NGL Admin — POS Terminal
    ============================================================ */
-import { getAllProducts, createOrder, generateOrderNumber, cfImg } from '../src/supabase.js';
+import { getAllProducts, createOrder, generateOrderNumber, cfImg, escapeHtml } from '../src/supabase.js';
 import { requireAuth, renderSidebar, showToast, formatPrice, openModal, closeModal } from '../src/admin.js';
 
 let products   = [];
@@ -30,14 +30,14 @@ function renderProductGrid(prods) {
   grid.innerHTML = available.map(p => {
     const stock = p.inventory?.stock || 0;
     return `
-      <button class="pos-product-tile" data-id="${p.id}" title="${p.name}">
+      <button class="pos-product-tile" data-id="${p.id}" title="${escapeHtml(p.name)}">
         ${p.image_url
           ? `<img src="${cfImg(p.image_url, 400)}" alt="${p.name}" class="pos-tile-img" />`
           : `<div class="pos-tile-placeholder"><span class="material-symbols-outlined">diamond</span></div>`
         }
         <div class="pos-tile-info">
-          <span class="pos-tile-name">${p.name}</span>
-          <span class="pos-tile-collection pos-coll--${p.collection.toLowerCase()}">${p.collection}</span>
+          <span class="pos-tile-name">${escapeHtml(p.name)}</span>
+          <span class="pos-tile-collection pos-coll--${escapeHtml(p.collection.toLowerCase())}">${escapeHtml(p.collection)}</span>
           <div class="pos-tile-bottom">
             <span class="pos-tile-price">${formatPrice(p.price)}</span>
             <span class="pos-tile-stock">${stock} left</span>
@@ -157,7 +157,7 @@ function renderCart() {
     el.dataset.id = product.id;
     el.innerHTML = `
       <div class="pos-cart-item-info">
-        <span class="pos-ci-name">${product.name}</span>
+        <span class="pos-ci-name">${escapeHtml(product.name)}</span>
         <span class="pos-ci-price">${formatPrice(product.price)}</span>
       </div>
       <div class="pos-cart-item-controls">
@@ -351,7 +351,7 @@ function showReceipt(order, orderNum, subtotal, discount, total) {
 
   const items = cart.map(({ product, quantity }) => `
     <div class="receipt-item">
-      <span>${product.name} ×${quantity}</span>
+      <span>${escapeHtml(product.name)} ×${quantity}</span>
       <span>${formatPrice(product.price * quantity)}</span>
     </div>
   `).join('');

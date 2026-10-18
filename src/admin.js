@@ -22,7 +22,7 @@ export async function requireAuth() {
   return admin;
 }
 
-// Any active admin may use the support console (see SUPPORT_BOT_PLAN.md).
+// Any active admin may use the support console (see docs/SUPPORT_BOT_PLAN.md).
 export const requireAdmin = requireAuth;
 
 export async function requireSuperadmin() {
@@ -249,12 +249,4 @@ export function closeModal(id) {
 export const isStockPurchase = e =>
   e.category === 'Inventory Purchase' || /^(Inventory purchase|Restock):/.test(e.title);
 
-export function escapeHtml(unsafe) {
-  if (!unsafe) return '';
-  return String(unsafe)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+export { escapeHtml } from './supabase.js';

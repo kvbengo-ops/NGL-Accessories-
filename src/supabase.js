@@ -22,6 +22,16 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 const SUPABASE_BASE = (SUPABASE_URL || '').replace(/\/$/, '');
 const SUPABASE_STORAGE_PREFIX = `${SUPABASE_BASE}/storage/v1/object/public/`;
 
+export function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export function cfImg(url, size) {
   // Not a Supabase Storage URL (or already rewritten) — return as-is.
   if (!url || !url.startsWith(SUPABASE_STORAGE_PREFIX)) return url || '';
@@ -193,7 +203,7 @@ export async function setAdminSetting(key, value) {
 
 /* ── Support chat (AI customer support) ──────────────────────
    Anonymous customers reach the chat only through these token-gated
-   RPCs (defined in setup/support-chat.sql). See SUPPORT_BOT_PLAN.md. */
+   RPCs (defined in setup/support-chat.sql). See docs/SUPPORT_BOT_PLAN.md. */
 export async function startSupportChat(pageUrl) {
   const { data, error } = await supabase.rpc('support_start', { p_page_url: pageUrl || null });
   if (error) throw error;
@@ -279,7 +289,7 @@ export async function uploadProductImage(file) {
 
 /* ── Try-on helpers ──────────────────────────────────────── */
 // Earring try-on placement settings (supabase/migrations/…_try-on.sql).
-// Config objects follow the contract in src/try-on/assets.js / plan.md.
+// Config objects follow the contract in src/try-on/assets.js / docs/plan.md.
 const TRY_ON_BUCKET = 'try-on-assets';
 const tryOnUrl = (path) =>
   path ? cfImg(supabase.storage.from(TRY_ON_BUCKET).getPublicUrl(path).data.publicUrl) : null;

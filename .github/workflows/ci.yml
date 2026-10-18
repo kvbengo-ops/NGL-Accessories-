@@ -37,6 +37,6 @@ jobs:
           grep -q 'img.src = cfImg(url)' src/try-on/assets.js \
             || { echo "::error::src/try-on/assets.js must load images via cfImg(url) with no size."; exit 1; }
 
-      - run: node --test test-stylist.mjs
-      - run: node --test test-try-on.mjs
+      - run: node --test tests/test-stylist.mjs
+      - run: node --test tests/test-try-on.mjs
       - run: npm run build

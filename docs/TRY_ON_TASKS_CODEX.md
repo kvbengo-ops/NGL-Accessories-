@@ -37,7 +37,7 @@ bottom of this file.
 
 **Do NOT touch (Claude owns):** `src/supabase.js`, `src/try-on/placement.js`,
 `src/try-on/assets.js`, `src/try-on/fixtures.js`, migrations, `public/try-on/`, `package.json`,
-`worker.js`, `wrangler.jsonc`, `ci.yml`, `test-try-on.mjs`, `plan.md`. Need a contract change?
+`worker.js`, `wrangler.jsonc`, `ci.yml`, `tests/test-try-on.mjs`, `plan.md`. Need a contract change?
 Write it under "Proposed contract changes" at the end of this file and stop that task.
 
 ---

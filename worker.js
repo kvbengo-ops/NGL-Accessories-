@@ -90,6 +90,13 @@ export default {
       if (request.method !== 'POST') {
         return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'POST' } });
       }
+      const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+      const origin = request.headers.get('Origin');
+      if (origin && origin !== url.origin) return json({ error: 'Origin not allowed.' }, 403);
+      if (env.SUPPORT_LIMITER) {
+        const { success } = await env.SUPPORT_LIMITER.limit({ key: request.headers.get('CF-Connecting-IP') || 'unknown' });
+        if (!success) return json({ error: 'Too many messages — please wait a minute.' }, 429);
+      }
       let input = {};
       try { input = await request.json(); } catch { /* invalid JSON → handled by core */ }
       try {
@@ -99,12 +106,9 @@ export default {
           headers: { 'Content-Type': 'application/json' },
         });
       } catch (err) {
-        // Surface the real reason (missing env, bad Supabase key, etc.) as JSON.
+        // Real reason stays in the Worker logs; never echo it (it can contain Supabase response bodies).
         console.error('support worker error', err);
-        return new Response(JSON.stringify({ error: String(err?.message || err) }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return json({ error: 'Support is unavailable right now.' }, 500);
       }
     }
 

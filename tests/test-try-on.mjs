@@ -1,9 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mapToView, earAnchors, computePlacement, createSmoother, EAR_DROP } from './src/try-on/placement.js';
-import { validateConfig, cropRect, cropAdjust, trimFromAlpha, autoAnchor, scaleFromLength } from './src/try-on/assets.js';
-import { FIXTURES } from './src/try-on/fixtures.js';
-import { normalizeDetectState, startWebarEngine, WEBAR_LIMITS, EAR_K } from './src/try-on/engine-webar.js';
+import { mapToView, earAnchors, computePlacement, createSmoother, EAR_DROP } from '../src/try-on/placement.js';
+import { validateConfig, cropRect, cropAdjust, trimFromAlpha, autoAnchor, scaleFromLength } from '../src/try-on/assets.js';
+import { FIXTURES } from '../src/try-on/fixtures.js';
+import { normalizeDetectState, startWebarEngine, WEBAR_LIMITS, EAR_K } from '../src/try-on/engine-webar.js';
+import { runCountdown } from '../src/try-on/countdown.js';
+
+test('camera countdown emits 3, 2, 1 before allowing the filter', async () => {
+  const ticks = [];
+  assert.equal(await runCountdown(3, new AbortController().signal, value => ticks.push(value)), true);
+  assert.deepEqual(ticks, [3, 2, 1]);
+});
+
+test('closing during the countdown cancels it before the filter can start', async () => {
+  const abort = new AbortController();
+  const ticks = [];
+  const finished = await runCountdown(3, abort.signal, value => { ticks.push(value); abort.abort(); });
+  assert.equal(finished, false);
+  assert.deepEqual(ticks, [3]);
+  assert.equal(await runCountdown(3, abort.signal, () => assert.fail('Cancelled session ticked')), false);
+});
 
 const near = (a, b, eps = 1e-6) => assert.ok(Math.abs(a - b) < eps, `${a} ≉ ${b}`);
 
