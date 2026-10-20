@@ -366,6 +366,7 @@ export async function uploadTryOnAsset(file, productId, side) {
   if (side !== 'left' && side !== 'right') throw new Error('side must be "left" or "right"');
   const { body, ext } = await shrinkImage(file, 1024, 0.9);
   if (ext !== 'webp' && ext !== 'png') throw new Error('Use a transparent PNG or WebP image.');
+  if (body.size > 2.5 * 1024 * 1024) throw new Error('Try-on image must be 2.5 MB or smaller.');
   const path = `${productId}/${side}-${Date.now()}.${ext}`;
   const { error } = await supabase.storage.from(TRY_ON_BUCKET)
     .upload(path, body, { cacheControl: ONE_YEAR, upsert: false, contentType: `image/${ext}` });

@@ -75,11 +75,11 @@ export function renderSidebar(activePage, admin) {
     <aside class="admin-sidebar" id="admin-sidebar">
       <div class="sidebar-brand">
         <div class="sidebar-brand-mark">
-          <span class="material-symbols-outlined">diamond</span>
+          <span aria-hidden="true">N</span>
         </div>
         <div class="sidebar-brand-text">
           <span class="sidebar-logo">NGL</span>
-          <span class="sidebar-subbrand">Admin Portal</span>
+          <span class="sidebar-subbrand">Accessories</span>
         </div>
       </div>
       <nav class="sidebar-nav">${navHtml}</nav>
